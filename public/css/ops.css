@@ -726,58 +726,83 @@ body.light-mode .section-label { color: #bbb; }
 
 /* ---- Mobile styles ---- */
 @media (max-width: 768px) {
-  .hero { padding: 12px 14px; }
-  .hero-logo { height: 40px; }
-  .hero-title { font-size: 18px; }
+  /* ---- Header ---- */
+  .hero { padding: 10px 12px; }
+  .hero-logo { height: 36px; }
+  .hero-title { font-size: 16px; }
+  .hero-label { font-size: 9px; }
   .hero-right { gap: 6px; }
   .btn { font-size: 11px; padding: 6px 10px; }
   .btn-group { flex-wrap: wrap; gap: 6px; }
-  .search-wrap { min-width: 140px; }
+  .search-wrap { min-width: 120px; flex: 1; }
 
-  .main { padding: 12px 14px; }
+  /* ---- Main ---- */
+  .main { padding: 10px 12px; }
 
-  .stats {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-  }
-  .stat { padding: 8px 10px; }
-  .stat-label { font-size: 9px; }
-  .stat-val { font-size: 20px; }
+  /* ---- Stats ---- */
+  .stats { grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  .stat { padding: 7px 8px; }
+  .stat-label { font-size: 8px; }
+  .stat-val { font-size: 18px; }
 
-  .pipeline { grid-template-columns: 1fr; gap: 8px; }
-
+  /* ---- Pipeline - single column, stages are dropdowns ---- */
+  .pipeline { grid-template-columns: 1fr; gap: 6px; }
   .stage-header { padding: 12px 14px; }
   .stage-title { font-size: 12px; }
+  .stage-body { max-height: 400px; }
 
-  /* Calendar - horizontal scroll on mobile */
-  .calendar-section { margin-top: 16px; }
+  /* ---- Kits ---- */
+  .kits-body { grid-template-columns: 1fr 1fr; }
+
+  /* ---- Calendar - compact single-column on mobile ---- */
+  .calendar-section { margin-top: 12px; overflow-x: hidden; }
+
+  .cal-header { padding: 10px 14px; }
+  .cal-title { font-size: 13px; }
 
   .cal-grid {
-    min-width: 700px;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    width: 100%;
   }
 
-  .calendar-scroll-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
+  .cal-dayname {
+    font-size: 8px;
+    padding: 5px 1px;
+    letter-spacing: 0;
   }
 
   .cal-cell {
     aspect-ratio: unset;
-    min-height: 80px;
+    min-height: 44px;
+    padding: 3px 2px;
   }
 
-  /* Modals full screen on mobile */
+  .cal-date { font-size: 9px; margin-bottom: 2px; }
+
+  .cal-event {
+    font-size: 8px;
+    padding: 1px 3px;
+    white-space: normal;
+    line-height: 1.2;
+    word-break: break-word;
+  }
+
+  .cal-legend { padding: 8px 12px; gap: 10px; }
+  .cal-legend-item { font-size: 10px; }
+
+  /* ---- Modals full screen ---- */
   .modal {
-    width: 95vw;
-    max-width: 95vw;
+    width: 96vw;
+    max-width: 96vw;
     padding: 16px;
+    max-height: 90vh;
   }
   .move-modal {
-    width: 95vw;
-    max-width: 95vw;
+    width: 96vw;
+    max-width: 96vw;
     padding: 16px;
   }
+  .modal-overlay { padding: 10px; }
 }
 
 /* ---- Powder coat date groups ---- */

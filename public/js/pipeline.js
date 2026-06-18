@@ -1,5 +1,19 @@
 // ---- Collapsible stages ----
 var openStages = {};
+var isMobile = window.innerWidth <= 768;
+
+function initStages() {
+  var tabs = ['new','ready','backorder','assembled','powdercoat','pickup'];
+  tabs.forEach(function(tab) {
+    var body = document.getElementById('col-' + tab);
+    var chv  = document.getElementById('chv-' + tab);
+    // Desktop: open by default. Mobile: collapsed by default
+    var startOpen = !isMobile;
+    if (body) body.style.display = startOpen ? 'block' : 'none';
+    if (chv) chv.classList.toggle('open', startOpen);
+    openStages[tab] = startOpen;
+  });
+}
 
 function toggleStage(tab) {
   var body = document.getElementById('col-' + tab);
@@ -23,6 +37,8 @@ function expandAllStages() {
 }
 
 function collapseAllStages() {
+  // Only collapse on mobile - desktop keeps stages open
+  if (!isMobile) return;
   var tabs = ['new','ready','backorder','assembled','powdercoat','pickup'];
   tabs.forEach(function(tab) {
     var body = document.getElementById('col-' + tab);
@@ -611,13 +627,15 @@ function resetDateBtn(inputId, val) {
 function openAddModal() {
   var m = document.getElementById('add-modal');
   if (m) m.classList.add('open');
-  var fields = ['add-order', 'add-sku', 'add-item', 'add-color', 'add-shipping', 'add-po', 'add-build', 'add-sent'];
+  var fields = ['add-order', 'add-sku', 'add-item', 'add-color', 'add-shipping', 'add-po'];
   fields.forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
   });
   resetDateBtn('add-orderdate', todayStr());
   resetDateBtn('add-eta', '');
+  resetDateBtn('add-sent', '');
+  resetDateBtn('add-build', '');
   updateAddFields();
 }
 

@@ -2,12 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
   <title>CAGEWRX OPS</title>
   <meta name="theme-color" content="#060e18">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="CAGEwrx Ops">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CAGEWRX OPS">
   <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="apple-touch-icon" href="img/favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="img/favicon.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="img/favicon.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="img/favicon.png">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/ops.css">
 </head>
@@ -104,12 +109,13 @@
       ondragover="onDragOver(event,'new')"
       ondragleave="onDragLeave('new')"
       ondrop="onDrop(event,'new')">
-      <div class="stage-header" style="background:#1a0d00;">
+      <div class="stage-header stage-toggle" style="background:#1a0d00;cursor:pointer;" onclick="toggleStage('new')">
         <span style="font-size:15px;">&#x1F6CE;</span>
         <p class="stage-title" style="color:#ff7043;">NEW ORDERS</p>
         <span class="stage-count" id="cnt-new" style="background:#2a1500;color:#ff7043;">-</span>
+        <span class="stage-chevron" id="chv-new">&#x25BE;</span>
       </div>
-      <div class="stage-body" id="col-new">
+      <div class="stage-body" id="col-new" style="display:none;">
         <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
       </div>
     </div>
@@ -119,12 +125,13 @@
       ondragover="onDragOver(event,'ready')"
       ondragleave="onDragLeave('ready')"
       ondrop="onDrop(event,'ready')">
-      <div class="stage-header" style="background:#0a1a0a;">
+      <div class="stage-header stage-toggle" style="background:#0a1a0a;cursor:pointer;" onclick="toggleStage('ready')">
         <span style="font-size:15px;">&#x1F4E6;</span>
         <p class="stage-title" style="color:#4caf50;">READY TO SHIP</p>
         <span class="stage-count" id="cnt-ready" style="background:#0f2a0f;color:#4caf50;">-</span>
+        <span class="stage-chevron" id="chv-ready">&#x25BE;</span>
       </div>
-      <div class="stage-body" id="col-ready">
+      <div class="stage-body" id="col-ready" style="display:none;">
         <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
       </div>
     </div>
@@ -134,12 +141,13 @@
       ondragover="onDragOver(event,'backorder')"
       ondragleave="onDragLeave('backorder')"
       ondrop="onDrop(event,'backorder')">
-      <div class="stage-header" style="background:#1a0808;">
+      <div class="stage-header stage-toggle" style="background:#1a0808;cursor:pointer;" onclick="toggleStage('backorder')">
         <span style="font-size:15px;">&#x23F8;</span>
         <p class="stage-title" style="color:#ef5350;">BACKORDERED / DROP SHIP</p>
         <span class="stage-count" id="cnt-back" style="background:#2a0f0f;color:#ef5350;">-</span>
+        <span class="stage-chevron" id="chv-back">&#x25BE;</span>
       </div>
-      <div class="stage-body" id="col-back">
+      <div class="stage-body" id="col-back" style="display:none;">
         <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
       </div>
     </div>
@@ -149,12 +157,13 @@
       ondragover="onDragOver(event,'assembled')"
       ondragleave="onDragLeave('assembled')"
       ondrop="onDrop(event,'assembled')">
-      <div class="stage-header" style="background:#0a1525;">
+      <div class="stage-header stage-toggle" style="background:#0a1525;cursor:pointer;" onclick="toggleStage('assembled')">
         <span style="font-size:15px;">&#x270F;</span>
         <p class="stage-title" style="color:#42a5f5;">ASSEMBLED CAGE ORDERS</p>
         <span class="stage-count" id="cnt-assembled" style="background:#0f1f35;color:#42a5f5;">-</span>
+        <span class="stage-chevron" id="chv-assembled">&#x25BE;</span>
       </div>
-      <div class="stage-body" id="col-assembled">
+      <div class="stage-body" id="col-assembled" style="display:none;">
         <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
       </div>
     </div>
@@ -164,12 +173,13 @@
       ondragover="onDragOver(event,'powdercoat')"
       ondragleave="onDragLeave('powdercoat')"
       ondrop="onDrop(event,'powdercoat')">
-      <div class="stage-header" style="background:#1a1000;">
+      <div class="stage-header stage-toggle" style="background:#1a1000;cursor:pointer;" onclick="toggleStage('powdercoat')">
         <span style="font-size:15px;">&#x1F525;</span>
         <p class="stage-title" style="color:#ffa726;">AT POWDER COATING</p>
         <span class="stage-count" id="cnt-powder" style="background:#2a1a00;color:#ffa726;">-</span>
+        <span class="stage-chevron" id="chv-powder">&#x25BE;</span>
       </div>
-      <div class="stage-body" id="col-powder">
+      <div class="stage-body" id="col-powder" style="display:none;">
         <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
       </div>
     </div>
@@ -179,12 +189,13 @@
       ondragover="onDragOver(event,'pickup')"
       ondragleave="onDragLeave('pickup')"
       ondrop="onDrop(event,'pickup')">
-      <div class="stage-header" style="background:#0a1a1a;">
+      <div class="stage-header stage-toggle" style="background:#0a1a1a;cursor:pointer;" onclick="toggleStage('pickup')">
         <span style="font-size:15px;">&#x2705;</span>
         <p class="stage-title" style="color:#4db6ac;">READY FOR PICKUP</p>
         <span class="stage-count" id="cnt-pickup" style="background:#0f2a2a;color:#4db6ac;">-</span>
+        <span class="stage-chevron" id="chv-pickup">&#x25BE;</span>
       </div>
-      <div class="stage-body" id="col-pickup">
+      <div class="stage-body" id="col-pickup" style="display:none;">
         <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
       </div>
     </div>
@@ -246,11 +257,19 @@
     </div>
     <div id="add-build-wrap" style="display:none;">
       <label>Build Date</label>
-      <input type="text" id="add-build" placeholder="MM/DD/YYYY" maxlength="10" oninput="autoSlashDate(this)">
+      <input type="hidden" id="add-build" value="">
+      <button type="button" class="date-input-btn" data-picker-target="add-build">
+        <span style="color:#333;">Select date...</span>
+        <span style="color:#555;font-size:12px;"> &#x1F4C5;</span>
+      </button>
     </div>
     <div id="add-sent-wrap" style="display:none;">
       <label>Sent to Powder</label>
-      <input type="text" id="add-sent" placeholder="MM/DD/YYYY" maxlength="10" oninput="autoSlashDate(this)">
+      <input type="hidden" id="add-sent" value="">
+      <button type="button" class="date-input-btn" data-picker-target="add-sent">
+        <span style="color:#333;">Select date...</span>
+        <span style="color:#555;font-size:12px;"> &#x1F4C5;</span>
+      </button>
     </div>
     <label>Order Date</label>
     <input type="hidden" id="add-orderdate" value="">
@@ -344,6 +363,9 @@
     _sess = sess;
     renderAvatar(_sess);
   });
+
+  // Init stages (open on desktop, collapsed on mobile)
+  initStages();
 
   // Init date picker event delegation
   initDatePickers();
