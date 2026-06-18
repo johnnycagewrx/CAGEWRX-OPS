@@ -2,12 +2,28 @@
 var openStages = {};
 var isMobile = window.innerWidth <= 768;
 
+// Map tab names to their actual DOM IDs
+var STAGE_IDS = {
+  new:        'col-new',
+  ready:      'col-ready',
+  backorder:  'col-back',
+  assembled:  'col-assembled',
+  powdercoat: 'col-powder',
+  pickup:     'col-pickup'
+};
+var CHEV_IDS = {
+  new:        'chv-new',
+  ready:      'chv-ready',
+  backorder:  'chv-back',
+  assembled:  'chv-assembled',
+  powdercoat: 'chv-powder',
+  pickup:     'chv-pickup'
+};
+
 function initStages() {
-  var tabs = ['new','ready','backorder','assembled','powdercoat','pickup'];
-  tabs.forEach(function(tab) {
-    var body = document.getElementById('col-' + tab);
-    var chv  = document.getElementById('chv-' + tab);
-    // Desktop: open by default. Mobile: collapsed by default
+  Object.keys(STAGE_IDS).forEach(function(tab) {
+    var body = document.getElementById(STAGE_IDS[tab]);
+    var chv  = document.getElementById(CHEV_IDS[tab]);
     var startOpen = !isMobile;
     if (body) body.style.display = startOpen ? 'block' : 'none';
     if (chv) chv.classList.toggle('open', startOpen);
@@ -16,8 +32,10 @@ function initStages() {
 }
 
 function toggleStage(tab) {
-  var body = document.getElementById('col-' + tab);
-  var chv  = document.getElementById('chv-' + tab);
+  var bodyId = STAGE_IDS[tab] || ('col-' + tab);
+  var chevId = CHEV_IDS[tab] || ('chv-' + tab);
+  var body = document.getElementById(bodyId);
+  var chv  = document.getElementById(chevId);
   if (!body) return;
   var isOpen = body.style.display !== 'none';
   body.style.display = isOpen ? 'none' : 'block';
@@ -26,10 +44,9 @@ function toggleStage(tab) {
 }
 
 function expandAllStages() {
-  var tabs = ['new','ready','backorder','assembled','powdercoat','pickup'];
-  tabs.forEach(function(tab) {
-    var body = document.getElementById('col-' + tab);
-    var chv  = document.getElementById('chv-' + tab);
+  Object.keys(STAGE_IDS).forEach(function(tab) {
+    var body = document.getElementById(STAGE_IDS[tab]);
+    var chv  = document.getElementById(CHEV_IDS[tab]);
     if (body) body.style.display = 'block';
     if (chv) chv.classList.add('open');
     openStages[tab] = true;
@@ -39,10 +56,9 @@ function expandAllStages() {
 function collapseAllStages() {
   // Only collapse on mobile - desktop keeps stages open
   if (!isMobile) return;
-  var tabs = ['new','ready','backorder','assembled','powdercoat','pickup'];
-  tabs.forEach(function(tab) {
-    var body = document.getElementById('col-' + tab);
-    var chv  = document.getElementById('chv-' + tab);
+  Object.keys(STAGE_IDS).forEach(function(tab) {
+    var body = document.getElementById(STAGE_IDS[tab]);
+    var chv  = document.getElementById(CHEV_IDS[tab]);
     if (body) body.style.display = 'none';
     if (chv) chv.classList.remove('open');
     openStages[tab] = false;
