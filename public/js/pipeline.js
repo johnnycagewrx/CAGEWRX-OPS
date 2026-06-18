@@ -1,3 +1,39 @@
+// ---- Collapsible stages ----
+var openStages = {};
+
+function toggleStage(tab) {
+  var body = document.getElementById('col-' + tab);
+  var chv  = document.getElementById('chv-' + tab);
+  if (!body) return;
+  var isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (chv) chv.classList.toggle('open', !isOpen);
+  openStages[tab] = !isOpen;
+}
+
+function expandAllStages() {
+  var tabs = ['new','ready','backorder','assembled','powdercoat','pickup'];
+  tabs.forEach(function(tab) {
+    var body = document.getElementById('col-' + tab);
+    var chv  = document.getElementById('chv-' + tab);
+    if (body) body.style.display = 'block';
+    if (chv) chv.classList.add('open');
+    openStages[tab] = true;
+  });
+}
+
+function collapseAllStages() {
+  var tabs = ['new','ready','backorder','assembled','powdercoat','pickup'];
+  tabs.forEach(function(tab) {
+    var body = document.getElementById('col-' + tab);
+    var chv  = document.getElementById('chv-' + tab);
+    if (body) body.style.display = 'none';
+    if (chv) chv.classList.remove('open');
+    openStages[tab] = false;
+  });
+}
+
+
 // ---- Undo ----
 function pushUndo(action, data) {
   undoStack.push({ action: action, data: data });
@@ -204,6 +240,43 @@ function renderKits(items) {
   el.innerHTML = h;
 }
 
+function renderPowderCoat(items) {
+  items = sortByOrderNum(items);
+  var cnt = items.length;
+  document.getElementById('cnt-powder').textContent = cnt;
+  document.getElementById('stat-powder').textContent = cnt;
+  var el = document.getElementById('col-powder');
+  if (!cnt) { el.innerHTML = '<div class="empty">No items</div>'; return; }
+
+  // Group by sent_to_powder date
+  var groups = {};
+  var groupOrder = [];
+  items.forEach(function(o) {
+    var key = o.sent_to_powder || '__none__';
+    if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
+    groups[key].push(o);
+  });
+
+  var h = '';
+  groupOrder.forEach(function(key, gi) {
+    var group = groups[key];
+    var dateLabel = key === '__none__' ? 'No date set' : 'Sent: ' + fmtDate(key);
+    // Add group header with subtle divider
+    h += '<div class="powder-group">';
+    h += '<div class="powder-group-label">' + dateLabel + ' <span style="color:#555;font-size:10px;">(' + group.length + ')</span></div>';
+    group.forEach(function(o) {
+      var metaHTML = pill(o.color, 'pill-color') +
+        pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order') +
+        pill(o.eta ? 'ETA: ' + fmtDate(o.eta) : '', 'pill-date');
+      h += buildCard(o, 'powdercoat', metaHTML);
+    });
+    h += '</div>';
+  });
+
+  el.innerHTML = h;
+}
+
+
 function renderData(data) {
   orderCache = {};
   var grouped = { new: [], ready: [], backorder: [], assembled: [], powdercoat: [], pickup: [] };
@@ -227,12 +300,7 @@ function renderData(data) {
       pill(o.build_date ? 'Build: ' + fmtDate(o.build_date) : '', 'pill-date') +
       pill(o.eta ? 'ETA: ' + fmtDate(o.eta) : '', 'pill-date');
   });
-  fillStage('col-powder', 'cnt-powder', 'stat-powder', 'powdercoat', grouped.powdercoat, function (o) {
-    return pill(o.color, 'pill-color') +
-      pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order') +
-      pill(o.sent_to_powder ? 'Sent: ' + fmtDate(o.sent_to_powder) : '', 'pill-date') +
-      pill(o.eta ? 'ETA: ' + fmtDate(o.eta) : '', 'pill-date');
-  });
+  renderPowderCoat(grouped.powdercoat);
   fillStage('col-pickup', 'cnt-pickup', 'stat-pickup', 'pickup', grouped.pickup, function (o) {
     return pill(o.color, 'pill-color') + pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order');
   });
@@ -600,7 +668,12 @@ function doSearch(val) {
   var clearBtn = document.getElementById('search-clear');
   if (clearBtn) clearBtn.style.display = val ? 'block' : 'none';
   var cards = document.querySelectorAll('.order-card');
-  if (!val) { cards.forEach(function (c) { c.classList.remove('highlight', 'dimmed'); }); return; }
+  if (!val) {
+    cards.forEach(function (c) { c.classList.remove('highlight', 'dimmed'); });
+    collapseAllStages();
+    return;
+  }
+  expandAllStages();
   var found = false;
   cards.forEach(function (c) {
     var num = c.querySelector('.order-num');
@@ -622,6 +695,7 @@ function clearSearch() {
   document.querySelectorAll('.order-card').forEach(function (c) {
     c.classList.remove('highlight', 'dimmed');
   });
+  collapseAllStages();
   if (inp) inp.focus();
 }
 

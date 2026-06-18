@@ -71,7 +71,7 @@
   border: none;
   outline: none;
   color: #e0e0e0;
-  font-size: 13px;
+  font-size: 16px;
   width: 100%;
   font-family: inherit;
 }
@@ -100,8 +100,8 @@
 }
 
 .stat {
-  background: #111;
-  border: 1px solid #1e1e1e;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
   border-radius: 10px;
   padding: 12px 16px;
 }
@@ -141,7 +141,7 @@
 
 /* ---- Stage columns ---- */
 .stage {
-  background: #0e0e0e;
+  background: #181818;
   border: 1px solid #1a1a1a;
   border-radius: 12px;
   overflow: hidden;
@@ -182,10 +182,10 @@
   max-height: 560px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #2a2a2a #111;
+  scrollbar-color: #333 #1a1a1a;
 }
 .stage-body::-webkit-scrollbar { width: 4px; }
-.stage-body::-webkit-scrollbar-track { background: #111; }
+.stage-body::-webkit-scrollbar-track { background: #1a1a1a; }
 .stage-body::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
 .stage-body::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
 
@@ -202,13 +202,13 @@
   scrollbar-color: #2a2a2a #111;
 }
 .kits-body::-webkit-scrollbar { width: 4px; }
-.kits-body::-webkit-scrollbar-track { background: #111; }
+.kits-body::-webkit-scrollbar-track { background: #1a1a1a; }
 .kits-body::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
 
 /* ---- Order cards ---- */
 .order-card {
-  background: #141414;
-  border: 1px solid #222;
+  background: #202020;
+  border: 1px solid #2e2e2e;
   border-radius: 8px;
   padding: 8px 10px;
   margin-bottom: 6px;
@@ -311,7 +311,7 @@
   position: fixed;
   bottom: 16px;
   right: 16px;
-  background: #111;
+  background: #1a1a1a;
   border: 1px solid #2a2a2a;
   border-radius: 8px;
   padding: 6px 12px;
@@ -345,7 +345,7 @@
 .move-overlay.open { display: flex; }
 
 .move-modal {
-  background: #111;
+  background: #1a1a1a;
   border: 1px solid #2a2a2a;
   border-radius: 14px;
   padding: 24px;
@@ -374,7 +374,7 @@
 
 .calendar-section {
   margin-top: 32px;
-  background: #0e0e0e;
+  background: #181818;
   border: 2px solid #e53935;
   border-radius: 14px;
   overflow: hidden;
@@ -422,9 +422,9 @@
   letter-spacing: .08em;
   padding: 8px 0;
   text-align: center;
-  border-right: 1px solid #2a2a2a;
-  border-bottom: 1px solid #2a2a2a;
-  background: #1e2a30;
+  border-right: 1px solid #2e2e2e;
+  border-bottom: 1px solid #2e2e2e;
+  background: #263238;
 }
 
 /* Square cells: use aspect-ratio for default square shape,
@@ -433,13 +433,13 @@
   aspect-ratio: 1 / 1;
   min-height: unset;
   padding: 6px;
-  border-right: 1px solid #2a2a2a;
-  border-bottom: 1px solid #2a2a2a;
+  border-right: 1px solid #2e2e2e;
+  border-bottom: 1px solid #2e2e2e;
   vertical-align: top;
   position: relative;
   overflow: visible;
   height: auto;
-  background: #1c1c1c;
+  background: #222;
 }
 
 /* Override aspect-ratio when cell has enough content to need more space */
@@ -449,7 +449,7 @@
 }
 
 .cal-cell.cal-empty {
-  background: #090909;
+  background: #1a1a1a;
   aspect-ratio: 1 / 1;
 }
 
@@ -713,3 +713,93 @@ body.light-mode .section-label { color: #bbb; }
 #undo-btn { transition: opacity 0.2s; }
 #undo-btn:not([disabled]) { opacity: 1 !important; color: #ffa726; border-color: #3a2200; }
 #undo-btn[disabled] { opacity: 0.3; cursor: not-allowed; }
+
+/* ---- Collapsible stages ---- */
+.stage-chevron {
+  font-size: 12px;
+  color: #444;
+  margin-left: 4px;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.stage-chevron.open { transform: rotate(180deg); color: #888; }
+
+/* ---- Mobile styles ---- */
+@media (max-width: 768px) {
+  .hero { padding: 12px 14px; }
+  .hero-logo { height: 40px; }
+  .hero-title { font-size: 18px; }
+  .hero-right { gap: 6px; }
+  .btn { font-size: 11px; padding: 6px 10px; }
+  .btn-group { flex-wrap: wrap; gap: 6px; }
+  .search-wrap { min-width: 140px; }
+
+  .main { padding: 12px 14px; }
+
+  .stats {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .stat { padding: 8px 10px; }
+  .stat-label { font-size: 9px; }
+  .stat-val { font-size: 20px; }
+
+  .pipeline { grid-template-columns: 1fr; gap: 8px; }
+
+  .stage-header { padding: 12px 14px; }
+  .stage-title { font-size: 12px; }
+
+  /* Calendar - horizontal scroll on mobile */
+  .calendar-section { margin-top: 16px; }
+
+  .cal-grid {
+    min-width: 700px;
+  }
+
+  .calendar-scroll-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .cal-cell {
+    aspect-ratio: unset;
+    min-height: 80px;
+  }
+
+  /* Modals full screen on mobile */
+  .modal {
+    width: 95vw;
+    max-width: 95vw;
+    padding: 16px;
+  }
+  .move-modal {
+    width: 95vw;
+    max-width: 95vw;
+    padding: 16px;
+  }
+}
+
+/* ---- Powder coat date groups ---- */
+.powder-group {
+  margin-bottom: 8px;
+}
+.powder-group:last-child { margin-bottom: 0; }
+
+.powder-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffa726;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  padding: 5px 6px 4px;
+  background: #1e1500;
+  border-left: 2px solid #ffa726;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.powder-group + .powder-group {
+  border-top: 1px solid #2a2a2a;
+  padding-top: 8px;
+}
