@@ -260,7 +260,14 @@ function renderPowderCoat(items) {
   var h = '';
   groupOrder.forEach(function(key, gi) {
     var group = groups[key];
-    var dateLabel = key === '__none__' ? 'No date set' : 'Sent: ' + fmtDate(key);
+    var today = new Date();
+    today.setHours(0,0,0,0);
+    var isFuture = key !== '__none__' && new Date(key.replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$1-$2')) > today;
+    var dateLabel = key === '__none__'
+      ? 'No date set'
+      : isFuture
+        ? 'SEND TO PC ON ' + fmtDate(key)
+        : 'Sent: ' + fmtDate(key);
     // Add group header with subtle divider
     h += '<div class="powder-group">';
     h += '<div class="powder-group-label">' + dateLabel + ' <span style="color:#555;font-size:10px;">(' + group.length + ')</span></div>';
@@ -459,6 +466,11 @@ function confirmMove() {
   var updates = { tab: toTab };
   var sentEl = document.getElementById('move-sent');
   if (sentEl && sentEl.value) updates.sent_to_powder = sentEl.value;
+
+  // Clear sent_to_powder when pulling OUT of powdercoat
+  if (fromTab === 'powdercoat' && toTab !== 'powdercoat') {
+    updates.sent_to_powder = '';
+  }
 
   // Save to undo stack before moving
   pushUndo('move', { id: o.id, fromTab: fromTab });
