@@ -352,3 +352,188 @@
   white-space: pre-wrap;
   word-break: break-all;
 }
+
+/* ============================================
+   Calendar styles
+   ============================================ */
+
+.calendar-section {
+  margin-top: 32px;
+  background: #0e0e0e;
+  border: 1px solid #1a1a1a;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid #1a1a1a;
+  background: #111;
+}
+
+.cal-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: .05em;
+}
+
+.cal-nav {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  color: #888;
+  font-size: 14px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.cal-nav:hover { background: #252525; color: #fff; }
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-left: 1px solid #1a1a1a;
+}
+
+.cal-dayname {
+  font-size: 10px;
+  font-weight: 700;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  padding: 8px 0;
+  text-align: center;
+  border-right: 1px solid #1a1a1a;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.cal-cell {
+  min-height: 100px;
+  padding: 6px;
+  border-right: 1px solid #1a1a1a;
+  border-bottom: 1px solid #1a1a1a;
+  vertical-align: top;
+  position: relative;
+}
+
+.cal-cell.cal-empty { background: #090909; }
+
+.cal-cell.cal-today { background: #0a0f1a; }
+.cal-cell.cal-today .cal-date { color: #42a5f5; font-weight: 700; }
+
+.cal-date {
+  font-size: 11px;
+  color: #333;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.cal-event {
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  margin-bottom: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.cal-event:hover { opacity: 0.8; }
+
+.cal-event-badge {
+  font-size: 8px;
+  font-weight: 700;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.cal-event-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cal-more {
+  font-size: 10px;
+  color: #444;
+  padding: 1px 4px;
+  cursor: pointer;
+}
+
+.cal-legend {
+  display: flex;
+  gap: 16px;
+  padding: 12px 20px;
+  border-top: 1px solid #1a1a1a;
+  flex-wrap: wrap;
+}
+
+.cal-legend-item {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: #555;
+}
+
+/* ============================================
+   Date Picker styles
+   ============================================ */
+
+.date-input-wrap {
+  position: relative;
+}
+
+.date-input-btn {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #e0e0e0;
+  outline: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.date-input-btn:hover { border-color: #42a5f5; }
+.date-input-btn .placeholder { color: #333; }
+
+.picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0 14px;
+}
+
+.picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.picker-cell {
+  text-align: center;
+  padding: 7px 4px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #bbb;
+}
+.picker-cell:hover { background: #1a1a1a; color: #fff; }
+.picker-cell.picker-empty { cursor: default; }
+.picker-cell.picker-today { color: #42a5f5; font-weight: 700; }
+.picker-cell.picker-selected {
+  background: #1565c0;
+  color: #fff;
+  font-weight: 700;
+}

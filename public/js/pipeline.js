@@ -188,6 +188,11 @@ function renderData(data) {
   var now = new Date();
   var lu = document.getElementById('last-updated');
   if (lu) lu.textContent = 'Last updated ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  // Update calendar with all orders
+  if (typeof renderCalendar === 'function') {
+    renderCalendar(data.orders.concat(data.kits));
+  }
 }
 
 function setLoadingSpinners() {
@@ -273,11 +278,16 @@ function labelHTML(t) {
 }
 
 function dateInputHTML(id, val) {
-  return '<input type="text" id="' + id + '" maxlength="10" value="' + (val || '') + '"' +
-    ' placeholder="MM/DD/YYYY"' +
-    ' style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;"' +
-    ' oninput="autoSlashDate(this)">';
+  var display = val || '';
+  var label = display || 'Select date...';
+  var clr = display ? '#e0e0e0' : '#333';
+  return '<input type="hidden" id="' + id + '" value="' + display + '">' +
+    '<button type="button" class="date-input-btn" data-picker-target="' + id + '">' +
+      '<span style="color:' + clr + ';">' + label + '</span>' +
+      '<span style="color:#555;font-size:12px;"> &#x1F4C5;</span>' +
+    '</button>';
 }
+
 
 function inputHTML(id, val) {
   return '<input type="text" id="' + id + '" value="' + (val || '') + '"' +

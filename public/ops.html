@@ -191,6 +191,13 @@
 
   <div class="timestamp" id="last-updated"></div>
 
+  <!-- ===== CALENDAR ===== -->
+  <div class="calendar-section">
+    <div id="calendar-body">
+      <div style="padding:40px;text-align:center;"><div class="spinner"></div></div>
+    </div>
+  </div>
+
 </div><!-- end .main -->
 
 <!-- Refresh indicator -->
@@ -297,10 +304,22 @@
   </div>
 </div>
 
+<!-- ===== DATE PICKER MODAL ===== -->
+<div class="modal-overlay" id="date-picker-modal">
+  <div class="modal" style="max-width:340px;">
+    <div id="picker-body"></div>
+    <div class="modal-btns" style="margin-top:12px;">
+      <button class="modal-btn modal-btn-cancel" onclick="closeDatePicker()">Cancel</button>
+      <button class="modal-btn" style="background:#1a1a1a;color:#555;" onclick="selectDate('');closeDatePicker()">Clear</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== SCRIPTS ===== -->
 <script src="js/supabase.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/pipeline.js"></script>
+<script src="js/calendar.js"></script>
 <script>
   // ---- Boot sequence ----
   var _sess = requireAuth();
@@ -314,6 +333,9 @@
     _sess = sess;
     renderAvatar(_sess);
   });
+
+  // Init date picker event delegation
+  initDatePickers();
 
   // Start loading data
   loadData(false);
