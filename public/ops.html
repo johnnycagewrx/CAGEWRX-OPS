@@ -41,6 +41,7 @@
         <button class="btn btn-green" onclick="openAddModal()">+ Add Order</button>
         <button class="btn btn-amber" onclick="openImportModal()">&#x1F4E5; Import CSV</button>
         <button class="btn" onclick="loadData(false)">&#x21BB; Refresh</button>
+        <button class="btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">&#x263C;</button>
 
         <!-- Avatar -->
         <div class="avatar-wrap">
@@ -336,6 +337,13 @@
 
   // Init date picker event delegation
   initDatePickers();
+
+  // Restore saved theme
+  if (localStorage.getItem('cw_theme') === 'light') {
+    document.body.classList.add('light-mode');
+    var tb = document.getElementById('theme-btn');
+    if (tb) tb.textContent = '☾';
+  }
 
   // Start loading data
   loadData(false);

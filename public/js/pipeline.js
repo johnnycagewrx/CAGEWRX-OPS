@@ -1,3 +1,11 @@
+// ---- Theme toggle ----
+function toggleTheme() {
+  var isLight = document.body.classList.toggle('light-mode');
+  localStorage.setItem('cw_theme', isLight ? 'light' : 'dark');
+  var btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = isLight ? '☾' : '☼';
+}
+
 // pipeline.js - CAGEwrx Ops pipeline logic
 
 'use strict';
