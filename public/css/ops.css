@@ -371,7 +371,7 @@
   justify-content: space-between;
   padding: 14px 20px;
   border-bottom: 1px solid #e53935;
-  background: #ff0000;
+  background: #510000;
 }
 
 .cal-title {
@@ -422,8 +422,8 @@
 
 .cal-cell.cal-empty { background: #090909; }
 
-.cal-cell.cal-today { background: #900000; }
-.cal-cell.cal-today .cal-date { color: #e53935; font-weight: 700; }
+.cal-cell.cal-today { background: #510000; }
+.cal-cell.cal-today .cal-date { color: #ffffff; font-weight: 700; }
 
 .cal-date {
   font-size: 11px;
