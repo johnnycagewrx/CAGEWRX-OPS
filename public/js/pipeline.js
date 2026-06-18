@@ -1,3 +1,45 @@
+// ---- Undo ----
+function pushUndo(action, data) {
+  undoStack.push({ action: action, data: data });
+  if (undoStack.length > 10) undoStack.shift();
+  var btn = document.getElementById('undo-btn');
+  if (btn) btn.disabled = false;
+}
+
+function undoLast() {
+  if (!undoStack.length) return;
+  var last = undoStack.pop();
+  if (!undoStack.length) {
+    var btn = document.getElementById('undo-btn');
+    if (btn) btn.disabled = true;
+  }
+
+  if (last.action === 'delete') {
+    // Re-insert the deleted order
+    var o = last.data;
+    var table = o.tab === 'cagekits' ? 'cagekits' : 'orders';
+    delete o.id; // let Supabase assign new id
+    sbFetch('POST', '/rest/v1/orders', o, function(err) {
+      if (err) showBanner('Undo failed: ' + err, 'error');
+      else { showBanner('Undo: order restored', 'success'); loadData(true); }
+    });
+  } else if (last.action === 'move') {
+    // Move back to previous tab
+    sbFetch('PATCH', '/rest/v1/orders?id=eq.' + last.data.id, { tab: last.data.fromTab }, function(err) {
+      if (err) showBanner('Undo failed: ' + err, 'error');
+      else { showBanner('Undo: order moved back', 'success'); loadData(true); }
+    });
+  } else if (last.action === 'edit') {
+    // Restore previous values
+    var prev = last.data;
+    sbFetch('PATCH', '/rest/v1/orders?id=eq.' + prev.id, prev, function(err) {
+      if (err) showBanner('Undo failed: ' + err, 'error');
+      else { showBanner('Undo: order restored', 'success'); loadData(true); }
+    });
+  }
+}
+
+
 // ---- Theme toggle ----
 function toggleTheme() {
   var isLight = document.body.classList.toggle('light-mode');
@@ -19,6 +61,7 @@ var pendingMove = null;
 var editingOrder = null;
 var editingTab = null;
 var orderCache = {};
+var undoStack = []; // { action, data } - last 10 actions
 
 // ---- Tab config ----
 var TAB_LABELS = {
@@ -348,6 +391,9 @@ function confirmMove() {
   var sentEl = document.getElementById('move-sent');
   if (sentEl && sentEl.value) updates.sent_to_powder = sentEl.value;
 
+  // Save to undo stack before moving
+  pushUndo('move', { id: o.id, fromTab: fromTab });
+
   sbFetch('PATCH', '/rest/v1/orders?id=eq.' + o.id, updates, function (err) {
     if (err) { showBanner('Move failed: ' + err, 'error'); loadData(false); }
     else { showBanner('Order #' + o.order_num + ' moved to ' + toLabel, 'success'); loadData(true); }
@@ -357,6 +403,9 @@ function confirmMove() {
 // ---- Mark done ----
 function markDone(tab, id) {
   if (!confirm('Mark this order as complete and remove it?')) return;
+  // Save to undo stack before deleting
+  var o = orderCache[id];
+  if (o) pushUndo('delete', JSON.parse(JSON.stringify(o)));
   sbFetch('DELETE', '/rest/v1/orders?id=eq.' + id, null, function (err) {
     if (err) { showBanner('Error: ' + err, 'error'); }
     else { showBanner('Order completed!', 'success'); loadData(true); }
@@ -454,7 +503,9 @@ function confirmEdit() {
     if (document.getElementById('edit-sent'))  updates.sent_to_powder = gv('edit-sent');
   }
   var oid = editingOrder.id;
+  var prev = JSON.parse(JSON.stringify(editingOrder));
   closeEditModal();
+  pushUndo('edit', prev);
   sbFetch('PATCH', '/rest/v1/orders?id=eq.' + oid, updates, function (err) {
     if (err) showBanner('Save failed: ' + err, 'error');
     else { showBanner('Order updated!', 'success'); loadData(true); }

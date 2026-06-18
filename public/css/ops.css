@@ -179,7 +179,15 @@
 .stage-body {
   padding: 8px;
   min-height: 80px;
+  max-height: 560px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a #111;
 }
+.stage-body::-webkit-scrollbar { width: 4px; }
+.stage-body::-webkit-scrollbar-track { background: #111; }
+.stage-body::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
+.stage-body::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
 
 /* ---- Cage Kits grid ---- */
 .kits-body {
@@ -188,7 +196,14 @@
   gap: 6px;
   padding: 8px;
   min-height: 60px;
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a #111;
 }
+.kits-body::-webkit-scrollbar { width: 4px; }
+.kits-body::-webkit-scrollbar-track { background: #111; }
+.kits-body::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
 
 /* ---- Order cards ---- */
 .order-card {
@@ -693,3 +708,8 @@ body.light-mode .cal-legend { border-top-color: #e0e0e0; }
 body.light-mode .refresh-indicator { background: #fff; border-color: #e0e0e0; color: #888; }
 body.light-mode .timestamp { color: #ccc; }
 body.light-mode .section-label { color: #bbb; }
+
+/* ---- Undo button ---- */
+#undo-btn { transition: opacity 0.2s; }
+#undo-btn:not([disabled]) { opacity: 1 !important; color: #ffa726; border-color: #3a2200; }
+#undo-btn[disabled] { opacity: 0.3; cursor: not-allowed; }
