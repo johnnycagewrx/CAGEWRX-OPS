@@ -88,8 +88,9 @@ function shipLabel(s) {
 }
 
 function doneBtn(tab, id) {
-  return '<button class="done-btn" title="Mark complete" onclick="markDone(\'' + tab + '\',\'' + id + '\')">&#x2713;</button>';
+  return '<button class="done-btn" title="Mark complete" onclick="event.stopPropagation();markDone(event,\'' + tab + '\',\'' + id + '\')">&#x2713;</button>';
 }
+
 
 function sortByOrderNum(items) {
   return items.slice().sort(function (a, b) {
@@ -401,7 +402,8 @@ function confirmMove() {
 }
 
 // ---- Mark done ----
-function markDone(tab, id) {
+function markDone(e, tab, id) {
+  e.stopPropagation();
   if (!confirm('Mark this order as complete and remove it?')) return;
   // Save to undo stack before deleting
   var o = orderCache[id];
