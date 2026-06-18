@@ -42,19 +42,36 @@ function formatDateKey(d) {
 }
 
 function buildCalEvents(orders) {
-  // Build a map of date -> [{order, type}]
   var map = {};
-  var dateFields = ['build_date', 'eta', 'sent_to_powder'];
 
   orders.forEach(function(o) {
-    dateFields.forEach(function(field) {
-      if (!o[field]) return;
-      var d = parseDate(o[field]);
-      if (!d) return;
-      var key = formatDateKey(d);
-      if (!map[key]) map[key] = [];
-      map[key].push({ order: o, type: field });
-    });
+    // build_date only shows for assembled stage
+    if (o.build_date && o.tab === 'assembled') {
+      var d = parseDate(o.build_date);
+      if (d) {
+        var key = formatDateKey(d);
+        if (!map[key]) map[key] = [];
+        map[key].push({ order: o, type: 'build_date' });
+      }
+    }
+    // sent_to_powder only shows for powdercoat stage
+    if (o.sent_to_powder && o.tab === 'powdercoat') {
+      var d = parseDate(o.sent_to_powder);
+      if (d) {
+        var key = formatDateKey(d);
+        if (!map[key]) map[key] = [];
+        map[key].push({ order: o, type: 'sent_to_powder' });
+      }
+    }
+    // eta shows for all active stages (not completed)
+    if (o.eta) {
+      var d = parseDate(o.eta);
+      if (d) {
+        var key = formatDateKey(d);
+        if (!map[key]) map[key] = [];
+        map[key].push({ order: o, type: 'eta' });
+      }
+    }
   });
   return map;
 }
