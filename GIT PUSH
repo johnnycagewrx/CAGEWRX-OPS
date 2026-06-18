@@ -1,3 +1,2 @@
 git add .
-git commit -m "Refactor: clean stack with separated CSS/JS files"
 git push

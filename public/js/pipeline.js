@@ -222,11 +222,9 @@ function loadData(background) {
   }
 
   sbFetch('GET', '/rest/v1/orders?select=*&order=order_num.asc', null, function (err, data) {
-    results.orders = (err || !Array.isArray(data)) ? [] : data;
-    tryRender();
-  });
-  sbFetch('GET', '/rest/v1/cagekits?select=*&order=order_num.asc', null, function (err, data) {
-    results.kits = (err || !Array.isArray(data)) ? [] : data;
+    var all = (err || !Array.isArray(data)) ? [] : data;
+    results.orders = all.filter(function(o){ return o.tab !== 'cagekits'; });
+    results.kits   = all.filter(function(o){ return o.tab === 'cagekits'; });
     tryRender();
   });
 }
@@ -324,34 +322,7 @@ function confirmMove() {
   var mm = document.getElementById('move-modal');
   if (mm) mm.classList.remove('open');
 
-  // Moving FROM cagekits to pipeline or TO cagekits uses different tables
-  // Handle cross-table moves: delete from source, insert into destination
-  if (fromTab === 'cagekits' || toTab === 'cagekits') {
-    var fromTable = fromTab === 'cagekits' ? 'cagekits' : 'orders';
-    var toTable   = toTab   === 'cagekits' ? 'cagekits' : 'orders';
-    var newRecord = {
-      order_num:  o.order_num,
-      sku:        o.sku        || '',
-      item:       o.item       || '',
-      color:      o.color      || '',
-      order_date: o.order_date || '',
-      shipping:   o.shipping   || '',
-      po_num:     o.po_num     || '',
-      eta:        o.eta        || '',
-      build_date: o.build_date || '',
-      sent_to_powder: o.sent_to_powder || ''
-    };
-    if (toTab !== 'cagekits') newRecord.tab = toTab;
-    // Insert into destination then delete from source
-    sbFetch('POST', '/rest/v1/' + toTable, newRecord, function(err) {
-      if (err) { showBanner('Move failed: ' + err, 'error'); return; }
-      sbFetch('DELETE', '/rest/v1/' + fromTable + '?id=eq.' + o.id, null, function(err2) {
-        if (err2) showBanner('Warning: copied but could not remove original', 'error');
-        else { showBanner('Order #' + o.order_num + ' moved to ' + toLabel, 'success'); loadData(true); }
-      });
-    });
-    return;
-  }
+
 
   var updates = { tab: toTab };
   var sentEl = document.getElementById('move-sent');
@@ -366,8 +337,7 @@ function confirmMove() {
 // ---- Mark done ----
 function markDone(tab, id) {
   if (!confirm('Mark this order as complete and remove it?')) return;
-  var table = tab === 'cagekits' ? 'cagekits' : 'orders';
-  sbFetch('DELETE', '/rest/v1/' + table + '?id=eq.' + id, null, function (err) {
+  sbFetch('DELETE', '/rest/v1/orders?id=eq.' + id, null, function (err) {
     if (err) { showBanner('Error: ' + err, 'error'); }
     else { showBanner('Order completed!', 'success'); loadData(true); }
   });
@@ -375,8 +345,7 @@ function markDone(tab, id) {
 
 function deleteByOrderNum(tab, orderNum) {
   if (!confirm('Delete order ' + orderNum + '?')) return;
-  var table = tab === 'cagekits' ? 'cagekits' : 'orders';
-  sbFetch('DELETE', '/rest/v1/' + table + '?order_num=eq.' + orderNum, null, function (err) {
+  sbFetch('DELETE', '/rest/v1/orders?order_num=eq.' + orderNum, null, function (err) {
     if (err) showBanner('Delete failed: ' + err, 'error');
     else { showBanner('Deleted', 'success'); loadData(true); }
   });
@@ -462,10 +431,9 @@ function confirmEdit() {
     if (document.getElementById('edit-build')) updates.build_date    = gv('edit-build');
     if (document.getElementById('edit-sent'))  updates.sent_to_powder = gv('edit-sent');
   }
-  var table = isKit ? 'cagekits' : 'orders';
   var oid = editingOrder.id;
   closeEditModal();
-  sbFetch('PATCH', '/rest/v1/' + table + '?id=eq.' + oid, updates, function (err) {
+  sbFetch('PATCH', '/rest/v1/orders?id=eq.' + oid, updates, function (err) {
     if (err) showBanner('Save failed: ' + err, 'error');
     else { showBanner('Order updated!', 'success'); loadData(true); }
   });
@@ -532,8 +500,7 @@ function submitAdd() {
 
   closeAddModal();
   showBanner('Adding order #' + num + '...', 'success');
-  var table = isKit ? 'cagekits' : 'orders';
-  sbFetch('POST', '/rest/v1/' + table, body, function (err) {
+  sbFetch('POST', '/rest/v1/orders', body, function (err) {
     if (err) showBanner('Add failed: ' + err, 'error');
     else { showBanner('Order #' + num + ' added!', 'success'); loadData(false); }
   });
