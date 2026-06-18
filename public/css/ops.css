@@ -360,7 +360,7 @@
 .calendar-section {
   margin-top: 32px;
   background: #0e0e0e;
-  border: 1px solid #1a1a1a;
+  border: 1px solid #e53935;
   border-radius: 14px;
   overflow: hidden;
 }
@@ -370,8 +370,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  border-bottom: 1px solid #1a1a1a;
-  background: #111;
+  border-bottom: 1px solid #e53935;
+  background: #1a0505;
 }
 
 .cal-title {
@@ -412,7 +412,7 @@
 }
 
 .cal-cell {
-  min-height: 100px;
+  min-height: 60px;
   padding: 6px;
   border-right: 1px solid #1a1a1a;
   border-bottom: 1px solid #1a1a1a;
@@ -422,8 +422,8 @@
 
 .cal-cell.cal-empty { background: #090909; }
 
-.cal-cell.cal-today { background: #0a0f1a; }
-.cal-cell.cal-today .cal-date { color: #42a5f5; font-weight: 700; }
+.cal-cell.cal-today { background: #1a0505; }
+.cal-cell.cal-today .cal-date { color: #e53935; font-weight: 700; }
 
 .cal-date {
   font-size: 11px;

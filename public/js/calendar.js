@@ -15,10 +15,10 @@ var DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 // Color coding by event type
 var CAL_COLORS = {
-  build_date:     { bg: '#0a1525', border: '#1565c0', text: '#42a5f5', label: 'Build' },
-  eta:            { bg: '#0a1f0a', border: '#1a4a1a', text: '#4caf50', label: 'ETA'   },
-  sent_to_powder: { bg: '#1a1000', border: '#3a2200', text: '#ffa726', label: 'Powder'},
-  order_date:     { bg: '#12080a', border: '#3a1020', text: '#f48fb1', label: 'Order' }
+  build_date:     { bg: '#0a1525', border: '#1565c0', text: '#42a5f5', label: 'BUILD'      },
+  eta:            { bg: '#0a1f0a', border: '#1a4a1a', text: '#4caf50', label: 'ETA'        },
+  sent_to_powder: { bg: '#1a1000', border: '#3a2200', text: '#ffa726', label: 'SENT TO PC' },
+  order_date:     { bg: '#12080a', border: '#3a1020', text: '#f48fb1', label: 'ORDER'      }
 };
 
 function parseDate(str) {
