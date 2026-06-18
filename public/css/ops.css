@@ -371,7 +371,7 @@
   justify-content: space-between;
   padding: 14px 20px;
   border-bottom: 1px solid #e53935;
-  background: #1a0505;
+  background: #ff0000;
 }
 
 .cal-title {
@@ -412,7 +412,7 @@
 }
 
 .cal-cell {
-  min-height: 60px;
+  min-height: 80px;
   padding: 6px;
   border-right: 1px solid #1a1a1a;
   border-bottom: 1px solid #1a1a1a;
@@ -422,7 +422,7 @@
 
 .cal-cell.cal-empty { background: #090909; }
 
-.cal-cell.cal-today { background: #1a0505; }
+.cal-cell.cal-today { background: #900000; }
 .cal-cell.cal-today .cal-date { color: #e53935; font-weight: 700; }
 
 .cal-date {
