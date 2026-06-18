@@ -39,7 +39,9 @@ function pill(t, c) {
 
 function shipLabel(s) {
   s = (s || '').toLowerCase();
-  return s.indexOf('pick') !== -1 ? 'PICKUP' : s ? 'SHIP' : '';
+  if (s.indexOf('pick') !== -1) return 'PICKUP';
+  if (s.indexOf('drop') !== -1) return 'DROP SHIP';
+  return s ? 'SHIP' : '';
 }
 
 function doneBtn(tab, id) {
@@ -414,10 +416,12 @@ function openEditModal(tab, o) {
   }
   f += labelHTML('Order Date') + dateInputHTML('edit-orderdate', o.order_date);
   f += labelHTML('Shipping');
-  var sv = (o.shipping || '').toLowerCase().indexOf('pick') !== -1 ? 'pickup' : 'ship';
+  var _sl = (o.shipping || '').toLowerCase();
+  var sv = _sl.indexOf('pick') !== -1 ? 'pickup' : _sl.indexOf('drop') !== -1 ? 'dropship' : 'ship';
   f += '<select id="edit-shipping" style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;margin-top:4px;">';
   f += '<option value="Pick Up"' + (sv === 'pickup' ? ' selected' : '') + '>PICKUP</option>';
   f += '<option value="Ship"' + (sv === 'ship' ? ' selected' : '') + '>SHIP</option>';
+  f += '<option value="Drop Ship"' + (sv === 'dropship' ? ' selected' : '') + '>DROP SHIP</option>';
   f += '</select>';
   var ef = document.getElementById('edit-fields');
   if (ef) ef.innerHTML = f;
@@ -458,16 +462,29 @@ function confirmEdit() {
 }
 
 // ---- Add order modal ----
+function resetDateBtn(inputId, val) {
+  var el = document.getElementById(inputId);
+  if (el) el.value = val || '';
+  var btn = document.querySelector('[data-picker-target="' + inputId + '"]');
+  if (btn) {
+    var span = btn.querySelector('span');
+    if (span) {
+      span.textContent = val || 'Select date...';
+      span.style.color = val ? '#e0e0e0' : '#333';
+    }
+  }
+}
+
 function openAddModal() {
   var m = document.getElementById('add-modal');
   if (m) m.classList.add('open');
-  var od = document.getElementById('add-orderdate');
-  if (od) od.value = todayStr();
-  var fields = ['add-order', 'add-sku', 'add-item', 'add-color', 'add-shipping', 'add-po', 'add-eta', 'add-build', 'add-sent'];
+  var fields = ['add-order', 'add-sku', 'add-item', 'add-color', 'add-shipping', 'add-po', 'add-build', 'add-sent'];
   fields.forEach(function (id) {
     var el = document.getElementById(id);
-    if (el && id !== 'add-orderdate') el.value = '';
+    if (el) el.value = '';
   });
+  resetDateBtn('add-orderdate', todayStr());
+  resetDateBtn('add-eta', '');
   updateAddFields();
 }
 

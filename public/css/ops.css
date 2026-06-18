@@ -438,7 +438,7 @@
   aspect-ratio: 1 / 1;
 }
 
-.cal-cell.cal-today { background: #1a1a1a; }
+.cal-cell.cal-today { background: #1a2a35; border: 2px solid #e53935; }
 .cal-cell.cal-today .cal-date {
   display: inline-block;
   background: #e53935;
