@@ -1,0 +1,422 @@
+/* ============================================
+   docs.css - Admin panel / docs page styles
+   CAGEwrx Ops
+   ============================================ */
+
+/* ---- Auth / Login screen ---- */
+.auth-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: #060e18;
+}
+
+.auth-box {
+  background: #0e0e0e;
+  border: 1px solid #1e1e1e;
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-logo {
+  height: 90px;
+  width: auto;
+  display: block;
+  margin: 0 auto 24px;
+}
+
+.auth-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.auth-sub {
+  font-size: 13px;
+  color: #444;
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.auth-label {
+  font-size: 11px;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  display: block;
+  margin-bottom: 6px;
+  margin-top: 16px;
+}
+
+.auth-input {
+  width: 100%;
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #e0e0e0;
+  outline: none;
+  font-family: inherit;
+}
+.auth-input:focus { border-color: #42a5f5; }
+
+.auth-btn {
+  width: 100%;
+  margin-top: 24px;
+  padding: 12px;
+  background: #0f2a0f;
+  border: 1px solid #1a4a1a;
+  border-radius: 8px;
+  color: #4caf50;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.auth-btn:hover { background: #1a3a1a; }
+
+.auth-error {
+  font-size: 12px;
+  color: #ff6b6b;
+  text-align: center;
+  margin-top: 12px;
+  display: none;
+}
+
+/* ---- App layout ---- */
+.app { display: none; }
+
+/* ---- Header ---- */
+.doc-header {
+  background: #060e18;
+  border-bottom: 1px solid #0d2137;
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.doc-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.doc-header-logo { height: 44px; width: auto; }
+
+.doc-header-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #e53935;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.doc-header-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.doc-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ---- Main ---- */
+.doc-main { padding: 24px 28px; }
+
+/* ---- Admin tabs ---- */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.admin-tab {
+  font-size: 13px;
+  padding: 10px 18px;
+  cursor: pointer;
+  color: #444;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  font-family: inherit;
+}
+.admin-tab:hover { color: #888; }
+.admin-tab.active { color: #42a5f5; border-bottom-color: #42a5f5; }
+
+.admin-section { display: none; }
+.admin-section.active { display: block; }
+
+/* ---- Toolbar ---- */
+.doc-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.doc-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 8px 14px;
+  flex: 1;
+  min-width: 200px;
+}
+.doc-search-wrap:focus-within { border-color: #42a5f5; }
+
+.doc-search-input {
+  background: none;
+  border: none;
+  outline: none;
+  color: #e0e0e0;
+  font-size: 13px;
+  width: 100%;
+  font-family: inherit;
+}
+.doc-search-input::placeholder { color: #333; }
+
+.doc-sort-select {
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #e0e0e0;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.doc-sort-select:focus { border-color: #42a5f5; }
+
+/* ---- Category tabs ---- */
+.cat-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.cat-tab {
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  border: 1px solid #1e1e1e;
+  background: #111;
+  color: #555;
+  font-family: inherit;
+}
+.cat-tab:hover { color: #888; border-color: #333; }
+.cat-tab.active { background: #0a1525; border-color: #1a3a5a; color: #42a5f5; }
+
+/* ---- Docs grid ---- */
+.docs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.doc-card {
+  background: #0e0e0e;
+  border: 1px solid #1a1a1a;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.15s;
+}
+.doc-card:hover { border-color: #2a2a2a; }
+
+.doc-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.doc-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.doc-icon.pdf { background: #1f0a0a; }
+.doc-icon.img { background: #0a1520; }
+.doc-icon.other { background: #141414; }
+
+.doc-info { flex: 1; min-width: 0; }
+
+.doc-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-sku { font-size: 11px; color: #42a5f5; margin-bottom: 3px; }
+.doc-desc { font-size: 11px; color: #444; line-height: 1.4; }
+
+.doc-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.doc-cat {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #141414;
+  border: 1px solid #222;
+  color: #666;
+}
+
+.doc-date { font-size: 10px; color: #333; }
+
+.doc-actions { display: flex; gap: 6px; }
+
+.doc-btn {
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  font-weight: 500;
+  font-family: inherit;
+}
+.doc-btn-view { background: #0a1525; color: #42a5f5; }
+.doc-btn-view:hover { background: #0f1f35; }
+.doc-btn-del { background: #1f0808; color: #ef5350; }
+.doc-btn-del:hover { background: #2a0f0f; }
+
+/* ---- Empty state ---- */
+.empty-state { text-align: center; padding: 60px 20px; color: #2a2a2a; }
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-text { font-size: 14px; }
+
+/* ---- User management ---- */
+.invite-box {
+  background: #0e0e0e;
+  border: 1px solid #1a1a1a;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.invite-field { flex: 1; min-width: 160px; }
+
+.invite-label {
+  font-size: 11px;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.invite-input {
+  width: 100%;
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #e0e0e0;
+  outline: none;
+  font-family: inherit;
+}
+.invite-input:focus { border-color: #42a5f5; }
+
+.user-table { width: 100%; border-collapse: collapse; }
+.user-table th {
+  font-size: 10px;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #1a1a1a;
+}
+.user-table td {
+  font-size: 13px;
+  color: #bbb;
+  padding: 10px 12px;
+  border-bottom: 1px solid #141414;
+}
+.user-table tr:last-child td { border-bottom: none; }
+
+.role-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.role-admin { background: #1f0808; color: #ef5350; border: 1px solid #4a1010; }
+.role-user  { background: #0a1525; color: #42a5f5; border: 1px solid #1a3a5a; }
+
+.role-select {
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #e0e0e0;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ---- Upload area ---- */
+.upload-area {
+  border: 2px dashed #2a2a2a;
+  border-radius: 10px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  margin-top: 14px;
+  transition: border-color 0.15s;
+}
+.upload-area:hover,
+.upload-area.drag-over { border-color: #42a5f5; background: #0a1525; }
+
+.upload-area-text { font-size: 13px; color: #444; margin-top: 8px; }
+.upload-preview { font-size: 12px; color: #42a5f5; margin-top: 8px; }

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAGEwrx Ops - Documents</title>
+  <meta name="theme-color" content="#060e18">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/docs.css">
+</head>
+<body>
+
+<!-- ===== AUTH SCREEN ===== -->
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-box">
+    <img class="auth-logo" src="img/cagewrx_logo.png" alt="CAGEwrx"
+      onerror="this.style.display='none'">
+    <div class="auth-title">CAGEwrx Ops</div>
+    <div class="auth-sub">Sign in to access documents</div>
+
+    <label class="auth-label">Email</label>
+    <input class="auth-input" type="email" id="login-email"
+      placeholder="you@cagewrx.com" autocomplete="email">
+
+    <label class="auth-label">Password</label>
+    <input class="auth-input" type="password" id="login-password"
+      placeholder="••••••••" autocomplete="current-password">
+
+    <button class="auth-btn" onclick="doSignIn()">Sign In</button>
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div class="app" id="app">
+
+  <!-- Header -->
+  <div class="doc-header">
+    <div class="doc-header-left">
+      <img class="doc-header-logo" src="img/cagewrx_logo.png" alt="CAGEwrx"
+        onerror="this.style.display='none'">
+      <div>
+        <div class="doc-header-label">CAGEwrx</div>
+        <div class="doc-header-title">Document Center</div>
+      </div>
+    </div>
+
+    <div class="doc-header-right">
+      <a class="btn" href="ops.html">&#x2190; CAGEwrx Ops</a>
+      <button class="btn btn-green" id="upload-btn"
+        onclick="openUploadModal()" style="display:none;">
+        + Upload File
+      </button>
+
+      <!-- Avatar -->
+      <div class="avatar-wrap">
+        <div id="user-avatar">?</div>
+        <div id="av-dd">
+          <div class="av-profile">
+            <div class="av-profile-name" id="avatar-name">Loading...</div>
+            <div class="av-profile-email" id="avatar-email"></div>
+            <span id="avatar-role-badge">User</span>
+          </div>
+          <button class="av-menu-item danger" onclick="doSignOut()">
+            &#x2192; Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="doc-main">
+
+    <div class="banner" id="banner"></div>
+
+    <!-- Admin tabs (admin only) -->
+    <div id="admin-tabs-wrap" style="display:none;">
+      <div class="admin-tabs">
+        <button class="admin-tab active" onclick="switchTab('docs')">Documents</button>
+        <button class="admin-tab" onclick="switchTab('users')">User Management</button>
+      </div>
+    </div>
+
+    <!-- ===== DOCUMENTS TAB ===== -->
+    <div class="admin-section active" id="tab-docs">
+
+      <div class="doc-toolbar">
+        <div class="doc-search-wrap">
+          <span style="color:#333;font-size:14px;">&#x2315;</span>
+          <input class="doc-search-input" type="text" id="doc-search"
+            placeholder="Search by name or SKU..." oninput="filterDocs()">
+        </div>
+        <select class="doc-sort-select" id="doc-sort" onchange="filterDocs()">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="name">Name A-Z</option>
+          <option value="sku">SKU</option>
+        </select>
+      </div>
+
+      <div class="cat-tabs">
+        <button class="cat-tab active" onclick="setCategory('all',this)">All</button>
+        <button class="cat-tab" onclick="setCategory('Assembly PDFs',this)">Assembly PDFs</button>
+        <button class="cat-tab" onclick="setCategory('Installation Instructions',this)">Installation Instructions</button>
+        <button class="cat-tab" onclick="setCategory('Build Sheets',this)">Build Sheets</button>
+        <button class="cat-tab" onclick="setCategory('Shipping Docs',this)">Shipping Docs</button>
+        <button class="cat-tab" onclick="setCategory('Other',this)">Other</button>
+      </div>
+
+      <div class="docs-grid" id="docs-grid">
+        <div class="empty-state"><div class="spinner"></div></div>
+      </div>
+
+    </div>
+
+    <!-- ===== USER MANAGEMENT TAB ===== -->
+    <div class="admin-section" id="tab-users">
+
+      <!-- Invite form -->
+      <div class="invite-box">
+        <div class="invite-field">
+          <label class="invite-label">Email</label>
+          <input class="invite-input" type="email" id="invite-email"
+            placeholder="team@cagewrx.com">
+        </div>
+        <div class="invite-field" style="max-width:170px;">
+          <label class="invite-label">Full Name</label>
+          <input class="invite-input" type="text" id="invite-name"
+            placeholder="John Smith">
+        </div>
+        <div class="invite-field" style="max-width:130px;">
+          <label class="invite-label">Role</label>
+          <select class="invite-input" id="invite-role">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <button class="btn btn-green" onclick="inviteUser()">+ Invite</button>
+      </div>
+
+      <!-- Users table -->
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Joined</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="user-tbody">
+          <tr>
+            <td colspan="5" style="text-align:center;color:#333;padding:20px;">
+              Loading...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== UPLOAD MODAL ===== -->
+<div class="modal-overlay" id="upload-modal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-title">Upload Document</div>
+
+    <label>Document Name</label>
+    <input type="text" id="up-name" placeholder="e.g. Pro R Cage Assembly Guide">
+
+    <label>SKU (optional)</label>
+    <input type="text" id="up-sku" placeholder="e.g. 2SPRORSS">
+
+    <label>Category</label>
+    <select id="up-category">
+      <option value="Assembly PDFs">Assembly PDFs</option>
+      <option value="Installation Instructions">Installation Instructions</option>
+      <option value="Build Sheets">Build Sheets</option>
+      <option value="Shipping Docs">Shipping Docs</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <label>Description (optional)</label>
+    <textarea id="up-desc" placeholder="Brief description of this document..."></textarea>
+
+    <label>File (PDF or Image)</label>
+    <div class="upload-area" id="upload-area"
+      onclick="document.getElementById('file-input').click()"
+      ondragover="onUploadDragOver(event)"
+      ondragleave="onUploadDragLeave()"
+      ondrop="onUploadDrop(event)">
+      <div style="font-size:28px;">&#x1F4C4;</div>
+      <div class="upload-area-text">
+        Click to browse or drag &amp; drop<br>
+        <span style="font-size:11px;color:#333;">PDF, PNG, JPG up to 50MB</span>
+      </div>
+      <div class="upload-preview" id="upload-preview"></div>
+    </div>
+    <input type="file" id="file-input"
+      accept=".pdf,.png,.jpg,.jpeg,.webp"
+      style="display:none;" onchange="onFileSelect(event)">
+
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeUploadModal()">Cancel</button>
+      <button class="modal-btn modal-btn-save" onclick="uploadFile()">Upload</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/docs.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAGEWRX OPS</title>
+  <meta name="theme-color" content="#060e18">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="CAGEWRX OPS">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/ops.css">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="hero">
+  <div class="hero-content">
+
+    <div class="hero-left">
+      <img class="hero-logo" id="hero-logo" src="img/cagewrx_logo.png" alt="CAGEwrx">
+      <div>
+        <div class="hero-label">Cagewrx Operations</div>
+        <div class="hero-title">CAGEWRX OPS</div>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="search-wrap">
+        <span style="color:#2a4a6a;font-size:14px;">&#x2315;</span>
+        <input class="search-input" id="search-input" type="text"
+          placeholder="Search order #..."
+          oninput="doSearch(this.value)"
+          onkeydown="if(event.key==='Escape') clearSearch()">
+        <span class="search-clear" id="search-clear" onclick="clearSearch()">&#x00D7;</span>
+      </div>
+
+      <div class="btn-group">
+        <a class="btn btn-blue" id="admin-btn" href="docs.html" style="display:none;">
+          &#x1F512; Admin
+        </a>
+        <button class="btn btn-green" onclick="openAddModal()">+ Add Order</button>
+        <button class="btn btn-amber" onclick="openImportModal()">&#x1F4E5; Import CSV</button>
+        <button class="btn" onclick="loadData(false)">&#x21BB; Refresh</button>
+
+        <!-- Avatar -->
+        <div class="avatar-wrap">
+          <div id="user-avatar">?</div>
+          <div id="av-dd">
+            <div class="av-profile">
+              <div class="av-profile-name" id="avatar-name">Loading...</div>
+              <div class="av-profile-email" id="avatar-email"></div>
+              <span id="avatar-role-badge">User</span>
+            </div>
+            <button class="av-menu-item danger" onclick="signOut()">&#x2192; Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== MAIN ===== -->
+<div class="main">
+
+  <div class="banner" id="banner"></div>
+
+  <!-- Stats bar -->
+  <div class="stats">
+    <div class="stat"><div class="stat-label">New orders</div><div class="stat-val orange" id="stat-new">-</div></div>
+    <div class="stat"><div class="stat-label">Ready to ship</div><div class="stat-val green" id="stat-ready">-</div></div>
+    <div class="stat"><div class="stat-label">Backordered</div><div class="stat-val red" id="stat-back">-</div></div>
+    <div class="stat"><div class="stat-label">Assembled</div><div class="stat-val blue" id="stat-assembled">-</div></div>
+    <div class="stat"><div class="stat-label">Powder coat</div><div class="stat-val amber" id="stat-powder">-</div></div>
+    <div class="stat"><div class="stat-label">For pickup</div><div class="stat-val teal" id="stat-pickup">-</div></div>
+    <div class="stat"><div class="stat-label">Cage kits</div><div class="stat-val purple" id="stat-kits">-</div></div>
+  </div>
+
+  <!-- Cage Kits (full width) -->
+  <div style="margin-bottom:20px;">
+    <div class="stage" id="stage-kits">
+      <div class="stage-header" style="background:#120a1a;">
+        <span style="font-size:15px;">&#x1F3D7;</span>
+        <p class="stage-title" style="color:#b39ddb;">CAGE KITS &mdash; READY TO SHIP</p>
+        <span class="stage-count" id="cnt-kits" style="background:#1e0f2a;color:#b39ddb;">-</span>
+      </div>
+      <div class="kits-body" id="col-kits">
+        <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pipeline -->
+  <div class="section-label">Order Pipeline</div>
+  <div class="pipeline">
+
+    <!-- New Orders -->
+    <div class="stage" id="stage-new"
+      ondragover="onDragOver(event,'new')"
+      ondragleave="onDragLeave('new')"
+      ondrop="onDrop(event,'new')">
+      <div class="stage-header" style="background:#1a0d00;">
+        <span style="font-size:15px;">&#x1F6CE;</span>
+        <p class="stage-title" style="color:#ff7043;">NEW ORDERS</p>
+        <span class="stage-count" id="cnt-new" style="background:#2a1500;color:#ff7043;">-</span>
+      </div>
+      <div class="stage-body" id="col-new">
+        <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Ready to Ship -->
+    <div class="stage" id="stage-ready"
+      ondragover="onDragOver(event,'ready')"
+      ondragleave="onDragLeave('ready')"
+      ondrop="onDrop(event,'ready')">
+      <div class="stage-header" style="background:#0a1a0a;">
+        <span style="font-size:15px;">&#x1F4E6;</span>
+        <p class="stage-title" style="color:#4caf50;">READY TO SHIP</p>
+        <span class="stage-count" id="cnt-ready" style="background:#0f2a0f;color:#4caf50;">-</span>
+      </div>
+      <div class="stage-body" id="col-ready">
+        <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Backordered -->
+    <div class="stage" id="stage-backorder"
+      ondragover="onDragOver(event,'backorder')"
+      ondragleave="onDragLeave('backorder')"
+      ondrop="onDrop(event,'backorder')">
+      <div class="stage-header" style="background:#1a0808;">
+        <span style="font-size:15px;">&#x23F8;</span>
+        <p class="stage-title" style="color:#ef5350;">BACKORDERED / DROP SHIP</p>
+        <span class="stage-count" id="cnt-back" style="background:#2a0f0f;color:#ef5350;">-</span>
+      </div>
+      <div class="stage-body" id="col-back">
+        <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Assembled -->
+    <div class="stage" id="stage-assembled"
+      ondragover="onDragOver(event,'assembled')"
+      ondragleave="onDragLeave('assembled')"
+      ondrop="onDrop(event,'assembled')">
+      <div class="stage-header" style="background:#0a1525;">
+        <span style="font-size:15px;">&#x270F;</span>
+        <p class="stage-title" style="color:#42a5f5;">ASSEMBLED CAGE ORDERS</p>
+        <span class="stage-count" id="cnt-assembled" style="background:#0f1f35;color:#42a5f5;">-</span>
+      </div>
+      <div class="stage-body" id="col-assembled">
+        <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Powder Coat -->
+    <div class="stage" id="stage-powdercoat"
+      ondragover="onDragOver(event,'powdercoat')"
+      ondragleave="onDragLeave('powdercoat')"
+      ondrop="onDrop(event,'powdercoat')">
+      <div class="stage-header" style="background:#1a1000;">
+        <span style="font-size:15px;">&#x1F525;</span>
+        <p class="stage-title" style="color:#ffa726;">AT POWDER COATING</p>
+        <span class="stage-count" id="cnt-powder" style="background:#2a1a00;color:#ffa726;">-</span>
+      </div>
+      <div class="stage-body" id="col-powder">
+        <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Ready for Pickup -->
+    <div class="stage" id="stage-pickup"
+      ondragover="onDragOver(event,'pickup')"
+      ondragleave="onDragLeave('pickup')"
+      ondrop="onDrop(event,'pickup')">
+      <div class="stage-header" style="background:#0a1a1a;">
+        <span style="font-size:15px;">&#x2705;</span>
+        <p class="stage-title" style="color:#4db6ac;">READY FOR PICKUP</p>
+        <span class="stage-count" id="cnt-pickup" style="background:#0f2a2a;color:#4db6ac;">-</span>
+      </div>
+      <div class="stage-body" id="col-pickup">
+        <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+  </div><!-- end .pipeline -->
+
+  <div class="timestamp" id="last-updated"></div>
+
+</div><!-- end .main -->
+
+<!-- Refresh indicator -->
+<div class="refresh-indicator" id="refresh-indicator">
+  <div class="spinner"></div>
+  <span id="refresh-msg">Refreshing...</span>
+</div>
+
+<!-- ===== ADD ORDER MODAL ===== -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-title">Add Order</div>
+    <label>Stage</label>
+    <select id="add-tab" onchange="updateAddFields()">
+      <option value="new">New Order</option>
+      <option value="ready">Ready to Ship</option>
+      <option value="backorder">Backorder</option>
+      <option value="assembled">Assembled</option>
+      <option value="powdercoat">Powder Coat</option>
+      <option value="pickup">Ready for Pickup</option>
+      <option value="cagekits">Cage Kit</option>
+    </select>
+    <label>Order #</label>
+    <input type="text" id="add-order" placeholder="e.g. 68305">
+    <label>SKU</label>
+    <input type="text" id="add-sku" placeholder="e.g. 2SPRORSS">
+    <label>Item</label>
+    <input type="text" id="add-item" placeholder="e.g. Pro R Roll Cage">
+    <div id="add-color-wrap">
+      <label>Color</label>
+      <input type="text" id="add-color" placeholder="e.g. Raw">
+    </div>
+    <div id="add-po-wrap" style="display:none;">
+      <label>PO #</label>
+      <input type="text" id="add-po">
+    </div>
+    <div id="add-eta-wrap" style="display:none;">
+      <label>ETA</label>
+      <input type="text" id="add-eta" placeholder="MM/DD/YYYY" maxlength="10" oninput="autoSlashDate(this)">
+    </div>
+    <div id="add-build-wrap" style="display:none;">
+      <label>Build Date</label>
+      <input type="text" id="add-build" placeholder="MM/DD/YYYY" maxlength="10" oninput="autoSlashDate(this)">
+    </div>
+    <div id="add-sent-wrap" style="display:none;">
+      <label>Sent to Powder</label>
+      <input type="text" id="add-sent" placeholder="MM/DD/YYYY" maxlength="10" oninput="autoSlashDate(this)">
+    </div>
+    <label>Order Date</label>
+    <input type="text" id="add-orderdate" placeholder="MM/DD/YYYY" maxlength="10" oninput="autoSlashDate(this)">
+    <label>Shipping</label>
+    <select id="add-shipping">
+      <option value="Pick Up">PICKUP</option>
+      <option value="Ship">SHIP</option>
+    </select>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="modal-btn modal-btn-save" onclick="submitAdd()">Add Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EDIT ORDER MODAL ===== -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title">Edit Order</div>
+    <div id="edit-fields"></div>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="modal-btn modal-btn-save" onclick="confirmEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MOVE MODAL ===== -->
+<div class="modal-overlay move-overlay" id="move-modal">
+  <div class="move-modal">
+    <div class="modal-title" id="move-title">Move Order</div>
+    <div id="move-fields"></div>
+    <div class="modal-btns" style="margin-top:20px;">
+      <button class="modal-btn modal-btn-cancel" onclick="closeMoveModal()">Cancel</button>
+      <button class="modal-btn modal-btn-save" onclick="confirmMove()">Move</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== IMPORT CSV MODAL ===== -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-title">&#x1F4E5; Import Shopify Orders</div>
+    <p style="font-size:12px;color:#555;margin-bottom:16px;line-height:1.6;">
+      Export unfulfilled orders from Shopify as CSV then paste the contents below.
+      Orders already in the system will be skipped.
+    </p>
+    <label>Paste CSV contents here</label>
+    <textarea id="import-csv"
+      style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:10px;font-size:11px;color:#666;outline:none;min-height:160px;font-family:monospace;resize:vertical;"
+      placeholder="Paste the full CSV text here including the header row..."></textarea>
+    <div id="import-preview" style="margin-top:12px;font-size:12px;color:#555;"></div>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeImportModal()">Cancel</button>
+      <button class="modal-btn modal-btn-save" onclick="runImport()">Import Orders</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/pipeline.js"></script>
+<script>
+  // ---- Boot sequence ----
+  var _sess = requireAuth();
+
+  // Set up avatar dropdown
+  initAvatarDropdown();
+
+  // Apply session data immediately then verify from Supabase
+  renderAvatar(_sess);
+  fetchProfile(_sess, function(sess) {
+    _sess = sess;
+    renderAvatar(_sess);
+  });
+
+  // Start loading data
+  loadData(false);
+</script>
+
+</body>
+</html>

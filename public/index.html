@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAGEWRX OPS</title>
+  <meta name="theme-color" content="#060e18">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="CAGEWRX OPS">
+  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUAAAAB4CAYAAACDziveAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAABzN0lEQVR42u2dd7xdVZn3v2utvU+5vaX3XgkdEZGAKGAFS7CNo2NjdGxjG8toyOjM6IhlVFQcFBsiuQjSEYQk...">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #060e18;
+      padding: 24px;
+    }
+    .login-box {
+      background: #0e0e0e;
+      border: 1px solid #1e1e1e;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .login-logo {
+      height: 90px;
+      width: auto;
+      display: block;
+      margin: 0 auto 24px;
+    }
+    .login-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      text-align: center;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .login-sub {
+      font-size: 13px;
+      color: #444;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .login-label {
+      font-size: 11px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      display: block;
+      margin-bottom: 6px;
+      margin-top: 16px;
+    }
+    .login-input {
+      width: 100%;
+      background: #141414;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      color: #e0e0e0;
+      outline: none;
+      font-family: inherit;
+    }
+    .login-input:focus { border-color: #42a5f5; }
+    .login-btn {
+      width: 100%;
+      margin-top: 24px;
+      padding: 12px;
+      background: #0f2a0f;
+      border: 1px solid #1a4a1a;
+      border-radius: 8px;
+      color: #4caf50;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .login-btn:hover { background: #1a3a1a; }
+    .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .login-error {
+      font-size: 12px;
+      color: #ff6b6b;
+      text-align: center;
+      margin-top: 12px;
+      display: none;
+    }
+    .login-loading {
+      font-size: 12px;
+      color: #42a5f5;
+      text-align: center;
+      margin-top: 12px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-box">
+  <img class="login-logo" src="img/cagewrx_logo.png" alt="CAGEWRX"
+    onerror="this.style.display='none'">
+  <div class="login-title">CAGEWRX OPS</div>
+  <div class="login-sub">Sign in to continue</div>
+
+  <label class="login-label">Email</label>
+  <input class="login-input" type="email" id="email"
+    placeholder="you@cagewrx.com" autocomplete="email">
+
+  <label class="login-label">Password</label>
+  <input class="login-input" type="password" id="password"
+    placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
+    autocomplete="current-password">
+
+  <button class="login-btn" id="signin-btn" onclick="signIn()">Sign In</button>
+  <div class="login-error" id="login-error"></div>
+  <div class="login-loading" id="login-loading">Signing in...</div>
+</div>
+
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  var SUPABASE_URL_LOCAL = 'https://jkgftyxavjppgmquueqx.supabase.co';
+  var ANON_KEY_LOCAL = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZ2Z0eXhhdmpwcGdtcXV1ZXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzU2MDQsImV4cCI6MjA5NzIxMTYwNH0.bkmtBbDvHPwqDMJnwtF9Bml3B7cs_t579c7FOqstvUo';
+
+  // Already logged in? Go straight to ops
+  (function () {
+    var sess = getSession();
+    if (sess && sess.access_token) {
+      window.location.href = 'ops.html';
+    }
+  })();
+
+  function showError(msg) {
+    var e = document.getElementById('login-error');
+    var l = document.getElementById('login-loading');
+    var b = document.getElementById('signin-btn');
+    e.textContent = msg;
+    e.style.display = 'block';
+    l.style.display = 'none';
+    b.disabled = false;
+  }
+
+  function signIn() {
+    var email = document.getElementById('email').value.trim();
+    var password = document.getElementById('password').value;
+    if (!email || !password) { showError('Please enter email and password'); return; }
+
+    document.getElementById('login-error').style.display = 'none';
+    document.getElementById('login-loading').style.display = 'block';
+    document.getElementById('signin-btn').disabled = true;
+
+    // Step 1: authenticate
+    fetch(SUPABASE_URL_LOCAL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'apikey': ANON_KEY_LOCAL, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, password: password })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (!data.access_token) {
+        showError(data.error_description || data.error || 'Invalid credentials');
+        return;
+      }
+
+      // Step 2: fetch profile to get role
+      return fetch(SUPABASE_URL_LOCAL + '/rest/v1/profiles?id=eq.' + data.user.id + '&select=role,full_name', {
+        headers: { 'apikey': ANON_KEY_LOCAL, 'Authorization': 'Bearer ' + data.access_token }
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (rows) {
+        var profile = Array.isArray(rows) && rows.length ? rows[0] : {};
+        var sess = {
+          access_token: data.access_token,
+          user: data.user,
+          role: profile.role || 'user',
+          full_name: profile.full_name || ''
+        };
+        saveSession(sess);
+        window.location.href = 'ops.html';
+      });
+    })
+    .catch(function () { showError('Network error - please try again'); });
+  }
+
+  // Sign in on Enter key
+  document.getElementById('password').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') signIn();
+  });
+  document.getElementById('email').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') signIn();
+  });
+</script>
+
+</body>
+</html>

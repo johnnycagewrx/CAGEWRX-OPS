@@ -1,0 +1,225 @@
+/* ============================================
+   main.css - Shared styles for CAGEwrx Ops
+   ============================================ */
+
+/* ---- Reset & Base ---- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #080808;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #777;
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 7px 14px;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+}
+.btn:hover { background: #1e1e1e; color: #ccc; }
+.btn-green { background: #0a1f0a; border-color: #1a4a1a; color: #4caf50; }
+.btn-green:hover { background: #0f2a0f; }
+.btn-red { background: #1f0808; border-color: #4a1010; color: #ef5350; }
+.btn-red:hover { background: #2a0f0f; }
+.btn-blue { background: #0a1525; border-color: #1a3a5a; color: #42a5f5; }
+.btn-blue:hover { background: #0f1f35; }
+.btn-amber { background: #1a0f00; border-color: #3a2200; color: #ffa726; }
+.btn-amber:hover { background: #251500; }
+
+/* ---- Banner notifications ---- */
+.banner {
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 12px;
+  margin-bottom: 16px;
+  display: none;
+}
+.banner.error { background: #1f0808; border: 1px solid #4a1010; color: #ff6b6b; }
+.banner.success { background: #0a1f0a; border: 1px solid #1a4a1a; color: #4caf50; }
+
+/* ---- Spinner ---- */
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #1a1a1a;
+  border-top-color: #42a5f5;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---- Avatar ---- */
+.avatar-wrap { position: relative; }
+
+#user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #3949ab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s;
+  user-select: none;
+  flex-shrink: 0;
+}
+#user-avatar:hover { border-color: #42a5f5; }
+
+#av-dd {
+  display: none;
+  position: fixed;
+  right: 16px;
+  top: 70px;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  min-width: 220px;
+  z-index: 99999;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+.av-profile { padding: 14px 16px; border-bottom: 1px solid #1a1a1a; }
+.av-profile-name { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+.av-profile-email { font-size: 12px; color: #555; margin-bottom: 8px; }
+#avatar-role-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  background: #0a1525;
+  color: #42a5f5;
+  border: 1px solid #1a3a5a;
+}
+.av-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  font-size: 13px;
+  color: #888;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+.av-menu-item:hover { background: #1a1a1a; color: #e0e0e0; }
+.av-menu-item.danger:hover { background: #1f0808; color: #ef5350; }
+.av-divider { border: none; border-top: 1px solid #1a1a1a; margin: 0; }
+
+/* ---- Modals ---- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 14px;
+  padding: 24px;
+  width: 380px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 16px; }
+.modal label {
+  font-size: 11px;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  display: block;
+  margin-bottom: 4px;
+  margin-top: 12px;
+}
+.modal input,
+.modal select,
+.modal textarea {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #e0e0e0;
+  outline: none;
+  font-family: inherit;
+}
+.modal input:focus,
+.modal select:focus,
+.modal textarea:focus { border-color: #42a5f5; }
+.modal textarea { resize: vertical; min-height: 80px; }
+.modal-btns { display: flex; gap: 8px; margin-top: 20px; }
+.modal-btn {
+  flex: 1;
+  padding: 9px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}
+.modal-btn-cancel { background: #1a1a1a; color: #888; }
+.modal-btn-save { background: #0f2a0f; color: #4caf50; border: 1px solid #1a4a1a; }
+.modal-btn-save:hover { background: #1a3a1a; }
+
+/* ---- Form helpers ---- */
+.field-label {
+  font-size: 11px;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+.field-input {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #e0e0e0;
+  outline: none;
+  font-family: inherit;
+}
+.field-input:focus { border-color: #42a5f5; }
+
+/* ---- Color classes ---- */
+.green  { color: #4caf50; }
+.red    { color: #ef5350; }
+.blue   { color: #42a5f5; }
+.amber  { color: #ffa726; }
+.teal   { color: #4db6ac; }
+.purple { color: #b39ddb; }
+.orange { color: #ff7043; }
+.pink   { color: #f48fb1; }
