@@ -360,7 +360,7 @@
 .calendar-section {
   margin-top: 32px;
   background: #0e0e0e;
-  border: 1px solid #e53935;
+  border: 1px solid #ff0400;
   border-radius: 14px;
   overflow: hidden;
 }
@@ -370,7 +370,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  border-bottom: 1px solid #e53935;
+  border-bottom: 1px solid #ff0400;
   background: #510000;
 }
 
@@ -461,7 +461,7 @@
 
 .cal-more {
   font-size: 10px;
-  color: #444;
+  color: #ababab;
   padding: 1px 4px;
   cursor: pointer;
 }
