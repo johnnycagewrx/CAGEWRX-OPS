@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CAGEWRX OPS</title>
+  <title>CAGEwrx Ops</title>
   <meta name="theme-color" content="#060e18">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="CAGEWRX OPS">
+  <meta name="apple-mobile-web-app-title" content="CAGEwrx Ops">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/ops.css">
 </head>
@@ -19,8 +19,8 @@
     <div class="hero-left">
       <img class="hero-logo" id="hero-logo" src="img/cagewrx_logo.png" alt="CAGEwrx">
       <div>
-        <div class="hero-label">Cagewrx Operations</div>
-        <div class="hero-title">CAGEWRX OPS</div>
+        <div class="hero-label">CAGEwrx Operations</div>
+        <div class="hero-title">CAGEwrx Ops</div>
       </div>
     </div>
 
@@ -78,7 +78,10 @@
 
   <!-- Cage Kits (full width) -->
   <div style="margin-bottom:20px;">
-    <div class="stage" id="stage-kits">
+    <div class="stage" id="stage-kits"
+      ondragover="onDragOver(event,'kits')"
+      ondragleave="onDragLeave('kits')"
+      ondrop="onDrop(event,'cagekits')">
       <div class="stage-header" style="background:#120a1a;">
         <span style="font-size:15px;">&#x1F3D7;</span>
         <p class="stage-title" style="color:#b39ddb;">CAGE KITS &mdash; READY TO SHIP</p>

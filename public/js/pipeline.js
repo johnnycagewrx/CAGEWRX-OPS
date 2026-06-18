@@ -324,8 +324,32 @@ function confirmMove() {
   var mm = document.getElementById('move-modal');
   if (mm) mm.classList.remove('open');
 
+  // Moving FROM cagekits to pipeline or TO cagekits uses different tables
+  // Handle cross-table moves: delete from source, insert into destination
   if (fromTab === 'cagekits' || toTab === 'cagekits') {
-    showBanner('Cannot move between Cage Kits and pipeline - use Done and re-add', 'error');
+    var fromTable = fromTab === 'cagekits' ? 'cagekits' : 'orders';
+    var toTable   = toTab   === 'cagekits' ? 'cagekits' : 'orders';
+    var newRecord = {
+      order_num:  o.order_num,
+      sku:        o.sku        || '',
+      item:       o.item       || '',
+      color:      o.color      || '',
+      order_date: o.order_date || '',
+      shipping:   o.shipping   || '',
+      po_num:     o.po_num     || '',
+      eta:        o.eta        || '',
+      build_date: o.build_date || '',
+      sent_to_powder: o.sent_to_powder || ''
+    };
+    if (toTab !== 'cagekits') newRecord.tab = toTab;
+    // Insert into destination then delete from source
+    sbFetch('POST', '/rest/v1/' + toTable, newRecord, function(err) {
+      if (err) { showBanner('Move failed: ' + err, 'error'); return; }
+      sbFetch('DELETE', '/rest/v1/' + fromTable + '?id=eq.' + o.id, null, function(err2) {
+        if (err2) showBanner('Warning: copied but could not remove original', 'error');
+        else { showBanner('Order #' + o.order_num + ' moved to ' + toLabel, 'success'); loadData(true); }
+      });
+    });
     return;
   }
 
