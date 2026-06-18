@@ -411,16 +411,31 @@
   border-bottom: 1px solid #1a1a1a;
 }
 
+/* Square cells: use aspect-ratio for default square shape,
+   but allow growth when content overflows */
 .cal-cell {
-  min-height: 80px;
+  aspect-ratio: 1 / 1;
+  min-height: unset;
   padding: 6px;
   border-right: 1px solid #1a1a1a;
   border-bottom: 1px solid #1a1a1a;
   vertical-align: top;
   position: relative;
+  overflow: visible;
+  /* When content is taller than the square, the cell stretches */
+  height: auto;
 }
 
-.cal-cell.cal-empty { background: #090909; }
+/* Override aspect-ratio when cell has enough content to need more space */
+.cal-cell:has(.cal-event:nth-child(4)) {
+  aspect-ratio: unset;
+  min-height: 120px;
+}
+
+.cal-cell.cal-empty {
+  background: #090909;
+  aspect-ratio: 1 / 1;
+}
 
 .cal-cell.cal-today { background: #510000; }
 .cal-cell.cal-today .cal-date { color: #ffffff; font-weight: 700; }
@@ -531,7 +546,7 @@
 }
 .picker-cell:hover { background: #1a1a1a; color: #fff; }
 .picker-cell.picker-empty { cursor: default; }
-.picker-cell.picker-today { color: #42a5f5; font-weight: 700; }
+.picker-cell.picker-today { color: #e53935; font-weight: 700; }
 .picker-cell.picker-selected {
   background: #1565c0;
   color: #fff;

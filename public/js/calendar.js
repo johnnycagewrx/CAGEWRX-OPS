@@ -99,24 +99,19 @@ function renderCalendar(orders) {
     html += '<div class="cal-cell' + (isToday ? ' cal-today' : '') + '">';
     html += '<div class="cal-date">' + day + '</div>';
 
-    // Show up to 3 events, then "+N more"
-    var shown = dayEvents.slice(0, 3);
-    var extra = dayEvents.length - shown.length;
-
-    shown.forEach(function(ev) {
+    // Show all events - cell stretches to fit
+        dayEvents.forEach(function(ev) {
       var c = CAL_COLORS[ev.type];
-      var label = ev.order.sku || ev.order.order_num || '';
-      html += '<div class="cal-event" style="background:' + c.bg + ';border-left:2px solid ' + c.border + ';color:' + c.text + ';"' +
-        ' title="#' + ev.order.order_num + ' - ' + (ev.order.sku || ev.order.item || '') + '"' +
-        ' onclick="editFromId(\'' + ev.order.id + '\',\'' + ev.order.tab + '\')">' +
-        '<span class="cal-event-badge">' + c.label + '</span> ' +
-        '<span class="cal-event-label">#' + label + '</span>' +
+      var num = ev.order.order_num || '?';
+      var oid = ev.order.id;
+      var otab = ev.order.tab;
+      html += '<div class="cal-event"' +
+        ' style="background:' + c.bg + ';border-left:2px solid ' + c.border + ';color:' + c.text + ';"' +
+        ' title="#' + num + ' - ' + (ev.order.sku || ev.order.item || '') + '"' +
+        ' data-id="' + oid + '" data-tab="' + otab + '">' +
+        '#' + num + ' &mdash; ' + c.label +
       '</div>';
     });
-
-    if (extra > 0) {
-      html += '<div class="cal-more">+' + extra + ' more</div>';
-    }
 
     html += '</div>';
   }
@@ -270,14 +265,22 @@ function pickerNext() {
   renderPicker();
 }
 
-// ---- Event delegation for date picker buttons ----
+// ---- Event delegation for date picker buttons and calendar events ----
 // Called once after DOM is ready
 function initDatePickers() {
   document.addEventListener('click', function(e) {
+    // Date picker buttons
     var btn = e.target.closest('[data-picker-target]');
     if (btn) {
       var targetId = btn.getAttribute('data-picker-target');
       if (targetId) openDatePicker(targetId);
+    }
+    // Calendar event clicks
+    var ev = e.target.closest('[data-id][data-tab]');
+    if (ev) {
+      var id  = ev.getAttribute('data-id');
+      var tab = ev.getAttribute('data-tab');
+      if (id && tab) editFromId(id, tab);
     }
   });
 }
