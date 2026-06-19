@@ -423,7 +423,7 @@ function setLoadingSpinners() {
 // ---- Data loading ----
 function loadData(background) {
   var banner = document.getElementById('banner');
-  if (banner) banner.style.display = 'none';
+  if (banner) banner.classList.remove('show');
   if (background) showIndicator('Refreshing...');
   else setLoadingSpinners();
 
@@ -559,7 +559,15 @@ function confirmMove() {
 
   sbFetch('PATCH', '/rest/v1/orders?id=eq.' + o.id, updates, function (err) {
     if (err) { showBanner('Move failed: ' + err, 'error'); loadData(false); }
-    else { showBanner('Order #' + o.order_num + ' moved to ' + toLabel, 'success'); loadData(true); }
+    else {
+      showBanner('Order #' + o.order_num + ' moved to ' + toLabel, 'success');
+      logActivity('orders', 'move', {
+        recordId: o.id,
+        fieldChanges: diffFields(o, updates),
+        summary: 'Order #' + o.order_num + ' moved from ' + (TAB_LABELS[fromTab]||fromTab) + ' to ' + toLabel
+      });
+      loadData(true);
+    }
   });
 }
 
@@ -572,7 +580,15 @@ function markDone(e, tab, id) {
   if (o) pushUndo('delete', JSON.parse(JSON.stringify(o)));
   sbFetch('DELETE', '/rest/v1/orders?id=eq.' + id, null, function (err) {
     if (err) { showBanner('Error: ' + err, 'error'); }
-    else { showBanner('Order completed!', 'success'); loadData(true); }
+    else {
+      showBanner('Order completed!', 'success');
+      logActivity('orders', 'delete', {
+        recordId: id,
+        fullBefore: o || null,
+        summary: 'Order #' + ((o && o.order_num) || id) + ' marked complete and removed'
+      });
+      loadData(true);
+    }
   });
 }
 
@@ -580,7 +596,13 @@ function deleteByOrderNum(tab, orderNum) {
   if (!confirm('Delete order ' + orderNum + '?')) return;
   sbFetch('DELETE', '/rest/v1/orders?order_num=eq.' + orderNum, null, function (err) {
     if (err) showBanner('Delete failed: ' + err, 'error');
-    else { showBanner('Deleted', 'success'); loadData(true); }
+    else {
+      showBanner('Deleted', 'success');
+      logActivity('orders', 'delete', {
+        summary: 'Order #' + orderNum + ' deleted (broken/duplicate entry)'
+      });
+      loadData(true);
+    }
   });
 }
 
@@ -684,7 +706,15 @@ function confirmEdit() {
   pushUndo('edit', prev);
   sbFetch('PATCH', '/rest/v1/orders?id=eq.' + oid, updates, function (err) {
     if (err) showBanner('Save failed: ' + err, 'error');
-    else { showBanner('Order updated!', 'success'); loadData(true); }
+    else {
+      showBanner('Order updated!', 'success');
+      logActivity('orders', 'update', {
+        recordId: oid,
+        fieldChanges: diffFields(prev, updates),
+        summary: 'Order #' + (prev.order_num || oid) + ' edited'
+      });
+      loadData(true);
+    }
   });
 }
 
@@ -756,9 +786,18 @@ function submitAdd() {
 
   closeAddModal();
   showBanner('Adding order #' + num + '...', 'success');
-  sbFetch('POST', '/rest/v1/orders', body, function (err) {
+  sbFetch('POST', '/rest/v1/orders', body, function (err, data) {
     if (err) showBanner('Add failed: ' + err, 'error');
-    else { showBanner('Order #' + num + ' added!', 'success'); loadData(false); }
+    else {
+      showBanner('Order #' + num + ' added!', 'success');
+      var newId = (Array.isArray(data) && data[0] && data[0].id) || null;
+      logActivity('orders', 'create', {
+        recordId: newId,
+        fullAfter: body,
+        summary: 'Order #' + num + ' added to ' + (TAB_LABELS[t] || t)
+      });
+      loadData(false);
+    }
   });
 }
 

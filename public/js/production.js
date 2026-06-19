@@ -141,18 +141,36 @@ function onTaskDrop(e, toSection) {
   document.querySelectorAll('.prod-stage').forEach(function (s) { s.classList.remove('drag-over'); });
   if (!dragTaskData || dragTaskFromSection === toSection) return;
   var taskId = dragTaskData.id;
+  var fromSection = dragTaskFromSection;
   sbFetch('PATCH', '/rest/v1/tasks?id=eq.' + taskId, { section: toSection }, function (err) {
     if (err) showBanner('Move failed: ' + err, 'error');
-    else { showBanner('Task moved to ' + SECTION_LABELS[toSection], 'success'); loadTasks(); }
+    else {
+      showBanner('Task moved to ' + SECTION_LABELS[toSection], 'success');
+      logActivity('tasks', 'move', {
+        recordId: taskId,
+        fieldChanges: { section: { old: fromSection, new: toSection } },
+        summary: 'Task "' + (dragTaskData.title||'') + '" moved from ' + SECTION_LABELS[fromSection] + ' to ' + SECTION_LABELS[toSection]
+      });
+      loadTasks();
+    }
   });
 }
 
 // ---- Mark done ----
 function markTaskDone(e, id) {
   if (!confirm('Mark this task as complete and remove it?')) return;
+  var t = taskCache[id];
   sbFetch('DELETE', '/rest/v1/tasks?id=eq.' + id, null, function (err) {
     if (err) showBanner('Error: ' + err, 'error');
-    else { showBanner('Task completed!', 'success'); loadTasks(); }
+    else {
+      showBanner('Task completed!', 'success');
+      logActivity('tasks', 'delete', {
+        recordId: id,
+        fullBefore: t || null,
+        summary: 'Task "' + ((t && t.title) || id) + '" marked complete and removed'
+      });
+      loadTasks();
+    }
   });
 }
 
@@ -214,16 +232,34 @@ function confirmTaskSave() {
 
   if (editingTask) {
     var id = editingTask.id;
+    var prevSnapshot = JSON.parse(JSON.stringify(editingTask));
     closeTaskModal();
     sbFetch('PATCH', '/rest/v1/tasks?id=eq.' + id, body, function (err) {
       if (err) showBanner('Save failed: ' + err, 'error');
-      else { showBanner('Task updated!', 'success'); loadTasks(); }
+      else {
+        showBanner('Task updated!', 'success');
+        logActivity('tasks', 'update', {
+          recordId: id,
+          fieldChanges: diffFields(prevSnapshot, body),
+          summary: 'Task "' + (body.title||prevSnapshot.title) + '" edited'
+        });
+        loadTasks();
+      }
     });
   } else {
     closeTaskModal();
-    sbFetch('POST', '/rest/v1/tasks', body, function (err) {
+    sbFetch('POST', '/rest/v1/tasks', body, function (err, data) {
       if (err) showBanner('Add failed: ' + err, 'error');
-      else { showBanner('Task added!', 'success'); loadTasks(); }
+      else {
+        showBanner('Task added!', 'success');
+        var newId = (Array.isArray(data) && data[0] && data[0].id) || null;
+        logActivity('tasks', 'create', {
+          recordId: newId,
+          fullAfter: body,
+          summary: 'Task "' + body.title + '" added to ' + SECTION_LABELS[body.section]
+        });
+        loadTasks();
+      }
     });
   }
 }

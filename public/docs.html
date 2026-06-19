@@ -2,13 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CAGEWRX OPS - Documents</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>CAGEWRX OPS - Admin Panel</title>
   <meta name="theme-color" content="#060e18">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CAGEWRX OPS">
   <link rel="icon" type="image/png" href="img/favicon.png">
   <link rel="apple-touch-icon" href="img/favicon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="img/favicon.png">
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/sidebar.css">
   <link rel="stylesheet" href="css/docs.css">
 </head>
 <body>
@@ -36,6 +40,9 @@
 
 <!-- ===== MAIN APP ===== -->
 <div class="app" id="app">
+<div class="app-shell">
+<div id="sidebar-mount"></div>
+<div class="app-content">
 
   <!-- Header -->
   <div class="doc-header">
@@ -44,16 +51,16 @@
         onerror="this.style.display='none'">
       <div>
         <div class="doc-header-label">CAGEwrx</div>
-        <div class="doc-header-title">CAGEWRX OPS</div>
+        <div class="doc-header-title">ADMIN PANEL</div>
       </div>
     </div>
 
     <div class="doc-header-right">
-      <a class="btn" href="ops.html">&#x2190; CAGEwrx Ops</a>
       <button class="btn btn-green" id="upload-btn"
         onclick="openUploadModal()" style="display:none;">
         + Upload File
       </button>
+      <button class="btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">&#x263C;</button>
 
       <!-- Avatar -->
       <div class="avatar-wrap">
@@ -76,14 +83,6 @@
   <div class="doc-main">
 
     <div class="banner" id="banner"></div>
-
-    <!-- Admin tabs (admin only) -->
-    <div id="admin-tabs-wrap" style="display:none;">
-      <div class="admin-tabs">
-        <button class="admin-tab active" onclick="switchTab('docs')">Documents</button>
-        <button class="admin-tab" onclick="switchTab('users')">User Management</button>
-      </div>
-    </div>
 
     <!-- ===== DOCUMENTS TAB ===== -->
     <div class="admin-section active" id="tab-docs">
@@ -165,7 +164,10 @@
     </div>
 
   </div>
-</div>
+
+</div><!-- end .app-content -->
+</div><!-- end .app-shell -->
+</div><!-- end .app -->
 
 <!-- ===== UPLOAD MODAL ===== -->
 <div class="modal-overlay" id="upload-modal">
@@ -217,7 +219,17 @@
 <!-- ===== SCRIPTS ===== -->
 <script src="js/supabase.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/activity-log-helper.js"></script>
+<script src="js/sidebar.js"></script>
 <script src="js/docs.js"></script>
+<script>
+  renderSidebar('docs');
+  if (localStorage.getItem('cw_theme') === 'light') {
+    document.body.classList.add('light-mode');
+    var tb = document.getElementById('theme-btn');
+    if (tb) tb.textContent = '☾';
+  }
+</script>
 
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-  <title>CAGEWRX OPS - FAQ</title>
+  <title>CAGEWRX OPS - Activity Log</title>
   <meta name="theme-color" content="#060e18">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="img/favicon.png">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/sidebar.css">
-  <link rel="stylesheet" href="css/faq.css">
+  <link rel="stylesheet" href="css/activity-page.css">
 </head>
 <body>
 
@@ -22,18 +22,18 @@
 <div class="app-content">
 
 <!-- ===== HEADER ===== -->
-<div class="faq-header">
-  <div class="faq-header-content">
-    <div class="faq-header-left">
-      <img class="faq-logo" src="img/cagewrx_logo.png" alt="CAGEWRX OPS">
+<div class="act-header">
+  <div class="act-header-content">
+    <div class="act-header-left">
+      <img class="act-logo" src="img/cagewrx_logo.png" alt="CAGEWRX OPS">
       <div>
-        <div class="faq-label">CAGEwrx Operations</div>
-        <div class="faq-title">FAQ</div>
+        <div class="act-label">CAGEwrx Operations</div>
+        <div class="act-title">ACTIVITY LOG</div>
       </div>
     </div>
 
-    <div class="faq-header-right">
-      <button class="btn btn-green" id="faq-add-btn" onclick="openFaqModal()" style="display:none;">+ Add Question</button>
+    <div class="act-header-right">
+      <button class="btn" onclick="loadActivityLog(false)">&#x21BB; Refresh</button>
       <button class="btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">&#x263C;</button>
 
       <div class="avatar-wrap">
@@ -52,44 +52,40 @@
 </div>
 
 <!-- ===== MAIN ===== -->
-<div class="faq-main">
+<div class="act-main">
 
   <div class="banner" id="banner"></div>
 
-  <div class="faq-search-wrap">
-    <span style="color:#444;font-size:16px;">&#x2315;</span>
-    <input class="faq-search-input" type="text" id="faq-search"
-      placeholder="Search questions..." oninput="filterFaqs()">
+  <div class="act-filters">
+    <div class="act-search-wrap">
+      <span style="color:#444;font-size:14px;">&#x2315;</span>
+      <input class="act-search-input" type="text" id="act-search"
+        placeholder="Search by summary or user..." oninput="renderActivityList()">
+    </div>
+    <select class="act-select" onchange="setLogFilterTable(this.value)">
+      <option value="all">All Pages</option>
+      <option value="orders">Orders</option>
+      <option value="tasks">Production</option>
+      <option value="faq_items">FAQ</option>
+    </select>
+    <select class="act-select" onchange="setLogFilterAction(this.value)">
+      <option value="all">All Actions</option>
+      <option value="create">Created</option>
+      <option value="update">Edited</option>
+      <option value="move">Moved</option>
+      <option value="delete">Deleted</option>
+    </select>
   </div>
 
-  <div class="faq-cat-tabs" id="faq-cat-tabs"></div>
-
-  <div class="faq-list" id="faq-list">
+  <div class="act-list" id="act-list">
     <div style="padding:40px;text-align:center;"><div class="spinner"></div></div>
   </div>
 
-</div><!-- end .faq-main -->
+  <button class="act-load-more" id="act-load-more" onclick="loadMoreActivity()" style="display:none;">
+    Load more
+  </button>
 
-<!-- ===== FAQ MODAL ===== -->
-<div class="modal-overlay" id="faq-modal">
-  <div class="modal" style="max-width:520px;">
-    <div class="modal-title" id="faq-modal-title">New Question</div>
-
-    <label>Question</label>
-    <input type="text" id="faq-question-input" placeholder="e.g. How do I track my order?">
-
-    <label>Answer</label>
-    <textarea id="faq-answer-input" placeholder="Write the answer here..." style="min-height:120px;"></textarea>
-
-    <label>Category (optional)</label>
-    <input type="text" id="faq-category-input" placeholder="e.g. Shipping, Orders, Returns">
-
-    <div class="modal-btns">
-      <button class="modal-btn modal-btn-cancel" onclick="closeFaqModal()">Cancel</button>
-      <button class="modal-btn modal-btn-save" onclick="confirmFaqSave()">Save</button>
-    </div>
-  </div>
-</div>
+</div><!-- end .act-main -->
 
 </div><!-- end .app-content -->
 </div><!-- end .app-shell -->
@@ -99,27 +95,22 @@
 <script src="js/auth.js"></script>
 <script src="js/activity-log-helper.js"></script>
 <script src="js/sidebar.js"></script>
-<script src="js/faq.js"></script>
+<script src="js/activity-page.js"></script>
 <script>
   var _sess = requireAuth();
   initAvatarDropdown();
   renderAvatar(_sess);
-  fetchProfile(_sess, function (sess) {
-    _sess = sess;
-    renderAvatar(_sess);
-    isAdmin = _sess.role === 'admin';
-    var addBtn = document.getElementById('faq-add-btn');
-    if (addBtn) addBtn.style.display = isAdmin ? 'inline-flex' : 'none';
-    loadFaqs();
-  });
+  fetchProfile(_sess, function (sess) { _sess = sess; renderAvatar(_sess); });
 
-  renderSidebar('faq');
+  renderSidebar('activity');
 
   if (localStorage.getItem('cw_theme') === 'light') {
     document.body.classList.add('light-mode');
     var tb = document.getElementById('theme-btn');
     if (tb) tb.textContent = '☾';
   }
+
+  loadActivityLog(false);
 </script>
 
 </body>

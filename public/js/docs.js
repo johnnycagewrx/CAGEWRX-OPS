@@ -71,13 +71,14 @@ function loadProfile() {
 
 function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
+  document.getElementById('app').classList.add('visible');
 
   var isAdmin = currentProfile && currentProfile.role === 'admin';
-  var tabsWrap  = document.getElementById('admin-tabs-wrap');
   var uploadBtn = document.getElementById('upload-btn');
-  if (tabsWrap)  tabsWrap.style.display  = isAdmin ? 'block' : 'none';
   if (uploadBtn) uploadBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+
+  // Non-admins only see Documents; redirect away from User Management section if not admin
+  if (!isAdmin) switchTab('docs');
 
   // Render avatar
   var name = (currentProfile && currentProfile.full_name) || currentUser.user.email || '';
@@ -427,11 +428,10 @@ function inviteUser() {
 
 // ---- Tab switching ----
 function switchTab(tab) {
-  document.querySelectorAll('.admin-tab').forEach(function (t, i) {
-    t.classList.toggle('active', (i === 0 && tab === 'docs') || (i === 1 && tab === 'users'));
-  });
   var docsSection  = document.getElementById('tab-docs');
   var usersSection = document.getElementById('tab-users');
   if (docsSection)  docsSection.classList.toggle('active',  tab === 'docs');
   if (usersSection) usersSection.classList.toggle('active', tab === 'users');
+  // Re-render sidebar so the correct sub-link is highlighted
+  if (typeof renderSidebar === 'function') renderSidebar(tab);
 }

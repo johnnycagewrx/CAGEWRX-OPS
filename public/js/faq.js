@@ -125,24 +125,51 @@ function confirmFaqSave() {
 
   if (editingFaq) {
     var id = editingFaq.id;
+    var prevSnapshot = JSON.parse(JSON.stringify(editingFaq));
     closeFaqModal();
     sbFetch('PATCH', '/rest/v1/faq_items?id=eq.' + id, body, function (err) {
       if (err) showBanner('Save failed: ' + err, 'error');
-      else { showBanner('Question updated!', 'success'); loadFaqs(); }
+      else {
+        showBanner('Question updated!', 'success');
+        logActivity('faq_items', 'update', {
+          recordId: id,
+          fieldChanges: diffFields(prevSnapshot, body),
+          summary: 'FAQ "' + (body.question||prevSnapshot.question) + '" edited'
+        });
+        loadFaqs();
+      }
     });
   } else {
     closeFaqModal();
-    sbFetch('POST', '/rest/v1/faq_items', body, function (err) {
+    sbFetch('POST', '/rest/v1/faq_items', body, function (err, data) {
       if (err) showBanner('Add failed: ' + err, 'error');
-      else { showBanner('Question added!', 'success'); loadFaqs(); }
+      else {
+        showBanner('Question added!', 'success');
+        var newId = (Array.isArray(data) && data[0] && data[0].id) || null;
+        logActivity('faq_items', 'create', {
+          recordId: newId,
+          fullAfter: body,
+          summary: 'FAQ "' + body.question + '" added'
+        });
+        loadFaqs();
+      }
     });
   }
 }
 
 function deleteFaq(id) {
   if (!confirm('Delete this question?')) return;
+  var f = allFaqs.find(function(x){ return x.id === id; });
   sbFetch('DELETE', '/rest/v1/faq_items?id=eq.' + id, null, function (err) {
     if (err) showBanner('Delete failed: ' + err, 'error');
-    else { showBanner('Question deleted', 'success'); loadFaqs(); }
+    else {
+      showBanner('Question deleted', 'success');
+      logActivity('faq_items', 'delete', {
+        recordId: id,
+        fullBefore: f || null,
+        summary: 'FAQ "' + ((f && f.question) || id) + '" deleted'
+      });
+      loadFaqs();
+    }
   });
 }
