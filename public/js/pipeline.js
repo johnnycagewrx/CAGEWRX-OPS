@@ -107,15 +107,6 @@ function undoLast() {
   }
 }
 
-
-// ---- Theme toggle ----
-function toggleTheme() {
-  var isLight = document.body.classList.toggle('light-mode');
-  localStorage.setItem('cw_theme', isLight ? 'light' : 'dark');
-  var btn = document.getElementById('theme-btn');
-  if (btn) btn.textContent = isLight ? '☾' : '☼';
-}
-
 // pipeline.js - CAGEwrx Ops pipeline logic
 
 'use strict';
@@ -139,7 +130,8 @@ var TAB_LABELS = {
   assembled:  'Assembled Cage Orders',
   powdercoat: 'At Powder Coating',
   pickup:     'Ready for Pickup',
-  cagekits:   'Cage Kits'
+  cagekits:   'Cage Kits',
+  tagpull:    'Tag and Pull from Inventory'
 };
 
 // ---- Helpers ----
@@ -273,7 +265,6 @@ function renderKits(items) {
 }
 
 function renderPowderCoat(items) {
-  items = sortByOrderNum(items);
   var cnt = items.length;
   document.getElementById('cnt-powder').textContent = cnt;
   document.getElementById('stat-powder').textContent = cnt;
@@ -282,25 +273,41 @@ function renderPowderCoat(items) {
 
   // Group by sent_to_powder date
   var groups = {};
-  var groupOrder = [];
   items.forEach(function(o) {
     var key = o.sent_to_powder || '__none__';
-    if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
+    if (!groups[key]) groups[key] = [];
     groups[key].push(o);
   });
 
+  // Sort group keys chronologically (earliest first), __none__ at end
+  var today = new Date();
+  today.setHours(0,0,0,0);
+
+  var sortedKeys = Object.keys(groups).sort(function(a, b) {
+    if (a === '__none__') return 1;
+    if (b === '__none__') return -1;
+    var da = parseMMDDYYYY(a);
+    var db = parseMMDDYYYY(b);
+    return da - db;
+  });
+
   var h = '';
-  groupOrder.forEach(function(key, gi) {
-    var group = groups[key];
-    var today = new Date();
-    today.setHours(0,0,0,0);
-    var isFuture = key !== '__none__' && new Date(key.replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$1-$2')) > today;
+  sortedKeys.forEach(function(key) {
+    // Sort orders within each group by order number ascending
+    var group = groups[key].slice().sort(function(a, b) {
+      return parseInt(a.order_num || 0, 10) - parseInt(b.order_num || 0, 10);
+    });
+
+    var isFuture = key !== '__none__' && parseMMDDYYYY(key) > today;
+    var isToday  = key !== '__none__' && parseMMDDYYYY(key).toDateString() === today.toDateString();
     var dateLabel = key === '__none__'
       ? 'No date set'
       : isFuture
         ? 'SEND TO PC ON ' + fmtDate(key)
-        : 'Sent: ' + fmtDate(key);
-    // Add group header with subtle divider
+        : isToday
+          ? 'SENDING TODAY - ' + fmtDate(key)
+          : 'Sent: ' + fmtDate(key);
+
     h += '<div class="powder-group">';
     h += '<div class="powder-group-label">' + dateLabel + ' <span style="color:#555;font-size:10px;">(' + group.length + ')</span></div>';
     group.forEach(function(o) {
@@ -315,10 +322,52 @@ function renderPowderCoat(items) {
   el.innerHTML = h;
 }
 
+function parseMMDDYYYY(s) {
+  if (!s) return new Date(0);
+  var p = s.split('/');
+  if (p.length === 3) return new Date(parseInt(p[2]), parseInt(p[0]) - 1, parseInt(p[1]));
+  return new Date(s);
+}
+
+
+function renderTagPull(items) {
+  items = sortByOrderNum(items);
+  document.getElementById('cnt-tagpull').textContent = items.length;
+  var el = document.getElementById('col-tagpull');
+  if (!items.length) { el.innerHTML = '<div class="empty">No items to tag and pull</div>'; return; }
+  var h = '';
+  for (var i = 0; i < items.length; i++) {
+    var o = items[i];
+    orderCache[o.id] = o;
+    var link = 'https://admin.shopify.com/store/ccee09-8a/orders?query=' + o.order_num;
+    var safeJson = JSON.stringify(o).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    h += '<div class="order-card" draggable="true"' +
+      ' data-id="' + o.id + '" data-tab="tagpull"' +
+      ' ondragstart="onDragStart(event,\'tagpull\',\'' + safeJson + '\')"' +
+      ' ondragend="onDragEnd()">' +
+      '<div class="order-top">' +
+        '<a class="order-num" href="' + link + '" target="_blank">#' + o.order_num + '</a>' +
+        '<div class="order-actions">' +
+          '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
+          doneBtn('tagpull', o.id) +
+        '</div>' +
+      '</div>' +
+      '<div class="order-item" style="cursor:pointer;" onclick="editFromCard(this.closest(\'.order-card\'))">' +
+        (o.item || '') +
+      '</div>' +
+      '<div class="order-meta">' +
+        pill(o.customer_name ? 'Customer: ' + o.customer_name : '', 'pill-order') +
+        (o.notes ? '<div style="font-size:11px;color:#888;margin-top:4px;width:100%;">' + o.notes + '</div>' : '') +
+      '</div>' +
+    '</div>';
+  }
+  el.innerHTML = h;
+}
+
 
 function renderData(data) {
   orderCache = {};
-  var grouped = { new: [], ready: [], backorder: [], assembled: [], powdercoat: [], pickup: [] };
+  var grouped = { new: [], ready: [], backorder: [], assembled: [], powdercoat: [], pickup: [], tagpull: [] };
   (data.orders || []).forEach(function (o) { if (grouped[o.tab]) grouped[o.tab].push(o); });
 
   fillStage('col-new', 'cnt-new', 'stat-new', 'new', grouped.new, function (o) {
@@ -345,6 +394,7 @@ function renderData(data) {
   });
 
   renderKits(data.kits || []);
+  renderTagPull(grouped.tagpull);
 
   var now = new Date();
   var lu = document.getElementById('last-updated');
@@ -559,7 +609,13 @@ function openEditModal(tab, o) {
   f += labelHTML('Order #') + inputHTML('edit-order', o.order_num);
   f += labelHTML('SKU') + inputHTML('edit-sku', o.sku);
   f += labelHTML('Item Description') + inputHTML('edit-item', o.item);
-  if (!isKit) {
+  var isTagPull = tab === 'tagpull';
+  if (isTagPull) {
+    f += labelHTML('Customer Name') + inputHTML('edit-customer', o.customer_name);
+    f += labelHTML('Notes');
+    f += '<textarea id="edit-notes" style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;min-height:70px;font-family:inherit;">' + (o.notes||'') + '</textarea>';
+  }
+  if (!isKit && !isTagPull) {
     f += labelHTML('Color') + inputHTML('edit-color', o.color);
     if (tab === 'backorder') {
       f += labelHTML('PO #') + inputHTML('edit-po', o.po_num);
@@ -609,7 +665,13 @@ function confirmEdit() {
     order_date: gv('edit-orderdate'),
     shipping:  gv('edit-shipping')
   };
-  if (!isKit) {
+  var isTagPull = editingTab === 'tagpull';
+  if (isTagPull) {
+    updates.customer_name = gv('edit-customer');
+    var notesEl = document.getElementById('edit-notes');
+    updates.notes = notesEl ? notesEl.value.trim() : '';
+  }
+  if (!isKit && !isTagPull) {
     updates.color = gv('edit-color') || '';
     if (document.getElementById('edit-po'))    updates.po_num        = gv('edit-po');
     if (document.getElementById('edit-eta'))   updates.eta           = gv('edit-eta');
@@ -627,23 +689,11 @@ function confirmEdit() {
 }
 
 // ---- Add order modal ----
-function resetDateBtn(inputId, val) {
-  var el = document.getElementById(inputId);
-  if (el) el.value = val || '';
-  var btn = document.querySelector('[data-picker-target="' + inputId + '"]');
-  if (btn) {
-    var span = btn.querySelector('span');
-    if (span) {
-      span.textContent = val || 'Select date...';
-      span.style.color = val ? '#e0e0e0' : '#333';
-    }
-  }
-}
 
 function openAddModal() {
   var m = document.getElementById('add-modal');
   if (m) m.classList.add('open');
-  var fields = ['add-order', 'add-sku', 'add-item', 'add-color', 'add-shipping', 'add-po'];
+  var fields = ['add-order', 'add-sku', 'add-item', 'add-color', 'add-shipping', 'add-po', 'add-customer', 'add-notes'];
   fields.forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
@@ -668,11 +718,13 @@ function updateAddFields() {
     var el = document.getElementById(id);
     if (el) el.style.display = visible ? 'block' : 'none';
   };
-  show('add-color-wrap',  t !== 'cagekits');
-  show('add-po-wrap',     t === 'backorder');
-  show('add-eta-wrap',    t === 'backorder' || t === 'powdercoat' || t === 'assembled');
-  show('add-build-wrap',  t === 'assembled');
-  show('add-sent-wrap',   t === 'powdercoat');
+  show('add-color-wrap',    t !== 'cagekits' && t !== 'tagpull');
+  show('add-po-wrap',       t === 'backorder');
+  show('add-eta-wrap',      t === 'backorder' || t === 'powdercoat' || t === 'assembled');
+  show('add-build-wrap',    t === 'assembled');
+  show('add-sent-wrap',     t === 'powdercoat');
+  show('add-customer-wrap', t === 'tagpull');
+  show('add-notes-wrap',    t === 'tagpull');
 }
 
 function submitAdd() {
@@ -698,6 +750,8 @@ function submitAdd() {
     body.eta    = (document.getElementById('add-eta') || {}).value || '';
     body.build_date = (document.getElementById('add-build') || {}).value || '';
     body.sent_to_powder = (document.getElementById('add-sent') || {}).value || '';
+    body.customer_name = (document.getElementById('add-customer') || {}).value || '';
+    body.notes = (document.getElementById('add-notes') || {}).value || '';
   }
 
   closeAddModal();

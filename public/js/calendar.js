@@ -15,10 +15,11 @@ var DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 // Color coding by event type
 var CAL_COLORS = {
-  build_date:     { bg: '#0d47a1', border: '#1565c0', text: '#e3f2fd', label: 'BUILD'      },
-  eta:            { bg: '#1b5e20', border: '#2e7d32', text: '#e8f5e9', label: 'ETA'        },
-  sent_to_powder: { bg: '#bf360c', border: '#e64a19', text: '#fbe9e7', label: 'SENT TO PC' },
-  order_date:     { bg: '#4a148c', border: '#6a1b9a', text: '#f3e5f5', label: 'ORDER'      }
+  build_date:      { bg: '#0d47a1', border: '#1565c0', text: '#e3f2fd', label: 'BUILD'      },
+  eta:             { bg: '#1b5e20', border: '#2e7d32', text: '#e8f5e9', label: 'ETA'        },
+  sent_to_powder:  { bg: '#bf360c', border: '#e64a19', text: '#fbe9e7', label: 'SENT TO PC' },
+  send_to_powder:  { bg: '#4a148c', border: '#7b1fa2', text: '#f3e5f5', label: 'SEND TO PC' },
+  order_date:      { bg: '#1a237e', border: '#283593', text: '#e8eaf6', label: 'ORDER'      }
 };
 
 function parseDate(str) {
@@ -60,7 +61,10 @@ function buildCalEvents(orders) {
       if (d) {
         var key = formatDateKey(d);
         if (!map[key]) map[key] = [];
-        map[key].push({ order: o, type: 'sent_to_powder' });
+        // Use different type/color if date is in the future
+        var now = new Date(); now.setHours(0,0,0,0);
+        var eventType = d > now ? 'send_to_powder' : 'sent_to_powder';
+        map[key].push({ order: o, type: eventType });
       }
     }
     // eta shows for all active stages (not completed)
@@ -146,8 +150,11 @@ function renderCalendar(orders) {
 
   // Legend
   html += '<div class="cal-legend">';
-  Object.keys(CAL_COLORS).forEach(function(type) {
+  // Show legend items (skip order_date as it's rarely used)
+  var legendTypes = ['build_date', 'eta', 'send_to_powder', 'sent_to_powder'];
+  legendTypes.forEach(function(type) {
     var c = CAL_COLORS[type];
+    if (!c) return;
     html += '<div class="cal-legend-item">' +
       '<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + c.bg + ';border:1px solid ' + c.border + ';margin-right:4px;"></span>' +
       '<span style="color:' + c.text + ';">' + c.label + '</span>' +
@@ -300,4 +307,17 @@ function initDatePickers() {
       if (id && tab) editFromId(id, tab);
     }
   });
+}
+
+function resetDateBtn(inputId, val) {
+  var el = document.getElementById(inputId);
+  if (el) el.value = val || '';
+  var btn = document.querySelector('[data-picker-target="' + inputId + '"]');
+  if (btn) {
+    var span = btn.querySelector('span');
+    if (span) {
+      span.textContent = val || 'Select date...';
+      span.style.color = val ? '#e0e0e0' : '#333';
+    }
+  }
 }

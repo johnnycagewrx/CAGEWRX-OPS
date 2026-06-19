@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>CAGEWRX OPS - FAQ</title>
+  <meta name="theme-color" content="#060e18">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CAGEWRX OPS">
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="apple-touch-icon" href="img/favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="img/favicon.png">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/faq.css">
+</head>
+<body>
+
+<div class="app-shell">
+<div id="sidebar-mount"></div>
+<div class="app-content">
+
+<!-- ===== HEADER ===== -->
+<div class="faq-header">
+  <div class="faq-header-content">
+    <div class="faq-header-left">
+      <img class="faq-logo" src="img/cagewrx_logo.png" alt="CAGEWRX OPS">
+      <div>
+        <div class="faq-label">CAGEwrx Operations</div>
+        <div class="faq-title">FAQ</div>
+      </div>
+    </div>
+
+    <div class="faq-header-right">
+      <button class="btn btn-green" id="faq-add-btn" onclick="openFaqModal()" style="display:none;">+ Add Question</button>
+      <button class="btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">&#x263C;</button>
+
+      <div class="avatar-wrap">
+        <div id="user-avatar">?</div>
+        <div id="av-dd">
+          <div class="av-profile">
+            <div class="av-profile-name" id="avatar-name">Loading...</div>
+            <div class="av-profile-email" id="avatar-email"></div>
+            <span id="avatar-role-badge">User</span>
+          </div>
+          <button class="av-menu-item danger" onclick="signOut()">&#x2192; Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN ===== -->
+<div class="faq-main">
+
+  <div class="banner" id="banner"></div>
+
+  <div class="faq-search-wrap">
+    <span style="color:#444;font-size:16px;">&#x2315;</span>
+    <input class="faq-search-input" type="text" id="faq-search"
+      placeholder="Search questions..." oninput="filterFaqs()">
+  </div>
+
+  <div class="faq-cat-tabs" id="faq-cat-tabs"></div>
+
+  <div class="faq-list" id="faq-list">
+    <div style="padding:40px;text-align:center;"><div class="spinner"></div></div>
+  </div>
+
+</div><!-- end .faq-main -->
+
+<!-- ===== FAQ MODAL ===== -->
+<div class="modal-overlay" id="faq-modal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-title" id="faq-modal-title">New Question</div>
+
+    <label>Question</label>
+    <input type="text" id="faq-question-input" placeholder="e.g. How do I track my order?">
+
+    <label>Answer</label>
+    <textarea id="faq-answer-input" placeholder="Write the answer here..." style="min-height:120px;"></textarea>
+
+    <label>Category (optional)</label>
+    <input type="text" id="faq-category-input" placeholder="e.g. Shipping, Orders, Returns">
+
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeFaqModal()">Cancel</button>
+      <button class="modal-btn modal-btn-save" onclick="confirmFaqSave()">Save</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .app-content -->
+</div><!-- end .app-shell -->
+
+<!-- ===== SCRIPTS ===== -->
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/faq.js"></script>
+<script>
+  var _sess = requireAuth();
+  initAvatarDropdown();
+  renderAvatar(_sess);
+  fetchProfile(_sess, function (sess) {
+    _sess = sess;
+    renderAvatar(_sess);
+    isAdmin = _sess.role === 'admin';
+    var addBtn = document.getElementById('faq-add-btn');
+    if (addBtn) addBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+    loadFaqs();
+  });
+
+  renderSidebar('faq');
+
+  if (localStorage.getItem('cw_theme') === 'light') {
+    document.body.classList.add('light-mode');
+    var tb = document.getElementById('theme-btn');
+    if (tb) tb.textContent = '☾';
+  }
+</script>
+
+</body>
+</html>

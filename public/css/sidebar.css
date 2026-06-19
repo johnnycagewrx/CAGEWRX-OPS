@@ -1,0 +1,204 @@
+/* ============================================
+   sidebar.css - Collapsible sidebar navigation
+   CAGEwrx Ops
+   ============================================ */
+
+body {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-shell {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ---- Sidebar ---- */
+.sidebar {
+  width: 60px;
+  background: #0a0a0a;
+  border-right: 1px solid #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width 0.2s ease;
+  overflow: hidden;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 100;
+}
+
+.sidebar:hover,
+.sidebar.expanded {
+  width: 220px;
+}
+
+.sidebar-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 14px;
+  border-bottom: 1px solid #1a1a1a;
+  min-height: 64px;
+}
+
+.sidebar-logo {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 6px;
+}
+
+.sidebar-brand {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: .06em;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.sidebar:hover .sidebar-brand,
+.sidebar.expanded .sidebar-brand { opacity: 1; }
+
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #555;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar-link:hover {
+  background: #161616;
+  color: #ccc;
+}
+
+.sidebar-link.active {
+  background: #1a0d05;
+  color: #ff7043;
+}
+
+.sidebar-link-icon {
+  font-size: 17px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.sidebar-link-label {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.sidebar:hover .sidebar-link-label,
+.sidebar.expanded .sidebar-link-label { opacity: 1; }
+
+.sidebar-footer {
+  padding: 12px 8px;
+  border-top: 1px solid #1a1a1a;
+}
+
+.sidebar-pin {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: #333;
+  font-size: 11px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+.sidebar-pin:hover { background: #161616; color: #888; }
+.sidebar-pin-label { opacity: 0; transition: opacity 0.15s; }
+.sidebar:hover .sidebar-pin-label,
+.sidebar.expanded .sidebar-pin-label { opacity: 1; }
+
+/* ---- Content area shifts to fill remaining space ---- */
+.app-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Mobile: sidebar becomes a bottom bar ---- */
+@media (max-width: 768px) {
+  body { flex-direction: column; }
+  .app-shell { flex-direction: column; }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    top: auto;
+    flex-direction: row;
+    border-right: none;
+    border-top: 1px solid #1a1a1a;
+    z-index: 999;
+  }
+  .sidebar:hover,
+  .sidebar.expanded { width: 100%; }
+
+  .sidebar-logo-wrap { display: none; }
+  .sidebar-footer { display: none; }
+
+  .sidebar-nav {
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 6px;
+    width: 100%;
+  }
+
+  .sidebar-link {
+    flex-direction: column;
+    gap: 3px;
+    padding: 6px 10px;
+    flex: 1;
+    text-align: center;
+  }
+
+  .sidebar-link-label {
+    opacity: 1;
+    font-size: 9px;
+  }
+
+  .app-content { padding-bottom: 64px; }
+}
+
+/* ---- Light mode ---- */
+body.light-mode .sidebar { background: #fff; border-right-color: #e0e0e0; }
+body.light-mode .sidebar-logo-wrap { border-bottom-color: #e0e0e0; }
+body.light-mode .sidebar-brand { color: #111; }
+body.light-mode .sidebar-link { color: #888; }
+body.light-mode .sidebar-link:hover { background: #f5f5f5; color: #333; }
+body.light-mode .sidebar-link.active { background: #fff3e0; color: #e65100; }
+body.light-mode .sidebar-footer { border-top-color: #e0e0e0; }
+body.light-mode .sidebar-pin { color: #ccc; }
+body.light-mode .sidebar-pin:hover { background: #f5f5f5; color: #888; }
+
+@media (max-width: 768px) {
+  body.light-mode .sidebar { border-top-color: #e0e0e0; }
+}

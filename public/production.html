@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>CAGEWRX OPS - Production</title>
+  <meta name="theme-color" content="#060e18">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CAGEWRX OPS">
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="apple-touch-icon" href="img/favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="img/favicon.png">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/production.css">
+</head>
+<body>
+
+<div class="app-shell">
+<div id="sidebar-mount"></div>
+<div class="app-content">
+
+<!-- ===== HEADER ===== -->
+<div class="prod-header">
+  <div class="prod-header-content">
+    <div class="prod-header-left">
+      <img class="prod-logo" src="img/cagewrx_logo.png" alt="CAGEWRX OPS">
+      <div>
+        <div class="prod-label">CAGEwrx Operations</div>
+        <div class="prod-title">PRODUCTION</div>
+      </div>
+    </div>
+
+    <div class="prod-header-right">
+      <button class="btn btn-green" onclick="openAddTaskModal()">+ Add Task</button>
+      <button class="btn" onclick="loadTasks()">&#x21BB; Refresh</button>
+      <button class="btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">&#x263C;</button>
+
+      <div class="avatar-wrap">
+        <div id="user-avatar">?</div>
+        <div id="av-dd">
+          <div class="av-profile">
+            <div class="av-profile-name" id="avatar-name">Loading...</div>
+            <div class="av-profile-email" id="avatar-email"></div>
+            <span id="avatar-role-badge">User</span>
+          </div>
+          <button class="av-menu-item danger" onclick="signOut()">&#x2192; Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN ===== -->
+<div class="prod-main">
+
+  <div class="banner" id="banner"></div>
+
+  <div class="prod-pipeline">
+
+    <!-- Shipping -->
+    <div class="prod-stage" id="pstage-shipping"
+      ondragover="onTaskDragOver(event,'shipping')"
+      ondragleave="onTaskDragLeave('shipping')"
+      ondrop="onTaskDrop(event,'shipping')">
+      <div class="prod-stage-header" style="background:#0a1a1a;" onclick="toggleProdSection('shipping')">
+        <span style="font-size:15px;">&#x1F4E6;</span>
+        <p class="prod-stage-title" style="color:#4db6ac;">SHIPPING</p>
+        <span class="prod-stage-count" id="pcnt-shipping" style="background:#0f2a2a;color:#4db6ac;">-</span>
+        <span class="prod-stage-chevron" id="pchv-shipping">&#x25BE;</span>
+      </div>
+      <div class="prod-stage-body" id="pcol-shipping">
+        <div style="padding:18px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Shop -->
+    <div class="prod-stage" id="pstage-shop"
+      ondragover="onTaskDragOver(event,'shop')"
+      ondragleave="onTaskDragLeave('shop')"
+      ondrop="onTaskDrop(event,'shop')">
+      <div class="prod-stage-header" style="background:#1a1000;" onclick="toggleProdSection('shop')">
+        <span style="font-size:15px;">&#x1F527;</span>
+        <p class="prod-stage-title" style="color:#ffa726;">SHOP</p>
+        <span class="prod-stage-count" id="pcnt-shop" style="background:#2a1a00;color:#ffa726;">-</span>
+        <span class="prod-stage-chevron" id="pchv-shop">&#x25BE;</span>
+      </div>
+      <div class="prod-stage-body" id="pcol-shop">
+        <div style="padding:18px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Sales/Marketing/Engineering -->
+    <div class="prod-stage" id="pstage-sme"
+      ondragover="onTaskDragOver(event,'sme')"
+      ondragleave="onTaskDragLeave('sme')"
+      ondrop="onTaskDrop(event,'sme')">
+      <div class="prod-stage-header" style="background:#0a1525;" onclick="toggleProdSection('sme')">
+        <span style="font-size:15px;">&#x1F4C8;</span>
+        <p class="prod-stage-title" style="color:#42a5f5;">SALES / MARKETING / ENGINEERING</p>
+        <span class="prod-stage-count" id="pcnt-sme" style="background:#0f1f35;color:#42a5f5;">-</span>
+        <span class="prod-stage-chevron" id="pchv-sme">&#x25BE;</span>
+      </div>
+      <div class="prod-stage-body" id="pcol-sme">
+        <div style="padding:18px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Need to Make -->
+    <div class="prod-stage" id="pstage-needtomake"
+      ondragover="onTaskDragOver(event,'needtomake')"
+      ondragleave="onTaskDragLeave('needtomake')"
+      ondrop="onTaskDrop(event,'needtomake')">
+      <div class="prod-stage-header" style="background:#1a0808;" onclick="toggleProdSection('needtomake')">
+        <span style="font-size:15px;">&#x1F6E0;</span>
+        <p class="prod-stage-title" style="color:#ef5350;">NEED TO MAKE</p>
+        <span class="prod-stage-count" id="pcnt-needtomake" style="background:#2a0f0f;color:#ef5350;">-</span>
+        <span class="prod-stage-chevron" id="pchv-needtomake">&#x25BE;</span>
+      </div>
+      <div class="prod-stage-body" id="pcol-needtomake">
+        <div style="padding:18px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+  </div><!-- end .prod-pipeline -->
+
+</div><!-- end .prod-main -->
+
+<!-- ===== TASK MODAL ===== -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal">
+    <div class="modal-title" id="task-modal-title">New Task</div>
+
+    <label>Section</label>
+    <select id="task-section">
+      <option value="shipping">Shipping</option>
+      <option value="shop">Shop</option>
+      <option value="sme">Sales / Marketing / Engineering</option>
+      <option value="needtomake">Need to Make</option>
+    </select>
+
+    <label>Title</label>
+    <input type="text" id="task-title" placeholder="e.g. Order more powder coat hooks">
+
+    <label>Description (optional)</label>
+    <textarea id="task-desc" placeholder="Additional details..."></textarea>
+
+    <label>Assigned To (optional)</label>
+    <input type="text" id="task-assigned" placeholder="e.g. Johnny">
+
+    <label>Due Date (optional)</label>
+    <input type="hidden" id="task-due" value="">
+    <button type="button" class="date-input-btn" data-picker-target="task-due">
+      <span style="color:#333;">Select date...</span>
+      <span style="color:#555;font-size:12px;"> &#x1F4C5;</span>
+    </button>
+
+    <label>Priority (optional)</label>
+    <input type="hidden" id="task-priority" value="">
+    <div class="priority-select-row">
+      <button type="button" class="priority-btn" data-priority="low" onclick="setPriority('low')">Low</button>
+      <button type="button" class="priority-btn" data-priority="medium" onclick="setPriority('medium')">Medium</button>
+      <button type="button" class="priority-btn" data-priority="high" onclick="setPriority('high')">High</button>
+    </div>
+
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeTaskModal()">Cancel</button>
+      <button class="modal-btn modal-btn-save" onclick="confirmTaskSave()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DATE PICKER MODAL ===== -->
+<div class="modal-overlay" id="date-picker-modal">
+  <div class="modal" style="max-width:340px;">
+    <div id="picker-body"></div>
+    <div class="modal-btns" style="margin-top:12px;">
+      <button class="modal-btn modal-btn-cancel" onclick="closeDatePicker()">Cancel</button>
+      <button class="modal-btn" style="background:#1a1a1a;color:#555;" onclick="selectDate('');closeDatePicker()">Clear</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .app-content -->
+</div><!-- end .app-shell -->
+
+<!-- ===== SCRIPTS ===== -->
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/production.js"></script>
+<script>
+  var _sess = requireAuth();
+  initAvatarDropdown();
+  renderAvatar(_sess);
+  fetchProfile(_sess, function (sess) { _sess = sess; renderAvatar(_sess); });
+
+  renderSidebar('production');
+  initProdSections();
+  initDatePickers();
+
+  if (localStorage.getItem('cw_theme') === 'light') {
+    document.body.classList.add('light-mode');
+    var tb = document.getElementById('theme-btn');
+    if (tb) tb.textContent = '☾';
+  }
+
+  loadTasks();
+</script>
+
+</body>
+</html>

@@ -14,9 +14,14 @@
   <link rel="apple-touch-icon" sizes="152x152" href="img/favicon.png">
   <link rel="apple-touch-icon" sizes="120x120" href="img/favicon.png">
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/sidebar.css">
   <link rel="stylesheet" href="css/ops.css">
 </head>
 <body>
+
+<div class="app-shell">
+<div id="sidebar-mount"></div>
+<div class="app-content">
 
 <!-- ===== HEADER ===== -->
 <div class="hero">
@@ -95,6 +100,23 @@
         <span class="stage-count" id="cnt-kits" style="background:#1e0f2a;color:#b39ddb;">-</span>
       </div>
       <div class="kits-body" id="col-kits">
+        <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tag and Pull from Inventory (full width) -->
+  <div style="margin-bottom:20px;">
+    <div class="stage" id="stage-tagpull"
+      ondragover="onDragOver(event,'tagpull')"
+      ondragleave="onDragLeave('tagpull')"
+      ondrop="onDrop(event,'tagpull')">
+      <div class="stage-header" style="background:#1a1505;">
+        <span style="font-size:15px;">&#x1F3F7;</span>
+        <p class="stage-title" style="color:#d4af37;">TAG AND PULL FROM INVENTORY</p>
+        <span class="stage-count" id="cnt-tagpull" style="background:#2a2200;color:#d4af37;">-</span>
+      </div>
+      <div class="kits-body" id="col-tagpull">
         <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
       </div>
     </div>
@@ -232,6 +254,7 @@
       <option value="powdercoat">Powder Coat</option>
       <option value="pickup">Ready for Pickup</option>
       <option value="cagekits">Cage Kit</option>
+      <option value="tagpull">Tag and Pull from Inventory</option>
     </select>
     <label>Order #</label>
     <input type="text" id="add-order" placeholder="e.g. 68305">
@@ -242,6 +265,14 @@
     <div id="add-color-wrap">
       <label>Color</label>
       <input type="text" id="add-color" placeholder="e.g. Raw">
+    </div>
+    <div id="add-customer-wrap" style="display:none;">
+      <label>Customer Name</label>
+      <input type="text" id="add-customer" placeholder="e.g. John Smith">
+    </div>
+    <div id="add-notes-wrap" style="display:none;">
+      <label>Notes</label>
+      <textarea id="add-notes" placeholder="Additional notes..."></textarea>
     </div>
     <div id="add-po-wrap" style="display:none;">
       <label>PO #</label>
@@ -345,9 +376,13 @@
   </div>
 </div>
 
+</div><!-- end .app-content -->
+</div><!-- end .app-shell -->
+
 <!-- ===== SCRIPTS ===== -->
 <script src="js/supabase.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/sidebar.js"></script>
 <script src="js/pipeline.js"></script>
 <script src="js/calendar.js"></script>
 <script>
@@ -363,6 +398,9 @@
     _sess = sess;
     renderAvatar(_sess);
   });
+
+  // Render sidebar nav
+  renderSidebar('orders');
 
   // Init stages (open on desktop, collapsed on mobile)
   initStages();

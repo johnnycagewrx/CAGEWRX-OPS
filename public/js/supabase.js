@@ -79,3 +79,13 @@ function showBanner(msg, type) {
   b.style.display = 'block';
   setTimeout(function () { b.style.display = 'none'; }, 4000);
 }
+
+/**
+ * Toggle light/dark theme, persisted to localStorage
+ */
+function toggleTheme() {
+  var isLight = document.body.classList.toggle('light-mode');
+  localStorage.setItem('cw_theme', isLight ? 'light' : 'dark');
+  var btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = isLight ? '☾' : '☼';
+}
