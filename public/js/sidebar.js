@@ -2,12 +2,16 @@
 // CAGEwrx Ops
 
 function renderSidebar(activePage) {
-  var isOnAdminPage = activePage === 'docs' || activePage === 'users';
+  var isOnAdminPage = activePage === 'docs' || activePage === 'users' || activePage === 'analytics';
 
   var adminSubLinks = '';
   if (isOnAdminPage) {
     adminSubLinks =
-      '<a class="sidebar-link sidebar-sublink' + (activePage === 'docs' ? ' active' : '') + '" data-page="docs" href="#" onclick="event.preventDefault();switchTab(\'docs\')">'
+      '<a class="sidebar-link sidebar-sublink' + (activePage === 'analytics' ? ' active' : '') + '" data-page="analytics" href="#" onclick="event.preventDefault();switchTab(\'analytics\')">'
+      + '<span class="sidebar-link-icon">&#x1F4C8;</span>'
+      + '<span class="sidebar-link-label">Analytics</span>'
+      + '</a>'
+      + '<a class="sidebar-link sidebar-sublink' + (activePage === 'docs' ? ' active' : '') + '" data-page="docs" href="#" onclick="event.preventDefault();switchTab(\'docs\')">'
       + '<span class="sidebar-link-icon">&#x1F4C4;</span>'
       + '<span class="sidebar-link-label">Documents</span>'
       + '</a>'

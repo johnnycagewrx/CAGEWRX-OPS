@@ -123,6 +123,7 @@ exports.handler = async (event) => {
       shipping:      shipping,
       customer_name: customerName,
       notes:         notes,
+      total_price:   parseFloat(order.total_price || 0),
       po_num:        '',
       eta:           '',
       build_date:    '',
@@ -134,5 +135,5 @@ exports.handler = async (event) => {
   if (response.status >= 300) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'Database insert failed', detail: resText }) };
   }
-  return { statusCode: 200, headers, body: JSON.stringify({ success: true, order: orderNum, color: color }) };
+  return { statusCode: 200, headers, body: JSON.stringify({ success: true, order: orderNum, color: color, total_price: order.total_price }) };
 };

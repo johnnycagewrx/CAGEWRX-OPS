@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/sidebar.css">
   <link rel="stylesheet" href="css/docs.css">
+  <link rel="stylesheet" href="css/analytics.css">
 </head>
 <body>
 
@@ -83,6 +84,22 @@
   <div class="doc-main">
 
     
+
+    <!-- ===== ANALYTICS TAB ===== -->
+    <div class="admin-section" id="tab-analytics">
+      <div class="analytics-wrap">
+        <div class="analytics-header">
+          <div class="analytics-title">&#x1F4C8; Shopify Revenue Analytics</div>
+          <div class="analytics-toggle">
+            <button class="toggle-btn active" data-mode="last_month" onclick="loadAnalytics('last_month')">vs Last Month</button>
+            <button class="toggle-btn" data-mode="last_year" onclick="loadAnalytics('last_year')">vs Last Year</button>
+          </div>
+        </div>
+        <div id="analytics-content">
+          <div class="analytics-loading">Click a tab above to load analytics</div>
+        </div>
+      </div>
+    </div>
 
     <!-- ===== DOCUMENTS TAB ===== -->
     <div class="admin-section active" id="tab-docs">
@@ -222,6 +239,7 @@
 <script src="js/activity-log-helper.js"></script>
 <script src="js/sidebar.js"></script>
 <script src="js/docs.js"></script>
+<script src="js/analytics-dashboard.js"></script>
 <script>
   renderSidebar('docs');
   if (localStorage.getItem('cw_theme') === 'light') {

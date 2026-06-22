@@ -200,6 +200,8 @@ function buildCard(o, tab, metaHTML) {
     .replace(/'/g, "\\'")
     .replace(/"/g, '&quot;');
 
+  var statusSelect = buildStatusSelect(o.id, tab);
+
   return '<div class="order-card" draggable="true"' +
     ' data-id="' + o.id + '" data-tab="' + tab + '"' +
     ' ondragstart="onDragStart(event,\'' + tab + '\',\'' + safeJson + '\')"' +
@@ -216,8 +218,63 @@ function buildCard(o, tab, metaHTML) {
       (o.sku || o.item || '') +
     '</div>' +
     '<div class="order-meta">' + metaHTML + '</div>' +
+    '<div class="order-status-row">' + statusSelect + '</div>' +
   '</div>';
 }
+
+function buildStatusSelect(id, currentTab) {
+  var tabs = [
+    { val: 'new',        label: '&#x1F6CE; New Order' },
+    { val: 'backorder',  label: '&#x23F8; Backordered' },
+    { val: 'dropship',   label: '&#x1F69A; Drop Shipping' },
+    { val: 'assembled',  label: '&#x1F4E6; Assembled' },
+    { val: 'powdercoat', label: '&#x1F3A8; At Powder Coat' },
+    { val: 'ready',      label: '&#x1F4EC; Ready to Ship' },
+    { val: 'pickup',     label: '&#x1F3E0; Ready for Pickup' },
+    { val: 'tagpull',    label: '&#x1F3F7; Tag & Pull' },
+    { val: 'cagekits',   label: '&#x1F4E6; Cage Kit' }
+  ];
+  var opts = tabs.map(function(t) {
+    return '<option value="' + t.val + '"' + (t.val === currentTab ? ' selected' : '') + '>' + t.label + '</option>';
+  }).join('');
+  return '<select class="status-select" data-id="' + id + '" data-current="' + currentTab + '" onclick="event.stopPropagation()" onchange="moveOrderToTab(this)">' + opts + '</select>';
+}
+
+// ---- Status select move ----
+function moveOrderToTab(selectEl) {
+  var id      = selectEl.getAttribute('data-id');
+  var fromTab = selectEl.getAttribute('data-current');
+  var toTab   = selectEl.value;
+  if (!id || toTab === fromTab) return;
+
+  var o = orderCache[id];
+  if (!o) return;
+
+  // Use existing move modal for tabs that need extra info
+  if (toTab === 'powdercoat' || toTab === 'assembled') {
+    selectEl.value = fromTab; // reset select - modal will handle it
+    showMoveModal(fromTab, toTab, o);
+    return;
+  }
+
+  var updates = { tab: toTab };
+  // Clear sent_to_powder if leaving powdercoat
+  if (fromTab === 'powdercoat') updates.sent_to_powder = '';
+
+  sbFetch('PATCH', '/rest/v1/orders?id=eq.' + id, updates, function(err) {
+    if (err) { showBanner('Move failed: ' + err, 'error'); loadData(false); }
+    else {
+      showBanner('Order #' + o.order_num + ' moved to ' + (TAB_LABELS[toTab] || toTab), 'success');
+      logActivity('orders', 'move', {
+        recordId: id,
+        fieldChanges: { tab: { old: fromTab, new: toTab } },
+        summary: 'Order #' + o.order_num + ' moved from ' + (TAB_LABELS[fromTab]||fromTab) + ' to ' + (TAB_LABELS[toTab]||toTab)
+      });
+      loadData(true);
+    }
+  });
+}
+
 
 // ---- Stage rendering ----
 function fillStage(bodyId, cntId, statId, tab, items, metaFn) {
@@ -360,6 +417,7 @@ function renderTagPull(items) {
         pill(o.customer_name ? 'Customer: ' + o.customer_name : '', 'pill-order') +
         (o.notes ? '<div style="font-size:11px;color:#888;margin-top:4px;width:100%;">' + o.notes + '</div>' : '') +
       '</div>' +
+      '<div class="order-status-row">' + buildStatusSelect(o.id, 'tagpull') + '</div>' +
     '</div>';
   }
   el.innerHTML = h;
@@ -397,6 +455,7 @@ function renderBackorder(items) {
       '</div>' +
       '<div class="order-item" style="cursor:pointer;" onclick="editFromCard(this.closest(\'.order-card\'))">' + (o.sku || o.item || '') + '</div>' +
       '<div class="order-meta">' + metaHTML + '</div>' +
+      '<div class="order-status-row">' + buildStatusSelect(o.id, 'backorder') + '</div>' +
     '</div>';
   }
   el.innerHTML = h;
@@ -479,6 +538,7 @@ function renderReadyToShip(items) {
       '</div>' +
       '<div class="order-item" style="cursor:pointer;' + (isHigh ? 'color:#fff;font-weight:600;' : '') + '" onclick="editFromCard(this.closest(\'.order-card\'))">' + (o.sku || o.item || '') + '</div>' +
       '<div class="order-meta">' + metaHTML + '</div>' +
+      '<div class="order-status-row">' + buildStatusSelect(o.id, 'ready') + '</div>' +
     '</div>';
   }
   el.innerHTML = h;
