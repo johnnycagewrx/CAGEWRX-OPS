@@ -6,7 +6,7 @@ var isMobile = window.innerWidth <= 768;
 var STAGE_IDS = {
   new:        'col-new',
   ready:      'col-ready',
-  backorder:  'col-back',
+  dropship:   'col-dropship',
   assembled:  'col-assembled',
   powdercoat: 'col-powder',
   pickup:     'col-pickup'
@@ -14,7 +14,7 @@ var STAGE_IDS = {
 var CHEV_IDS = {
   new:        'chv-new',
   ready:      'chv-ready',
-  backorder:  'chv-back',
+  dropship:   'chv-dropship',
   assembled:  'chv-assembled',
   powdercoat: 'chv-powder',
   pickup:     'chv-pickup'
@@ -126,7 +126,8 @@ var undoStack = []; // { action, data } - last 10 actions
 var TAB_LABELS = {
   new:        'New Orders',
   ready:      'Ready to Ship',
-  backorder:  'Backordered / Drop Ship',
+  backorder:  'Backordered',
+  dropship:   'Drop Shipping',
   assembled:  'Assembled Cage Orders',
   powdercoat: 'At Powder Coating',
   pickup:     'Ready for Pickup',
@@ -365,21 +366,159 @@ function renderTagPull(items) {
 }
 
 
+function renderBackorder(items) {
+  items = sortByOrderNum(items);
+  document.getElementById('cnt-back').textContent = items.length;
+  var statEl = document.getElementById('stat-back');
+  if (statEl) statEl.textContent = items.length;
+  var el = document.getElementById('col-back');
+  if (!items.length) { el.innerHTML = '<div class="empty">No backordered items</div>'; return; }
+  var h = '';
+  for (var i = 0; i < items.length; i++) {
+    var o = items[i];
+    orderCache[o.id] = o;
+    var link = 'https://admin.shopify.com/store/ccee09-8a/orders?query=' + o.order_num;
+    var safeJson = JSON.stringify(o).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    var metaHTML = pill(o.color, 'pill-color') +
+      pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order') +
+      pill(o.po_num ? 'PO: ' + o.po_num : '', 'pill-po') +
+      pill(o.eta ? 'ETA: ' + fmtDate(o.eta) : '', 'pill-eta');
+    h += '<div class="order-card" draggable="true"' +
+      ' data-id="' + o.id + '" data-tab="backorder"' +
+      ' ondragstart="onDragStart(event,\'backorder\',\'' + safeJson + '\')"' +
+      ' ondragend="onDragEnd()">' +
+      '<div class="order-top">' +
+        '<a class="order-num" href="' + link + '" target="_blank">#' + o.order_num + '</a>' +
+        '<div class="order-actions">' +
+          '<span class="order-ship">' + shipLabel(o.shipping) + '</span>' +
+          '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
+          doneBtn('backorder', o.id) +
+        '</div>' +
+      '</div>' +
+      '<div class="order-item" style="cursor:pointer;" onclick="editFromCard(this.closest(\'.order-card\'))">' + (o.sku || o.item || '') + '</div>' +
+      '<div class="order-meta">' + metaHTML + '</div>' +
+    '</div>';
+  }
+  el.innerHTML = h;
+}
+
+
+// ---- Cascade build date modal ----
+var _cascadeDelta = 0;
+var _cascadePivot = '';
+
+function showCascadeModal(days, direction, delta, pivotDate) {
+  _cascadeDelta = delta;
+  _cascadePivot = pivotDate;
+  var el = document.getElementById('cascade-modal');
+  var msg = document.getElementById('cascade-msg');
+  var allBtn = document.getElementById('cascade-all-btn');
+  if (msg) msg.textContent = 'Build date changed by ' + days + ' weekday' + (days === 1 ? '' : 's') + '.';
+  if (allBtn) allBtn.textContent = (direction === 'push back' ? 'Push' : 'Move') + ' all orders back by ' + days + ' day' + (days === 1 ? '' : 's');
+  if (el) el.classList.add('open');
+}
+
+function closeCascadeModal() {
+  var el = document.getElementById('cascade-modal');
+  if (el) el.classList.remove('open');
+}
+
+function cascadeThisOnly() {
+  closeCascadeModal();
+  loadData(true);
+}
+
+function cascadeAll() {
+  closeCascadeModal();
+  showBanner('Adjusting build schedule...', 'success');
+  cascadeBuildDates(_cascadePivot, _cascadeDelta, function() { loadData(true); });
+}
+
+
+function renderReadyToShip(items) {
+  items = items.slice().sort(function(a, b) {
+    if (a.priority === 'high' && b.priority !== 'high') return -1;
+    if (b.priority === 'high' && a.priority !== 'high') return 1;
+    return parseInt(a.order_num || 0, 10) - parseInt(b.order_num || 0, 10);
+  });
+
+  var cnt = items.length;
+  document.getElementById('cnt-ready').textContent = cnt;
+  var statEl = document.getElementById('stat-ready');
+  if (statEl) statEl.textContent = cnt;
+  var el = document.getElementById('col-ready');
+  if (!items.length) { el.innerHTML = '<div class="empty">No items</div>'; return; }
+
+  var h = '';
+  for (var i = 0; i < items.length; i++) {
+    var o = items[i];
+    orderCache[o.id] = o;
+    var isHigh = o.priority === 'high';
+    var link = 'https://admin.shopify.com/store/ccee09-8a/orders?query=' + o.order_num;
+    var safeJson = JSON.stringify(o).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    var metaHTML = pill(o.color, 'pill-color') + pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order');
+    var newPriority = isHigh ? '' : 'high';
+    var starBtn = '<button class="' + (isHigh ? 'priority-btn-active' : 'priority-btn-inactive') + '"' +
+      ' title="' + (isHigh ? 'Remove high priority' : 'Mark high priority') + '"' +
+      ' data-priority-id="' + o.id + '" data-priority-val="' + newPriority + '">' +
+      (isHigh ? '&#x2605;' : '&#x2606;') + '</button>';
+    var shipSpan = isHigh
+      ? '<span class="order-ship ship-now">&#x1F6A8; SHIP NOW</span>'
+      : '<span class="order-ship">' + shipLabel(o.shipping) + '</span>';
+
+    h += '<div class="order-card' + (isHigh ? ' priority-high' : '') + '" draggable="true"' +
+      ' data-id="' + o.id + '" data-tab="ready"' +
+      ' ondragstart="onDragStart(event,\'ready\',\'' + safeJson + '\')"' +
+      ' ondragend="onDragEnd()">' +
+      '<div class="order-top">' +
+        '<a class="order-num" href="' + link + '" target="_blank"' + (isHigh ? ' style="color:#69f0ae;"' : '') + '>#' + o.order_num + '</a>' +
+        '<div class="order-actions">' + shipSpan + starBtn +
+          '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
+          doneBtn('ready', o.id) +
+        '</div>' +
+      '</div>' +
+      '<div class="order-item" style="cursor:pointer;' + (isHigh ? 'color:#fff;font-weight:600;' : '') + '" onclick="editFromCard(this.closest(\'.order-card\'))">' + (o.sku || o.item || '') + '</div>' +
+      '<div class="order-meta">' + metaHTML + '</div>' +
+    '</div>';
+  }
+  el.innerHTML = h;
+
+  // Wire up priority buttons via event delegation
+  el.querySelectorAll('[data-priority-id]').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      togglePriority(btn.getAttribute('data-priority-id'), btn.getAttribute('data-priority-val'));
+    });
+  });
+}
+
+
+function togglePriority(id, priority) {
+  var o = orderCache[id];
+  if (!o) return;
+  sbFetch('PATCH', '/rest/v1/orders?id=eq.' + id, { priority: priority }, function(err) {
+    if (err) showBanner('Could not update priority', 'error');
+    else {
+      showBanner(priority === 'high' ? '&#x1F6A8; Marked HIGH PRIORITY' : 'Priority removed', 'success');
+      loadData(true);
+    }
+  });
+}
+
+
 function renderData(data) {
   orderCache = {};
-  var grouped = { new: [], ready: [], backorder: [], assembled: [], powdercoat: [], pickup: [], tagpull: [] };
+  var grouped = { new: [], ready: [], backorder: [], dropship: [], assembled: [], powdercoat: [], pickup: [], tagpull: [] };
   (data.orders || []).forEach(function (o) { if (grouped[o.tab]) grouped[o.tab].push(o); });
 
   fillStage('col-new', 'cnt-new', 'stat-new', 'new', grouped.new, function (o) {
     return pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order');
   });
-  fillStage('col-ready', 'cnt-ready', 'stat-ready', 'ready', grouped.ready, function (o) {
-    return pill(o.color, 'pill-color') + pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order');
-  });
-  fillStage('col-back', 'cnt-back', 'stat-back', 'backorder', grouped.backorder, function (o) {
+  renderReadyToShip(grouped.ready);
+  renderBackorder(grouped.backorder);
+  fillStage('col-dropship', 'cnt-dropship', 'stat-dropship', 'dropship', grouped.dropship, function (o) {
     return pill(o.color, 'pill-color') +
       pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order') +
-      pill(o.po_num ? 'PO: ' + o.po_num : '', 'pill-po') +
       pill(o.eta ? 'ETA: ' + fmtDate(o.eta) : '', 'pill-eta');
   });
   fillStage('col-assembled', 'cnt-assembled', 'stat-assembled', 'assembled', grouped.assembled, function (o) {
@@ -401,19 +540,23 @@ function renderData(data) {
   if (lu) lu.textContent = 'Last updated ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   // Update calendar with all orders
-  if (typeof renderCalendar === 'function') {
-    renderCalendar(data.orders.concat(data.kits));
+  try {
+    if (typeof renderCalendar === 'function') {
+      renderCalendar(data.orders.concat(data.kits));
+    }
+  } catch(calErr) {
+    console.error('Calendar render error:', calErr);
   }
 }
 
 function setLoadingSpinners() {
-  var ids = ['col-new', 'col-ready', 'col-back', 'col-assembled', 'col-powder', 'col-pickup', 'col-kits'];
+  var ids = ['col-new', 'col-ready', 'col-back', 'col-dropship', 'col-assembled', 'col-powder', 'col-pickup', 'col-kits'];
   ids.forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.innerHTML = spinnerHTML();
   });
-  var cids = ['stat-new', 'stat-ready', 'stat-back', 'stat-assembled', 'stat-powder', 'stat-pickup', 'stat-kits',
-              'cnt-new', 'cnt-ready', 'cnt-back', 'cnt-assembled', 'cnt-powder', 'cnt-pickup', 'cnt-kits'];
+  var cids = ['stat-new', 'stat-ready', 'stat-back', 'stat-dropship', 'stat-assembled', 'stat-powder', 'stat-pickup', 'stat-kits',
+              'cnt-new', 'cnt-ready', 'cnt-back', 'cnt-dropship', 'cnt-assembled', 'cnt-powder', 'cnt-pickup', 'cnt-kits'];
   cids.forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.textContent = '-';
@@ -483,6 +626,106 @@ function onDrop(e, toTab) {
   showMoveModal(dragFromTab, toTab, dragData);
 }
 
+// ---- Build date scheduling helpers ----
+
+function isWeekday(d) {
+  var day = d.getDay();
+  return day !== 0 && day !== 6;
+}
+
+function addWeekdays(d, n) {
+  var result = new Date(d);
+  if (n >= 0) {
+    var added = 0;
+    while (added < n) {
+      result.setDate(result.getDate() + 1);
+      if (isWeekday(result)) added++;
+    }
+  } else {
+    var removed = 0;
+    var abs = Math.abs(n);
+    while (removed < abs) {
+      result.setDate(result.getDate() - 1);
+      if (isWeekday(result)) removed++;
+    }
+  }
+  return result;
+}
+
+function countWeekdays(from, to) {
+  if (to <= from) return 0;
+  var count = 0;
+  var cur = new Date(from);
+  cur.setDate(cur.getDate() + 1);
+  while (cur <= to) {
+    if (isWeekday(cur)) count++;
+    cur.setDate(cur.getDate() + 1);
+  }
+  return count;
+}
+
+function parseBuildDate(str) {
+  if (!str) return null;
+  var p = str.split('/');
+  if (p.length !== 3) return null;
+  var d = new Date(parseInt(p[2]), parseInt(p[0]) - 1, parseInt(p[1]));
+  d.setHours(0, 0, 0, 0);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function formatBuildDate(d) {
+  var m = d.getMonth() + 1, dd = d.getDate(), y = d.getFullYear();
+  return (m < 10 ? '0' + m : m) + '/' + (dd < 10 ? '0' + dd : dd) + '/' + y;
+}
+
+function getNextBuildDate(cb) {
+  sbFetch('GET', '/rest/v1/orders?select=build_date&build_date=neq.&order=build_date.asc', null, function(err, rows) {
+    var dates = [];
+    (rows || []).forEach(function(r) {
+      if (r.build_date) {
+        var d = parseBuildDate(r.build_date);
+        if (d) dates.push(d);
+      }
+    });
+    var base = dates.length ? new Date(Math.max.apply(null, dates)) : new Date();
+    base.setHours(0, 0, 0, 0);
+    var next = new Date(base);
+    do { next.setDate(next.getDate() + 1); } while (!isWeekday(next));
+    cb(formatBuildDate(next));
+  });
+}
+
+function cascadeBuildDates(pivotDateStr, weekdayDelta, cb) {
+  if (!weekdayDelta) { if (cb) cb(); return; }
+  sbFetch('GET', '/rest/v1/orders?select=id,order_num,build_date&build_date=neq.&order=build_date.asc', null, function(err, rows) {
+    if (err || !rows || !rows.length) { if (cb) cb(); return; }
+    var pivotDate = parseBuildDate(pivotDateStr);
+    if (!pivotDate) { if (cb) cb(); return; }
+    var toUpdate = rows.filter(function(r) {
+      var d = parseBuildDate(r.build_date);
+      return d && d > pivotDate;
+    });
+    if (!toUpdate.length) {
+      showBanner('No orders after this date to update', 'success');
+      if (cb) cb();
+      return;
+    }
+    var done = 0;
+    toUpdate.forEach(function(r) {
+      var d = parseBuildDate(r.build_date);
+      var newDate = addWeekdays(d, weekdayDelta);
+      sbFetch('PATCH', '/rest/v1/orders?id=eq.' + r.id, { build_date: formatBuildDate(newDate) }, function() {
+        done++;
+        if (done === toUpdate.length) {
+          showBanner(toUpdate.length + ' build dates updated', 'success');
+          if (cb) cb();
+        }
+      });
+    });
+  });
+}
+
+
 // ---- Move modal ----
 function labelHTML(t) {
   return '<label style="font-size:11px;color:#555;text-transform:uppercase;letter-spacing:.07em;display:block;margin-top:12px;margin-bottom:4px;">' + t + '</label>';
@@ -546,8 +789,10 @@ function confirmMove() {
 
 
   var updates = { tab: toTab };
-  var sentEl = document.getElementById('move-sent');
-  if (sentEl && sentEl.value) updates.sent_to_powder = sentEl.value;
+  var sentEl  = document.getElementById('move-sent');
+  var buildEl = document.getElementById('move-build');
+  if (sentEl  && sentEl.value)  updates.sent_to_powder = sentEl.value;
+  if (buildEl && buildEl.value) updates.build_date     = buildEl.value;
 
   // Clear sent_to_powder when pulling OUT of powdercoat
   if (fromTab === 'powdercoat' && toTab !== 'powdercoat') {
@@ -702,6 +947,8 @@ function confirmEdit() {
   }
   var oid = editingOrder.id;
   var prev = JSON.parse(JSON.stringify(editingOrder));
+  var oldBuildDate = prev.build_date || '';
+  var newBuildDate = updates.build_date || '';
   closeEditModal();
   pushUndo('edit', prev);
   sbFetch('PATCH', '/rest/v1/orders?id=eq.' + oid, updates, function (err) {
@@ -713,6 +960,21 @@ function confirmEdit() {
         fieldChanges: diffFields(prev, updates),
         summary: 'Order #' + (prev.order_num || oid) + ' edited'
       });
+      // Cascade build date push if build_date changed
+      var finalNewDate = updates.build_date || '';
+      if (finalNewDate && oldBuildDate && finalNewDate !== oldBuildDate) {
+        var oldD = parseBuildDate(oldBuildDate);
+        var newD = parseBuildDate(finalNewDate);
+        if (oldD && newD) {
+          var delta = newD > oldD ? countWeekdays(oldD, newD) : -countWeekdays(newD, oldD);
+          if (delta !== 0) {
+            var direction = delta > 0 ? 'push back' : 'move forward';
+            var days = Math.abs(delta);
+            showCascadeModal(days, direction, delta, oldBuildDate);
+            return; // loadData called inside modal handlers
+          }
+        }
+      }
       loadData(true);
     }
   });
@@ -750,7 +1012,7 @@ function updateAddFields() {
   };
   show('add-color-wrap',    t !== 'cagekits' && t !== 'tagpull');
   show('add-po-wrap',       t === 'backorder');
-  show('add-eta-wrap',      t === 'backorder' || t === 'powdercoat' || t === 'assembled');
+  show('add-eta-wrap',      t === 'backorder' || t === 'dropship' || t === 'powdercoat' || t === 'assembled');
   show('add-build-wrap',    t === 'assembled');
   show('add-sent-wrap',     t === 'powdercoat');
   show('add-customer-wrap', t === 'tagpull');
@@ -893,12 +1155,40 @@ function runImport() {
     if (!name) return;
     if (!orders[name]) orders[name] = {
       order_num: name,
-      items: [], skus: [],
+      items: [], skus: [], colors: [],
       shipping: r['Shipping Method'] || '',
       order_date: r['Created at'] ? new Date(r['Created at']).toLocaleDateString('en-US') : ''
     };
     if (r['Lineitem name']) orders[name].items.push(r['Lineitem name']);
     if (r['Lineitem sku'])  orders[name].skus.push(r['Lineitem sku']);
+    // Color from line item properties columns
+    // Shopify CSV exports property names as "Property: <name>" columns
+    var colorFields = [
+      'cage color','roof color','bumper color','skid plate color',
+      'windshield frame color','grille frame color','grille mesh color',
+      'roof rack frame color','roof rack bezel color','enclosure color',
+      'color','colour','powder color','finish'
+    ];
+    var colorParts = [];
+    Object.keys(r).forEach(function(col) {
+      var colLower = col.toLowerCase().replace(/^property:\s*/,'').trim();
+      if (colorFields.indexOf(colLower) !== -1 && r[col] && r[col].trim()) {
+        colorParts.push(col.replace(/^Property:\s*/i,'').replace(/ Color$/i,'') + ': ' + r[col].trim());
+      }
+    });
+    if (colorParts.length) {
+      // If all same value, just store that value; otherwise store full breakdown
+      var uniqueVals = colorParts.map(function(p){ return p.split(': ')[1]; })
+        .filter(function(v,i,a){ return a.indexOf(v) === i; });
+      orders[name].colors.push(uniqueVals.length === 1 ? uniqueVals[0] : colorParts.join(', '));
+    } else {
+      // Fallback: variant title
+      var variant = r['Lineitem variant'] || r['Variant Title'] || '';
+      if (variant && variant.toLowerCase() !== 'default title') {
+        var colorVal = variant.split('/')[0].trim();
+        if (colorVal) orders[name].colors.push(colorVal);
+      }
+    }
   });
 
   var orderList = Object.values(orders);
@@ -931,7 +1221,7 @@ function runImport() {
         order_num: o.order_num,
         sku:  (o.skus || []).join(', ') || '',
         item: o.items.join(', '),
-        color: '',
+        color: (o.colors && o.colors[0]) || '',
         order_date: o.order_date,
         shipping: o.shipping,
         po_num: '', eta: '', build_date: '', sent_to_powder: ''

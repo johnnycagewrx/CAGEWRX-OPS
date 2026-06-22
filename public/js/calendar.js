@@ -1,52 +1,59 @@
-// calendar.js - CAGEwrx Ops Calendar + Date Picker
+// calendar.js - CAGEwrx Ops Calendar (vertical infinite scroll)
 
 'use strict';
 
 // ---- State ----
-var calYear  = new Date().getFullYear();
-var calMonth = new Date().getMonth(); // 0-indexed
 var calOrders = [];
-var datePickerTarget = null; // input id that the picker will fill
+var calStartDate = null;    // Monday of the week shown at top
+var calWeeksLoaded = 0;     // how many weeks rendered below start
+var calWeeksBefore = 0;     // how many weeks rendered above start
+var CAL_WEEK_CHUNK = 8;     // weeks loaded per scroll trigger
 
-// ---- Calendar rendering ----
-var MONTH_NAMES = ['January','February','March','April','May','June',
-                   'July','August','September','October','November','December'];
-var DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-
-// Color coding by event type
 var CAL_COLORS = {
   build_date:      { bg: '#0d47a1', border: '#1565c0', text: '#e3f2fd', label: 'BUILD'      },
-  eta:             { bg: '#1b5e20', border: '#2e7d32', text: '#e8f5e9', label: 'ETA'        },
   sent_to_powder:  { bg: '#bf360c', border: '#e64a19', text: '#fbe9e7', label: 'SENT TO PC' },
-  send_to_powder:  { bg: '#4a148c', border: '#7b1fa2', text: '#f3e5f5', label: 'SEND TO PC' },
-  order_date:      { bg: '#1a237e', border: '#283593', text: '#e8eaf6', label: 'ORDER'      }
+  send_to_powder:  { bg: '#4a148c', border: '#7b1fa2', text: '#f3e5f5', label: 'SEND TO PC' }
 };
 
+var DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+var MONTH_NAMES = ['January','February','March','April','May','June',
+                   'July','August','September','October','November','December'];
+
+// ---- Date helpers ----
 function parseDate(str) {
   if (!str) return null;
-  // Handle MM/DD/YYYY
-  var parts = str.split('/');
-  if (parts.length === 3) {
-    var d = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+  var p = str.split('/');
+  if (p.length === 3) {
+    var d = new Date(parseInt(p[2]), parseInt(p[0]) - 1, parseInt(p[1]));
     return isNaN(d.getTime()) ? null : d;
   }
-  // Handle ISO
-  var d2 = new Date(str);
-  return isNaN(d2.getTime()) ? null : d2;
+  return null;
 }
 
 function formatDateKey(d) {
-  // Returns YYYY-MM-DD key
-  return d.getFullYear() + '-' +
-    String(d.getMonth() + 1).padStart(2, '0') + '-' +
-    String(d.getDate()).padStart(2, '0');
+  var m = d.getMonth() + 1;
+  var dd = d.getDate();
+  return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (dd < 10 ? '0' + dd : dd);
 }
 
+function startOfWeek(d) {
+  // Returns Sunday of the week containing d
+  var r = new Date(d);
+  r.setDate(r.getDate() - r.getDay());
+  r.setHours(0, 0, 0, 0);
+  return r;
+}
+
+function addDays(d, n) {
+  var r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
+}
+
+// ---- Event map ----
 function buildCalEvents(orders) {
   var map = {};
-
   orders.forEach(function(o) {
-    // build_date only shows for assembled stage
     if (o.build_date && o.tab === 'assembled') {
       var d = parseDate(o.build_date);
       if (d) {
@@ -55,141 +62,185 @@ function buildCalEvents(orders) {
         map[key].push({ order: o, type: 'build_date' });
       }
     }
-    // sent_to_powder only shows for powdercoat stage
     if (o.sent_to_powder && o.tab === 'powdercoat') {
-      var d = parseDate(o.sent_to_powder);
-      if (d) {
-        var key = formatDateKey(d);
-        if (!map[key]) map[key] = [];
-        // Use different type/color if date is in the future
-        var now = new Date(); now.setHours(0,0,0,0);
-        var eventType = d > now ? 'send_to_powder' : 'sent_to_powder';
-        map[key].push({ order: o, type: eventType });
-      }
-    }
-    // eta shows for all active stages (not completed)
-    if (o.eta) {
-      var d = parseDate(o.eta);
-      if (d) {
-        var key = formatDateKey(d);
-        if (!map[key]) map[key] = [];
-        map[key].push({ order: o, type: 'eta' });
+      var d2 = parseDate(o.sent_to_powder);
+      if (d2) {
+        var key2 = formatDateKey(d2);
+        if (!map[key2]) map[key2] = [];
+        var now = new Date(); now.setHours(0, 0, 0, 0);
+        map[key2].push({ order: o, type: d2 > now ? 'send_to_powder' : 'sent_to_powder' });
       }
     }
   });
   return map;
 }
 
+// ---- Render ----
 function renderCalendar(orders) {
   calOrders = orders || calOrders;
-  var events = buildCalEvents(calOrders);
 
-  var firstDay = new Date(calYear, calMonth, 1).getDay();
-  var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  // Start from previous Sunday (so current week is at top)
   var today = new Date();
-  var todayKey = formatDateKey(today);
+  today.setHours(0, 0, 0, 0);
+  calStartDate = startOfWeek(today);
+  // Go back one more week so "previous week" is visible at top
+  calStartDate = addDays(calStartDate, -7);
 
-  var html = '';
+  calWeeksLoaded = 0;
+  calWeeksBefore = 1; // we already placed 1 week before current
 
-  // Header
-  html += '<div class="cal-header">';
-  html += '<button class="cal-nav" onclick="calPrev()">&#x276E;</button>';
-  html += '<div class="cal-title">' + MONTH_NAMES[calMonth] + ' ' + calYear + '</div>';
-  html += '<button class="cal-nav" onclick="calNext()">&#x276F;</button>';
-  html += '</div>';
+  var container = document.getElementById('calendar-body');
+  if (!container) return;
 
-  // Day name row
-  html += '<div class="cal-grid">';
-  DAY_NAMES.forEach(function(d) {
-    html += '<div class="cal-dayname">' + d + '</div>';
-  });
+  container.innerHTML =
+    buildLegendHTML() +
+    buildDayNamesHTML() +
+    '<div id="cal-scroll-area" class="cal-scroll-area">' +
+      '<div id="cal-load-past" class="cal-load-more-btn" onclick="loadMorePast()">&#x2191; Load earlier weeks</div>' +
+      '<div id="cal-weeks"></div>' +
+      '<div id="cal-load-future" class="cal-load-more-btn" onclick="loadMoreFuture()">&#x2193; Load more weeks</div>' +
+    '</div>';
 
-  // Empty cells before first day
-  for (var i = 0; i < firstDay; i++) {
-    html += '<div class="cal-cell cal-empty"></div>';
-  }
+  renderWeeks(CAL_WEEK_CHUNK);
 
-  // Day cells
-  for (var day = 1; day <= daysInMonth; day++) {
-    var key = calYear + '-' +
-      String(calMonth + 1).padStart(2, '0') + '-' +
-      String(day).padStart(2, '0');
-    var isToday = key === todayKey;
-    var dayEvents = events[key] || [];
-
-    html += '<div class="cal-cell' + (isToday ? ' cal-today' : '') + '">';
-    html += '<div class="cal-date">' + day + '</div>';
-
-    // Show all events - cell stretches to fit
-        dayEvents.forEach(function(ev) {
-      var c = CAL_COLORS[ev.type];
-      var num = ev.order.order_num || '?';
-      var oid = ev.order.id;
-      var otab = ev.order.tab;
-      html += '<div class="cal-event"' +
-        ' style="background:' + c.bg + ';border-left:2px solid ' + c.border + ';color:' + c.text + ';"' +
-        ' title="#' + num + ' - ' + (ev.order.sku || ev.order.item || '') + '"' +
-        ' data-id="' + oid + '" data-tab="' + otab + '">' +
-        '#' + num + ' &mdash; ' + c.label +
-      '</div>';
-    });
-
-    html += '</div>';
-  }
-
-  // Fill remaining cells to complete last row
-  var totalCells = firstDay + daysInMonth;
-  var remainder = totalCells % 7;
-  if (remainder > 0) {
-    for (var j = 0; j < (7 - remainder); j++) {
-      html += '<div class="cal-cell cal-empty"></div>';
+  // Scroll so current week is visible (skip the "previous week" row)
+  setTimeout(function() {
+    var scrollArea = document.getElementById('cal-scroll-area');
+    var firstWeekRow = document.querySelector('.cal-week-row');
+    if (scrollArea && firstWeekRow) {
+      // Scroll past the first (past) week row
+      scrollArea.scrollTop = firstWeekRow.offsetHeight + 4;
     }
-  }
+  }, 50);
+}
 
-  html += '</div>'; // end cal-grid
-
-  // Legend
-  html += '<div class="cal-legend">';
-  // Show legend items (skip order_date as it's rarely used)
-  var legendTypes = ['build_date', 'eta', 'send_to_powder', 'sent_to_powder'];
-  legendTypes.forEach(function(type) {
+function buildLegendHTML() {
+  var h = '<div class="cal-legend">';
+  var types = ['build_date', 'send_to_powder', 'sent_to_powder'];
+  types.forEach(function(type) {
     var c = CAL_COLORS[type];
     if (!c) return;
-    html += '<div class="cal-legend-item">' +
+    h += '<div class="cal-legend-item">' +
       '<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + c.bg + ';border:1px solid ' + c.border + ';margin-right:4px;"></span>' +
       '<span style="color:' + c.text + ';">' + c.label + '</span>' +
     '</div>';
   });
-  html += '</div>';
-
-  var el = document.getElementById('calendar-body');
-  if (el) el.innerHTML = html;
+  h += '</div>';
+  return h;
 }
 
-function editFromId(id, tab) {
-  var o = orderCache[id];
-  if (o) openEditModal(tab, o);
+function buildDayNamesHTML() {
+  var h = '<div class="cal-daynames-row">';
+  DAY_NAMES.forEach(function(d) {
+    h += '<div class="cal-dayname">' + d + '</div>';
+  });
+  h += '</div>';
+  return h;
 }
 
-function calPrev() {
-  calMonth--;
-  if (calMonth < 0) { calMonth = 11; calYear--; }
-  renderCalendar();
+function renderWeeks(count) {
+  var events = buildCalEvents(calOrders);
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+  var todayKey = formatDateKey(today);
+
+  var weeksEl = document.getElementById('cal-weeks');
+  if (!weeksEl) return;
+
+  var html = weeksEl.innerHTML;
+
+  for (var w = 0; w < count; w++) {
+    var weekStart = addDays(calStartDate, calWeeksLoaded * 7);
+    var monthLabel = '';
+    // Show month label when a new month starts in this week
+    for (var d = 0; d < 7; d++) {
+      var day = addDays(weekStart, d);
+      if (day.getDate() <= 7 && d === 0) {
+        monthLabel = MONTH_NAMES[day.getMonth()] + ' ' + day.getFullYear();
+      }
+    }
+
+    html += buildWeekRowHTML(weekStart, events, todayKey, monthLabel);
+    calWeeksLoaded++;
+  }
+
+  weeksEl.innerHTML = html;
 }
 
-function calNext() {
-  calMonth++;
-  if (calMonth > 11) { calMonth = 0; calYear++; }
-  renderCalendar();
+function buildWeekRowHTML(weekStart, events, todayKey, monthLabel) {
+  var h = '<div class="cal-week-row">';
+  if (monthLabel) {
+    h += '<div class="cal-month-label" style="grid-column:1/-1;">' + monthLabel + '</div>';
+  }
+  for (var d = 0; d < 7; d++) {
+    var day = addDays(weekStart, d);
+    var key = formatDateKey(day);
+    var isToday = key === todayKey;
+    var dayEvents = events[key] || [];
+
+    h += '<div class="cal-cell' + (isToday ? ' cal-today' : '') + '">';
+    h += '<div class="cal-date">' + day.getDate() + '</div>';
+
+    dayEvents.forEach(function(ev) {
+      var c = CAL_COLORS[ev.type];
+      if (!c) return;
+      var num = ev.order.order_num || '?';
+      h += '<div class="cal-event"' +
+        ' style="background:' + c.bg + ';border-left:2px solid ' + c.border + ';color:' + c.text + ';"' +
+        ' data-id="' + ev.order.id + '" data-tab="' + ev.order.tab + '">' +
+        '#' + num + ' &mdash; ' + c.label +
+      '</div>';
+    });
+
+    h += '</div>';
+  }
+  h += '</div>';
+  return h;
 }
 
-// ---- Date Picker ----
+function loadMoreFuture() {
+  renderWeeks(CAL_WEEK_CHUNK);
+}
+
+function loadMorePast() {
+  var events = buildCalEvents(calOrders);
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+  var todayKey = formatDateKey(today);
+  var weeksEl = document.getElementById('cal-weeks');
+  if (!weeksEl) return;
+
+  var html = '';
+  for (var w = 0; w < CAL_WEEK_CHUNK; w++) {
+    calWeeksBefore++;
+    var weekStart = addDays(calStartDate, -((calWeeksBefore - 1) * 7));
+    var monthLabel = '';
+    if (weekStart.getDate() <= 7) {
+      monthLabel = MONTH_NAMES[weekStart.getMonth()] + ' ' + weekStart.getFullYear();
+    }
+    html = buildWeekRowHTML(weekStart, events, todayKey, monthLabel) + html;
+  }
+
+  var scrollArea = document.getElementById('cal-scroll-area');
+  var prevScrollHeight = scrollArea ? scrollArea.scrollHeight : 0;
+  var prevScrollTop = scrollArea ? scrollArea.scrollTop : 0;
+
+  weeksEl.innerHTML = html + weeksEl.innerHTML;
+
+  // Preserve scroll position so it doesn't jump
+  if (scrollArea) {
+    var newScrollHeight = scrollArea.scrollHeight;
+    scrollArea.scrollTop = prevScrollTop + (newScrollHeight - prevScrollHeight);
+  }
+}
+
+// ---- Date Picker (unchanged) ----
+var datePickerTarget = null;
 var pickerYear  = new Date().getFullYear();
 var pickerMonth = new Date().getMonth();
 
 function openDatePicker(inputId) {
   datePickerTarget = inputId;
-  // Pre-set picker to current value of the input if valid
   var el = document.getElementById(inputId);
   if (el && el.value) {
     var d = parseDate(el.value);
@@ -214,8 +265,6 @@ function renderPicker() {
   var daysInMonth = new Date(pickerYear, pickerMonth + 1, 0).getDate();
   var today = new Date();
   var todayKey = formatDateKey(today);
-
-  // Get currently selected value
   var selectedKey = null;
   if (datePickerTarget) {
     var el = document.getElementById(datePickerTarget);
@@ -224,54 +273,37 @@ function renderPicker() {
       if (d) selectedKey = formatDateKey(d);
     }
   }
-
-  var html = '';
-  html += '<div class="picker-header">';
+  var MONTH_NAMES_PICK = ['January','February','March','April','May','June',
+    'July','August','September','October','November','December'];
+  var html = '<div class="picker-header">';
   html += '<button class="cal-nav" onclick="pickerPrev()">&#x276E;</button>';
-  html += '<div class="cal-title">' + MONTH_NAMES[pickerMonth] + ' ' + pickerYear + '</div>';
+  html += '<div class="cal-title">' + MONTH_NAMES_PICK[pickerMonth] + ' ' + pickerYear + '</div>';
   html += '<button class="cal-nav" onclick="pickerNext()">&#x276F;</button>';
   html += '</div>';
-
   html += '<div class="picker-grid">';
-  DAY_NAMES.forEach(function(d) {
-    html += '<div class="cal-dayname">' + d + '</div>';
-  });
-
-  for (var i = 0; i < firstDay; i++) {
-    html += '<div class="picker-cell picker-empty"></div>';
-  }
-
+  DAY_NAMES.forEach(function(d) { html += '<div class="cal-dayname">' + d + '</div>'; });
+  for (var i = 0; i < firstDay; i++) html += '<div class="picker-cell picker-empty"></div>';
   for (var day = 1; day <= daysInMonth; day++) {
-    var key = pickerYear + '-' +
-      String(pickerMonth + 1).padStart(2, '0') + '-' +
-      String(day).padStart(2, '0');
-    var isToday    = key === todayKey;
-    var isSelected = key === selectedKey;
-    var cls = 'picker-cell' +
-      (isToday    ? ' picker-today'    : '') +
-      (isSelected ? ' picker-selected' : '');
-    var m = String(pickerMonth + 1).padStart(2, '0');
-    var dd = String(day).padStart(2, '0');
+    var key = pickerYear + '-' + pickerMonth + 1 < 10 ? '0' + (pickerMonth + 1) : '' + (pickerMonth + 1) + '-' + day < 10 ? '0' + day : '' + day;
+    var cls = 'picker-cell' + (key === todayKey ? ' picker-today' : '') + (key === selectedKey ? ' picker-selected' : '');
+    var m = pickerMonth + 1 < 10 ? '0' + (pickerMonth + 1) : '' + (pickerMonth + 1);
+    var dd = day < 10 ? '0' + day : '' + day;
     var val = m + '/' + dd + '/' + pickerYear;
     html += '<div class="' + cls + '" onclick="selectDate(\'' + val + '\')">' + day + '</div>';
   }
-
   html += '</div>';
-
   var pb = document.getElementById('picker-body');
   if (pb) pb.innerHTML = html;
 }
 
 function selectDate(val) {
   if (datePickerTarget) {
-    // Update hidden input
     var el = document.getElementById(datePickerTarget);
     if (el) el.value = val;
-    // Update the button display text
     var btn = document.querySelector('[data-picker-target="' + datePickerTarget + '"]');
     if (btn) {
-      btn.innerHTML = '<span style="color:#e0e0e0;">' + val + '</span>' +
-        '<span style="color:#555;font-size:12px;"> &#x1F4C5;</span>';
+      var span = btn.querySelector('span');
+      if (span) { span.textContent = val; span.style.color = '#e0e0e0'; }
     }
   }
   closeDatePicker();
@@ -289,35 +321,31 @@ function pickerNext() {
   renderPicker();
 }
 
-// ---- Event delegation for date picker buttons and calendar events ----
-// Called once after DOM is ready
-function initDatePickers() {
-  document.addEventListener('click', function(e) {
-    // Date picker buttons
-    var btn = e.target.closest('[data-picker-target]');
-    if (btn) {
-      var targetId = btn.getAttribute('data-picker-target');
-      if (targetId) openDatePicker(targetId);
-    }
-    // Calendar event clicks
-    var ev = e.target.closest('[data-id][data-tab]');
-    if (ev) {
-      var id  = ev.getAttribute('data-id');
-      var tab = ev.getAttribute('data-tab');
-      if (id && tab) editFromId(id, tab);
-    }
-  });
-}
-
 function resetDateBtn(inputId, val) {
   var el = document.getElementById(inputId);
   if (el) el.value = val || '';
   var btn = document.querySelector('[data-picker-target="' + inputId + '"]');
   if (btn) {
     var span = btn.querySelector('span');
-    if (span) {
-      span.textContent = val || 'Select date...';
-      span.style.color = val ? '#e0e0e0' : '#333';
-    }
+    if (span) { span.textContent = val || 'Select date...'; span.style.color = val ? '#e0e0e0' : '#333'; }
   }
+}
+
+function editFromId(id, tab) {
+  var o = orderCache[id];
+  if (o) openEditModal(tab, o);
+}
+
+// ---- Event delegation ----
+function initDatePickers() {
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-picker-target]');
+    if (btn) { var targetId = btn.getAttribute('data-picker-target'); if (targetId) openDatePicker(targetId); }
+    var ev = e.target.closest('[data-id][data-tab]');
+    if (ev && !e.target.closest('[data-priority-id]') && !e.target.closest('.edit-btn') && !e.target.closest('.done-btn')) {
+      var id = ev.getAttribute('data-id');
+      var tab = ev.getAttribute('data-tab');
+      if (id && tab) editFromId(id, tab);
+    }
+  });
 }

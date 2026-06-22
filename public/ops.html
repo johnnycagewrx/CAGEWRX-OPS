@@ -75,13 +75,14 @@
 <!-- ===== MAIN ===== -->
 <div class="main">
 
-  <div class="banner" id="banner"></div>
+  
 
   <!-- Stats bar -->
   <div class="stats">
     <div class="stat"><div class="stat-label">New orders</div><div class="stat-val orange" id="stat-new">-</div></div>
     <div class="stat"><div class="stat-label">Ready to ship</div><div class="stat-val green" id="stat-ready">-</div></div>
     <div class="stat"><div class="stat-label">Backordered</div><div class="stat-val red" id="stat-back">-</div></div>
+    <div class="stat"><div class="stat-label">Drop Shipping</div><div class="stat-val purple" id="stat-dropship">-</div></div>
     <div class="stat"><div class="stat-label">Assembled</div><div class="stat-val blue" id="stat-assembled">-</div></div>
     <div class="stat"><div class="stat-label">Powder coat</div><div class="stat-val amber" id="stat-powder">-</div></div>
     <div class="stat"><div class="stat-label">For pickup</div><div class="stat-val teal" id="stat-pickup">-</div></div>
@@ -105,8 +106,9 @@
     </div>
   </div>
 
-  <!-- Tag and Pull from Inventory (full width) -->
-  <div style="margin-bottom:20px;">
+  <!-- Tag and Pull + Backorder (half width each) -->
+  <div class="half-width-row" style="margin-bottom:20px;">
+
     <div class="stage" id="stage-tagpull"
       ondragover="onDragOver(event,'tagpull')"
       ondragleave="onDragLeave('tagpull')"
@@ -120,6 +122,21 @@
         <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
       </div>
     </div>
+
+    <div class="stage" id="stage-backorder"
+      ondragover="onDragOver(event,'backorder')"
+      ondragleave="onDragLeave('backorder')"
+      ondrop="onDrop(event,'backorder')">
+      <div class="stage-header" style="background:#1a0808;">
+        <span style="font-size:15px;">&#x23F8;</span>
+        <p class="stage-title" style="color:#ef5350;">BACKORDERED</p>
+        <span class="stage-count" id="cnt-back" style="background:#2a0f0f;color:#ef5350;">-</span>
+      </div>
+      <div class="kits-body" id="col-back">
+        <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Pipeline -->
@@ -158,18 +175,18 @@
       </div>
     </div>
 
-    <!-- Backordered -->
-    <div class="stage" id="stage-backorder"
-      ondragover="onDragOver(event,'backorder')"
-      ondragleave="onDragLeave('backorder')"
-      ondrop="onDrop(event,'backorder')">
-      <div class="stage-header stage-toggle" style="background:#1a0808;cursor:pointer;" onclick="toggleStage('backorder')">
-        <span style="font-size:15px;">&#x23F8;</span>
-        <p class="stage-title" style="color:#ef5350;">BACKORDERED / DROP SHIP</p>
-        <span class="stage-count" id="cnt-back" style="background:#2a0f0f;color:#ef5350;">-</span>
-        <span class="stage-chevron" id="chv-back">&#x25BE;</span>
+    <!-- Drop Shipping -->
+    <div class="stage" id="stage-dropship"
+      ondragover="onDragOver(event,'dropship')"
+      ondragleave="onDragLeave('dropship')"
+      ondrop="onDrop(event,'dropship')">
+      <div class="stage-header stage-toggle" style="background:#1a0a1a;cursor:pointer;" onclick="toggleStage('dropship')">
+        <span style="font-size:15px;">&#x1F69A;</span>
+        <p class="stage-title" style="color:#ce93d8;">DROP SHIPPING</p>
+        <span class="stage-count" id="cnt-dropship" style="background:#2a0a2a;color:#ce93d8;">-</span>
+        <span class="stage-chevron" id="chv-dropship">&#x25BE;</span>
       </div>
-      <div class="stage-body" id="col-back" style="display:none;">
+      <div class="stage-body" id="col-dropship" style="display:none;">
         <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
       </div>
     </div>
@@ -249,7 +266,8 @@
     <select id="add-tab" onchange="updateAddFields()">
       <option value="new">New Order</option>
       <option value="ready">Ready to Ship</option>
-      <option value="backorder">Backorder</option>
+      <option value="backorder">Backordered</option>
+      <option value="dropship">Drop Shipping</option>
       <option value="assembled">Assembled</option>
       <option value="powdercoat">Powder Coat</option>
       <option value="pickup">Ready for Pickup</option>
@@ -420,5 +438,24 @@
   loadData(false);
 </script>
 
+<!-- ===== CASCADE BUILD DATE MODAL ===== -->
+<div class="modal-overlay" id="cascade-modal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-title">&#x1F4C5; Build Date Changed</div>
+    <p id="cascade-msg" style="font-size:13px;color:#999;margin-bottom:20px;line-height:1.5;"></p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="modal-btn modal-btn-save" onclick="cascadeAll()" id="cascade-all-btn"
+        style="font-size:13px;padding:12px;">
+        Push all orders back by N days
+      </button>
+      <button class="modal-btn modal-btn-cancel" onclick="cascadeThisOnly()"
+        style="font-size:13px;padding:12px;">
+        Change this order date only
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="banner" id="banner"></div>
 </body>
 </html>

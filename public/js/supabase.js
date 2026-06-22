@@ -71,13 +71,23 @@ function autoSlashDate(input) {
 /**
  * Show a banner notification
  */
+var _bannerTimer = null;
 function showBanner(msg, type) {
   var b = document.getElementById('banner');
   if (!b) return;
+  // Clear show first, force reflow, then re-add with new content
+  b.classList.remove('show');
   b.textContent = msg;
   b.className = 'banner ' + type;
+  // Make visible before reflow so offsetWidth is measurable
   b.style.display = 'block';
-  setTimeout(function () { b.style.display = 'none'; }, 4000);
+  void b.offsetWidth; // force reflow to restart CSS transition
+  b.classList.add('show');
+  if (_bannerTimer) clearTimeout(_bannerTimer);
+  _bannerTimer = setTimeout(function () {
+    b.classList.remove('show');
+    setTimeout(function() { b.style.display = 'none'; }, 250);
+  }, 3000);
 }
 
 /**

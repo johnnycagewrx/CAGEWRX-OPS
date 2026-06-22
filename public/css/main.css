@@ -39,14 +39,28 @@ body {
 
 /* ---- Banner notifications ---- */
 .banner {
+  position: fixed !important;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   border-radius: 8px;
-  padding: 10px 16px;
-  font-size: 12px;
-  margin-bottom: 16px;
+  padding: 10px 22px;
+  font-size: 13px;
+  font-weight: 600;
   display: none;
+  z-index: 99999;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  max-width: 90vw;
+  text-align: center;
+  white-space: nowrap;
 }
-.banner.error { background: #1f0808; border: 1px solid #4a1010; color: #ff6b6b; }
-.banner.success { background: #0a1f0a; border: 1px solid #1a4a1a; color: #4caf50; }
+.banner.show { display: block; }
+.banner.error { background: #2a0d0d; border: 1px solid #c62828; color: #ff8a80; }
+.banner.success { background: #0d2a0d; border: 1px solid #2e7d32; color: #81c784; }
+
+@media (max-width: 768px) {
+  .banner { top: auto; bottom: 78px; max-width: 92vw; white-space: normal; }
+}
 
 /* ---- Spinner ---- */
 .spinner {
@@ -88,7 +102,7 @@ body {
   position: fixed;
   right: 16px;
   top: 70px;
-  background: #111;
+  background: #1e1e1e;
   border: 1px solid #2a2a2a;
   border-radius: 12px;
   min-width: 220px;
@@ -134,13 +148,13 @@ body {
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 2000;
   padding: 20px;
 }
 .modal-overlay.open { display: flex; }
 
 .modal {
-  background: #111;
+  background: #1e1e1e;
   border: 1px solid #2a2a2a;
   border-radius: 14px;
   padding: 24px;
@@ -219,6 +233,7 @@ body {
 .red    { color: #ef5350; }
 .blue   { color: #42a5f5; }
 .amber  { color: #ffa726; }
+.purple { color: #ce93d8; }
 .teal   { color: #4db6ac; }
 .purple { color: #b39ddb; }
 .orange { color: #ff7043; }
