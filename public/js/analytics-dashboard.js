@@ -143,11 +143,11 @@ function renderAnalytics(data) {
   // ---- CSV import section ----
   var importHTML = '<div class="import-section">' +
     '<div class="chart-title">&#x1F4C5; Backfill Historical Revenue</div>' +
-    '<p class="import-hint">Import your Shopify order history to populate revenue charts. Only orders not already in the system will be added.</p>' +
+    '<p class="import-hint">Update revenue prices on your existing pipeline orders using a Shopify CSV export. <strong style="color:#ef5350;">This will never create new orders</strong> — it only adds price data to orders already in your pipeline.</p>' +
     '<ol class="import-steps">' +
-      '<li>In Shopify Admin → Orders → Export → All time → Plain CSV</li>' +
+      '<li>In Shopify Admin → Orders → Export → All time → Plain CSV for Excel</li>' +
       '<li>Select the exported file below</li>' +
-      '<li>Click Import — only new orders with prices will be added</li>' +
+      '<li>Click Import — only existing pipeline orders will have their price updated</li>' +
     '</ol>' +
     '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">' +
       '<input type="file" id="analytics-csv-file" accept=".csv" style="font-size:12px;color:#666;">' +
@@ -171,62 +171,99 @@ function kpiCard(label, value, compareHTML) {
 function importAnalyticsCSV() {
   var fileEl = document.getElementById('analytics-csv-file');
   var statusEl = document.getElementById('analytics-import-status');
-  if (!fileEl || !fileEl.files.length) { if (statusEl) statusEl.textContent = 'Please select a CSV file first.'; return; }
+  if (!fileEl) { console.error('No file input found'); return; }
+  if (!fileEl.files || !fileEl.files.length) {
+    if (statusEl) statusEl.textContent = 'Please select a CSV file first.';
+    showBanner('Please select a CSV file first', 'error');
+    return;
+  }
+  if (statusEl) statusEl.textContent = 'Reading file...';
+  showBanner('Reading CSV...', 'success');
 
   var reader = new FileReader();
+  reader.onerror = function() { showBanner('Could not read file', 'error'); };
   reader.onload = function(e) {
+    console.log('[CSV] File loaded, length:', e.target.result.length);
     var rows = parseCSVText(e.target.result);
     if (!rows.length) { if (statusEl) statusEl.textContent = 'No data found in CSV.'; return; }
 
     // Group by order number, grab price from "Total" column
     var orders = {};
+    // Log first row keys so we can see what columns Shopify exports
+    if (rows.length > 0) console.log('[CSV] Columns found:', Object.keys(rows[0]).join(', '));
+
     rows.forEach(function(r) {
-      var name = (r['Name'] || r['Order'] || '').replace('#', '').trim();
+      var name = (r['Name'] || r['Order'] || r['order_number'] || '').replace('#', '').trim();
       if (!name) return;
+      // Try multiple column names for total price
+      var price = parseFloat(
+        r['Total'] || r['Subtotal'] || r['total_price'] ||
+        r['Total Price'] || r['Gross Sales'] || r['Net Sales'] || 0
+      );
       if (!orders[name]) {
+        var rawDate = r['Created at'] || r['Created At'] || r['created_at'] || '';
+        var orderDate = '';
+        if (rawDate) {
+          try { orderDate = new Date(rawDate).toLocaleDateString('en-US'); } catch(e) {}
+        }
         orders[name] = {
           order_num:   name,
           item:        '',
           sku:         '',
-          total_price: parseFloat(r['Total'] || r['Subtotal'] || r['total_price'] || 0),
-          order_date:  r['Created at'] ? new Date(r['Created at']).toLocaleDateString('en-US') : '',
+          total_price: price,
+          order_date:  orderDate,
           shipping:    r['Shipping Method'] || r['Lineitem fulfillment status'] || '',
           color:       '',
           tab:         'new'
         };
+      } else if (price > 0 && !orders[name].total_price) {
+        orders[name].total_price = price;
       }
       if (r['Lineitem name'] && !orders[name].item) orders[name].item = r['Lineitem name'];
       if (r['Lineitem sku']  && !orders[name].sku)  orders[name].sku  = r['Lineitem sku'];
     });
 
-    var list = Object.values(orders).filter(function(o) { return o.total_price > 0 && o.order_date; });
-    if (!list.length) { if (statusEl) statusEl.textContent = 'No orders with valid prices found in CSV.'; return; }
+    var list = Object.values(orders).filter(function(o) { return o.order_num; });
+    var withPrice = list.filter(function(o) { return o.total_price > 0; });
+    console.log('[CSV] Total orders parsed:', list.length, 'with price:', withPrice.length);
+    if (!withPrice.length) {
+      if (statusEl) statusEl.textContent = 'No orders with valid prices found in CSV. Columns seen: ' + Object.keys(rows[0] || {}).join(', ');
+      return;
+    }
+    var list = withPrice;
 
-    if (statusEl) statusEl.textContent = 'Checking ' + list.length + ' orders...';
+    if (statusEl) statusEl.textContent = 'Matching ' + list.length + ' orders to existing pipeline...';
 
-    // Fetch existing order numbers to avoid duplicates
-    sbFetch('GET', '/rest/v1/orders?select=order_num', null, function(err, existing) {
-      var ex = {};
-      (existing || []).forEach(function(o) { ex[o.order_num] = true; });
-      var toImport = list.filter(function(o) { return !ex[o.order_num]; });
-      var skipped = list.length - toImport.length;
+    // Only update total_price on orders that ALREADY EXIST in the pipeline
+    // Never create new orders from the CSV
+    sbFetch('GET', '/rest/v1/orders?select=id,order_num,total_price', null, function(err, existing) {
+      var exMap = {};
+      (existing || []).forEach(function(o) { exMap[o.order_num] = o; });
 
-      if (!toImport.length) {
-        if (statusEl) statusEl.textContent = 'All ' + skipped + ' orders already exist. Nothing to import.';
+      var toUpdate = list.filter(function(o) {
+        return exMap[o.order_num] && o.total_price > 0 && !exMap[o.order_num].total_price;
+      });
+      var notFound = list.length - toUpdate.length;
+
+      if (!toUpdate.length) {
+        if (statusEl) statusEl.textContent = notFound + ' orders in CSV not found in pipeline (or already have prices). Nothing to update.';
+        showBanner('No matching orders to update', 'error');
         return;
       }
 
-      if (statusEl) statusEl.textContent = 'Importing ' + toImport.length + ' orders (' + skipped + ' already exist)...';
+      if (statusEl) statusEl.textContent = 'Updating prices on ' + toUpdate.length + ' existing orders...';
 
       var done = 0, errors = 0, idx = 0;
       function next() {
-        if (idx >= toImport.length) {
-          if (statusEl) statusEl.textContent = '✓ Imported ' + done + ' orders' + (errors ? ', ' + errors + ' errors' : '') + '. Refreshing analytics...';
+        if (idx >= toUpdate.length) {
+          if (statusEl) statusEl.textContent = '✓ Updated prices on ' + done + ' orders' + (errors ? ', ' + errors + ' errors' : '') + '. Refreshing analytics...';
+          showBanner('✓ ' + done + ' order prices updated!', 'success');
           setTimeout(function() { loadAnalytics(); }, 1000);
           return;
         }
-        var o = toImport[idx++];
-        sbFetch('POST', '/rest/v1/orders', o, function(err) {
+        var o = toUpdate[idx++];
+        var existingOrder = exMap[o.order_num];
+        sbFetch('PATCH', '/rest/v1/orders?id=eq.' + existingOrder.id, { total_price: o.total_price }, function(err) {
           if (err) errors++;
           else done++;
           next();
@@ -239,16 +276,48 @@ function importAnalyticsCSV() {
 }
 
 function parseCSVText(text) {
-  var lines = text.split('\n');
-  if (!lines.length) return [];
-  var headers = lines[0].split(',').map(function(h) { return h.replace(/"/g, '').trim(); });
+  // Proper CSV parser that handles quoted fields with commas inside
+  function parseLine(line) {
+    var result = [], cur = '', inQuotes = false;
+    for (var i = 0; i < line.length; i++) {
+      var ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i+1] === '"') { cur += '"'; i++; }
+        else inQuotes = !inQuotes;
+      } else if (ch === ',' && !inQuotes) {
+        result.push(cur.trim());
+        cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    result.push(cur.trim());
+    return result;
+  }
+
+  // Split on newlines but respect quoted newlines
   var rows = [];
-  for (var i = 1; i < lines.length; i++) {
-    var vals = lines[i].split(',').map(function(v) { return v.replace(/"/g, '').trim(); });
+  var cur = '', inQuotes = false;
+  for (var i = 0; i < text.length; i++) {
+    var ch = text[i];
+    if (ch === '"') { inQuotes = !inQuotes; cur += ch; }
+    else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      if (cur.trim()) rows.push(cur);
+      cur = '';
+      if (ch === '\r' && text[i+1] === '\n') i++;
+    } else { cur += ch; }
+  }
+  if (cur.trim()) rows.push(cur);
+
+  if (!rows.length) return [];
+  var headers = parseLine(rows[0]);
+  var result = [];
+  for (var r = 1; r < rows.length; r++) {
+    var vals = parseLine(rows[r]);
     if (vals.length < 2) continue;
     var row = {};
     headers.forEach(function(h, idx) { row[h] = vals[idx] || ''; });
-    rows.push(row);
+    result.push(row);
   }
-  return rows;
+  return result;
 }
