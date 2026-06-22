@@ -428,15 +428,10 @@ function inviteUser() {
 
 // ---- Tab switching ----
 function switchTab(tab) {
-  var docsSection      = document.getElementById('tab-docs');
-  var usersSection     = document.getElementById('tab-users');
-  var analyticsSection = document.getElementById('tab-analytics');
-  if (docsSection)      docsSection.classList.toggle('active',      tab === 'docs');
-  if (usersSection)     usersSection.classList.toggle('active',     tab === 'users');
-  if (analyticsSection) analyticsSection.classList.toggle('active', tab === 'analytics');
-  // Re-render sidebar so the correct sub-link is highlighted
+  var docsSection  = document.getElementById('tab-docs');
+  var usersSection = document.getElementById('tab-users');
+  if (docsSection)  docsSection.classList.toggle('active',  tab === 'docs');
+  if (usersSection) usersSection.classList.toggle('active', tab === 'users');
   if (typeof renderSidebar === 'function') renderSidebar(tab);
-  // Reload on tab switch
   if (tab === 'users') loadUsers();
-  if (tab === 'analytics' && typeof loadAnalytics === 'function') loadAnalytics();
 }
