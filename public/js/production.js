@@ -8,10 +8,11 @@ var dragTaskFromSection = null;
 var editingTask = null;
 
 var SECTION_LABELS = {
-  shipping:   'Shipping',
-  shop:       'Shop',
-  sme:        'Sales / Marketing / Engineering',
-  needtomake: 'Need to Make'
+  shipping:    'Shipping',
+  shop:        'Shop',
+  sme:         'Sales / Marketing',
+  engineering: 'Engineering',
+  needtomake:  'Need to Make'
 };
 
 var PRIORITY_LABELS = { low: 'Low', medium: 'Medium', high: 'High' };
@@ -57,7 +58,7 @@ function loadTasks() {
 
 function renderTasks(tasks) {
   taskCache = {};
-  var grouped = { shipping: [], shop: [], sme: [], needtomake: [] };
+  var grouped = { shipping: [], shop: [], sme: [], engineering: [], needtomake: [] };
   tasks.forEach(function (t) {
     taskCache[t.id] = t;
     if (grouped[t.section]) grouped[t.section].push(t);

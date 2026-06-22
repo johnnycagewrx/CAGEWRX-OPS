@@ -1,3 +1,29 @@
+// ---- Collapsible kits-style sections (Tag+Pull, Backorder) ----
+var openKitsSections = {};
+
+function initKitsSections() {
+  var sections = ['tagpull', 'back'];
+  sections.forEach(function(sec) {
+    var body = document.getElementById('col-' + sec);
+    var chv  = document.getElementById('chv-' + sec);
+    var startOpen = !isMobile;
+    if (body) body.style.display = startOpen ? 'grid' : 'none';
+    if (chv) chv.classList.toggle('open', startOpen);
+    openKitsSections[sec] = startOpen;
+  });
+}
+
+function toggleKitsSection(sec) {
+  var body = document.getElementById('col-' + sec);
+  var chv  = document.getElementById('chv-' + sec);
+  if (!body) return;
+  var isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'grid';
+  if (chv) chv.classList.toggle('open', !isOpen);
+  openKitsSections[sec] = !isOpen;
+}
+
+
 // ---- Collapsible stages ----
 var openStages = {};
 var isMobile = window.innerWidth <= 768;

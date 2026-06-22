@@ -98,11 +98,27 @@
       ondrop="onTaskDrop(event,'sme')">
       <div class="prod-stage-header" style="background:#0a1525;" onclick="toggleProdSection('sme')">
         <span style="font-size:15px;">&#x1F4C8;</span>
-        <p class="prod-stage-title" style="color:#42a5f5;">SALES / MARKETING / ENGINEERING</p>
+        <p class="prod-stage-title" style="color:#42a5f5;">SALES / MARKETING</p>
         <span class="prod-stage-count" id="pcnt-sme" style="background:#0f1f35;color:#42a5f5;">-</span>
         <span class="prod-stage-chevron" id="pchv-sme">&#x25BE;</span>
       </div>
       <div class="prod-stage-body" id="pcol-sme">
+        <div style="padding:18px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Engineering -->
+    <div class="prod-stage" id="pstage-engineering"
+      ondragover="onTaskDragOver(event,'engineering')"
+      ondragleave="onTaskDragLeave('engineering')"
+      ondrop="onTaskDrop(event,'engineering')">
+      <div class="prod-stage-header" style="background:#0a0a1a;" onclick="toggleProdSection('engineering')">
+        <span style="font-size:15px;">&#x2699;</span>
+        <p class="prod-stage-title" style="color:#9c27b0;">ENGINEERING</p>
+        <span class="prod-stage-count" id="pcnt-engineering" style="background:#1a0a2a;color:#9c27b0;">-</span>
+        <span class="prod-stage-chevron" id="pchv-engineering">&#x25BE;</span>
+      </div>
+      <div class="prod-stage-body" id="pcol-engineering">
         <div style="padding:18px;text-align:center;"><div class="spinner"></div></div>
       </div>
     </div>
@@ -136,7 +152,8 @@
     <select id="task-section">
       <option value="shipping">Shipping</option>
       <option value="shop">Shop</option>
-      <option value="sme">Sales / Marketing / Engineering</option>
+      <option value="sme">Sales / Marketing</option>
+      <option value="engineering">Engineering</option>
       <option value="needtomake">Need to Make</option>
     </select>
 

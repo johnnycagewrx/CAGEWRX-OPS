@@ -13,9 +13,9 @@
   <link rel="apple-touch-icon" sizes="180x180" href="img/favicon.png">
   <link rel="apple-touch-icon" sizes="152x152" href="img/favicon.png">
   <link rel="apple-touch-icon" sizes="120x120" href="img/favicon.png">
-  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/main.css?v=1782157178">
   <link rel="stylesheet" href="css/sidebar.css">
-  <link rel="stylesheet" href="css/ops.css">
+  <link rel="stylesheet" href="css/ops.css?v=1782157178">
 </head>
 <body>
 
@@ -113,10 +113,11 @@
       ondragover="onDragOver(event,'tagpull')"
       ondragleave="onDragLeave('tagpull')"
       ondrop="onDrop(event,'tagpull')">
-      <div class="stage-header" style="background:#1a1505;">
+      <div class="stage-header stage-toggle" style="background:#1a1505;cursor:pointer;" onclick="toggleKitsSection('tagpull')">
         <span style="font-size:15px;">&#x1F3F7;</span>
         <p class="stage-title" style="color:#d4af37;">TAG AND PULL FROM INVENTORY</p>
         <span class="stage-count" id="cnt-tagpull" style="background:#2a2200;color:#d4af37;">-</span>
+        <span class="stage-chevron" id="chv-tagpull">&#x25BE;</span>
       </div>
       <div class="kits-body" id="col-tagpull">
         <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
@@ -127,10 +128,11 @@
       ondragover="onDragOver(event,'backorder')"
       ondragleave="onDragLeave('backorder')"
       ondrop="onDrop(event,'backorder')">
-      <div class="stage-header" style="background:#1a0808;">
+      <div class="stage-header stage-toggle" style="background:#1a0808;cursor:pointer;" onclick="toggleKitsSection('back')">
         <span style="font-size:15px;">&#x23F8;</span>
         <p class="stage-title" style="color:#ef5350;">BACKORDERED</p>
         <span class="stage-count" id="cnt-back" style="background:#2a0f0f;color:#ef5350;">-</span>
+        <span class="stage-chevron" id="chv-back">&#x25BE;</span>
       </div>
       <div class="kits-body" id="col-back">
         <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
@@ -402,8 +404,8 @@
 <script src="js/auth.js"></script>
 <script src="js/activity-log-helper.js"></script>
 <script src="js/sidebar.js"></script>
-<script src="js/pipeline.js"></script>
-<script src="js/calendar.js"></script>
+<script src="js/pipeline.js?v=1782157178"></script>
+<script src="js/calendar.js?v=1782157178"></script>
 <script>
   // ---- Boot sequence ----
   var _sess = requireAuth();
@@ -423,6 +425,7 @@
 
   // Init stages (open on desktop, collapsed on mobile)
   initStages();
+  initKitsSections();
 
   // Init date picker event delegation
   initDatePickers();
