@@ -72,6 +72,9 @@ function loadProfile() {
 function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').classList.add('visible');
+  // Auto-switch tab if URL has ?tab=users
+  var urlTab = new URLSearchParams(window.location.search).get('tab');
+  if (urlTab) switchTab(urlTab);
 
   var isAdmin = currentProfile && currentProfile.role === 'admin';
   var uploadBtn = document.getElementById('upload-btn');

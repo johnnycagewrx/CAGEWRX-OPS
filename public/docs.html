@@ -221,7 +221,9 @@
 <script src="js/sidebar.js"></script>
 <script src="js/docs.js"></script>
 <script>
-  renderSidebar('docs');
+  // Check for ?tab=users in URL to auto-switch tab on mobile
+  var urlTab = new URLSearchParams(window.location.search).get('tab');
+  renderSidebar(urlTab || 'docs');
   if (localStorage.getItem('cw_theme') === 'light') {
     document.body.classList.add('light-mode');
     var tb = document.getElementById('theme-btn');

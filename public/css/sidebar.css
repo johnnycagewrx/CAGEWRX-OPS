@@ -212,13 +212,48 @@ body.light-mode .sidebar-pin:hover { background: #f5f5f5; color: #888; }
 .sidebar-sublink .sidebar-link-icon { font-size: 13px; }
 
 @media (max-width: 768px) {
-  .sidebar-sublink {
-    display: flex;
-    flex: 0.7;
-    padding: 4px 6px;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .sidebar-sublink .sidebar-link-icon { font-size: 13px; }
-  .sidebar-sublink .sidebar-link-label { font-size: 8px; opacity: 1; }
+  .sidebar-sublink { display: none; }
 }
+
+/* ---- Admin sub-menu popup (mobile) ---- */
+.admin-submenu-popup {
+  display: none;
+  position: fixed;
+  bottom: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 8px;
+  z-index: 1000;
+  min-width: 200px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+  flex-direction: column;
+  gap: 4px;
+}
+.admin-submenu-popup.open { display: flex; }
+
+.admin-submenu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: #888;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.admin-submenu-item:hover,
+.admin-submenu-item.active { background: #1a0d05; color: #ff7043; }
+.admin-submenu-item-icon { font-size: 16px; }
+
+.admin-submenu-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+}
+.admin-submenu-backdrop.open { display: block; }
