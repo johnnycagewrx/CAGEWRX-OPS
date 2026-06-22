@@ -72,16 +72,17 @@ function loadProfile() {
 function showApp() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').classList.add('visible');
-  // Auto-switch tab if URL has ?tab=users
-  var urlTab = new URLSearchParams(window.location.search).get('tab');
-  if (urlTab) switchTab(urlTab);
 
   var isAdmin = currentProfile && currentProfile.role === 'admin';
   var uploadBtn = document.getElementById('upload-btn');
   if (uploadBtn) uploadBtn.style.display = isAdmin ? 'inline-flex' : 'none';
 
-  // Non-admins only see Documents; redirect away from User Management section if not admin
-  if (!isAdmin) switchTab('docs');
+  // Default to docs tab; admins can switch to users
+  switchTab('docs');
+
+  // Auto-switch tab if URL has ?tab=users (admin only)
+  var urlTab = new URLSearchParams(window.location.search).get('tab');
+  if (urlTab && isAdmin) switchTab(urlTab);
 
   // Render avatar
   var name = (currentProfile && currentProfile.full_name) || currentUser.user.email || '';
@@ -333,13 +334,17 @@ function loadUsers() {
   tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#333;padding:20px;">Loading...</td></tr>';
 
   fetch(SUPABASE_URL + '/rest/v1/profiles?select=*&order=created_at.asc', {
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + currentUser.access_token }
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY
+    }
   })
   .then(function (r) { return r.json(); })
   .then(function (users) {
     users = Array.isArray(users) ? users : [];
+    console.log('[Users] loaded:', users.length);
     if (!users.length) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#333;padding:20px;">No users yet</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#333;padding:20px;">No users found</td></tr>';
       return;
     }
     tbody.innerHTML = users.map(function (u) {
