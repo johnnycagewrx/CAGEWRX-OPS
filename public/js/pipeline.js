@@ -200,8 +200,6 @@ function buildCard(o, tab, metaHTML) {
     .replace(/'/g, "\\'")
     .replace(/"/g, '&quot;');
 
-  var statusSelect = buildStatusSelect(o.id, tab);
-
   return '<div class="order-card" draggable="true"' +
     ' data-id="' + o.id + '" data-tab="' + tab + '"' +
     ' ondragstart="onDragStart(event,\'' + tab + '\',\'' + safeJson + '\')"' +
@@ -218,7 +216,6 @@ function buildCard(o, tab, metaHTML) {
       (o.sku || o.item || '') +
     '</div>' +
     '<div class="order-meta">' + metaHTML + '</div>' +
-    '<div class="order-status-row">' + statusSelect + '</div>' +
   '</div>';
 }
 
@@ -417,7 +414,6 @@ function renderTagPull(items) {
         pill(o.customer_name ? 'Customer: ' + o.customer_name : '', 'pill-order') +
         (o.notes ? '<div style="font-size:11px;color:#888;margin-top:4px;width:100%;">' + o.notes + '</div>' : '') +
       '</div>' +
-      '<div class="order-status-row">' + buildStatusSelect(o.id, 'tagpull') + '</div>' +
     '</div>';
   }
   el.innerHTML = h;
@@ -455,7 +451,6 @@ function renderBackorder(items) {
       '</div>' +
       '<div class="order-item" style="cursor:pointer;" onclick="editFromCard(this.closest(\'.order-card\'))">' + (o.sku || o.item || '') + '</div>' +
       '<div class="order-meta">' + metaHTML + '</div>' +
-      '<div class="order-status-row">' + buildStatusSelect(o.id, 'backorder') + '</div>' +
     '</div>';
   }
   el.innerHTML = h;
@@ -538,7 +533,6 @@ function renderReadyToShip(items) {
       '</div>' +
       '<div class="order-item" style="cursor:pointer;' + (isHigh ? 'color:#fff;font-weight:600;' : '') + '" onclick="editFromCard(this.closest(\'.order-card\'))">' + (o.sku || o.item || '') + '</div>' +
       '<div class="order-meta">' + metaHTML + '</div>' +
-      '<div class="order-status-row">' + buildStatusSelect(o.id, 'ready') + '</div>' +
     '</div>';
   }
   el.innerHTML = h;
@@ -933,6 +927,25 @@ function openEditModal(tab, o) {
   editingTab = tab;
   var isKit = tab === 'cagekits';
   var f = '';
+
+  // Status / Move To dropdown at top of modal
+  var allTabs = [
+    { val: 'new',        label: 'New Order' },
+    { val: 'backorder',  label: 'Backordered' },
+    { val: 'dropship',   label: 'Drop Shipping' },
+    { val: 'assembled',  label: 'Assembled' },
+    { val: 'powdercoat', label: 'At Powder Coat' },
+    { val: 'ready',      label: 'Ready to Ship' },
+    { val: 'pickup',     label: 'Ready for Pickup' },
+    { val: 'tagpull',    label: 'Tag & Pull' },
+    { val: 'cagekits',   label: 'Cage Kit' }
+  ];
+  var tabOpts = allTabs.map(function(t) {
+    return '<option value="' + t.val + '"' + (t.val === tab ? ' selected' : '') + '>' + t.label + '</option>';
+  }).join('');
+  f += labelHTML('Status / Move To');
+  f += '<select id="edit-tab-select" style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;font-family:inherit;margin-bottom:4px;">' + tabOpts + '</select>';
+
   f += labelHTML('Order #') + inputHTML('edit-order', o.order_num);
   f += labelHTML('SKU') + inputHTML('edit-sku', o.sku);
   f += labelHTML('Item Description') + inputHTML('edit-item', o.item);
@@ -984,6 +997,36 @@ function closeEditModal() {
 
 function confirmEdit() {
   if (!editingOrder) { showBanner('No order selected', 'error'); return; }
+
+  // Handle tab/status change first
+  var tabSelectEl = document.getElementById('edit-tab-select');
+  var newTab = tabSelectEl ? tabSelectEl.value : editingTab;
+  if (newTab && newTab !== editingTab) {
+    if (newTab === 'powdercoat' || newTab === 'assembled') {
+      closeEditModal();
+      showMoveModal(editingTab, newTab, editingOrder);
+      return;
+    }
+    var tabUpdates = { tab: newTab };
+    if (editingTab === 'powdercoat') tabUpdates.sent_to_powder = '';
+    var o = editingOrder;
+    var fromTab = editingTab;
+    closeEditModal();
+    sbFetch('PATCH', '/rest/v1/orders?id=eq.' + o.id, tabUpdates, function(err) {
+      if (err) showBanner('Move failed: ' + err, 'error');
+      else {
+        showBanner('Order #' + o.order_num + ' moved to ' + (TAB_LABELS[newTab]||newTab), 'success');
+        logActivity('orders', 'move', {
+          recordId: o.id,
+          fieldChanges: { tab: { old: fromTab, new: newTab } },
+          summary: 'Order #' + o.order_num + ' moved from ' + (TAB_LABELS[fromTab]||fromTab) + ' to ' + (TAB_LABELS[newTab]||newTab)
+        });
+        loadData(true);
+      }
+    });
+    return;
+  }
+
   var isKit = editingTab === 'cagekits';
   var updates = {
     order_num: gv('edit-order'),
