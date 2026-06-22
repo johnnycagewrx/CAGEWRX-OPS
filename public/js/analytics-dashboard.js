@@ -19,6 +19,8 @@ function loadAnalytics(mode) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       analyticsData = data;
+      console.log('[Analytics] debug:', data.debug);
+      console.log('[Analytics] current revenue:', data.current && data.current.revenue);
       renderAnalytics(data);
     })
     .catch(function(e) {
