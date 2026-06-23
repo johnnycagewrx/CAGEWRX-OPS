@@ -589,7 +589,25 @@ body.light-mode .cal-legend { background: #fafafa; border-color: #e0e0e0; }
 }
 .picker-cell:hover { background: #1a1a1a; color: #fff; }
 .picker-cell.picker-empty { cursor: default; }
-.picker-cell.picker-today { color: #e53935; font-weight: 700; }
+.picker-cell.picker-today {
+  background: #1a0a0a;
+  color: #e53935;
+  font-weight: 700;
+  border: 2px solid #e53935;
+  border-radius: 6px;
+  position: relative;
+}
+.picker-cell.picker-today::after {
+  content: 'TODAY';
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 5px;
+  letter-spacing: .04em;
+  color: #e53935;
+  font-weight: 700;
+}
 .picker-cell.picker-selected {
   background: #1565c0;
   color: #fff;
@@ -926,4 +944,16 @@ body.light-mode .status-select {
   border-color: #ddd;
   color: #555;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E");
+}
+
+/* ---- Calendar search highlight ---- */
+.cal-event-highlight {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
+  opacity: 1 !important;
+  z-index: 2;
+  position: relative;
+}
+.cal-event-dimmed {
+  opacity: 0.2;
 }

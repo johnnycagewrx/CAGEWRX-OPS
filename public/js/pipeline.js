@@ -977,7 +977,10 @@ function openEditModal(tab, o) {
   f += labelHTML('Item Description') + inputHTML('edit-item', o.item);
   var isTagPull = tab === 'tagpull';
   if (isTagPull) {
-    f += labelHTML('Customer Name') + inputHTML('edit-customer', o.customer_name);
+    f += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+       + '<div>' + labelHTML('First Name') + inputHTML('edit-first-name', o.first_name || '') + '</div>'
+       + '<div>' + labelHTML('Last Name')  + inputHTML('edit-last-name',  o.last_name  || '') + '</div>'
+       + '</div>';
     f += labelHTML('Notes');
     f += '<textarea id="edit-notes" style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;min-height:70px;font-family:inherit;">' + (o.notes||'') + '</textarea>';
   }
@@ -1063,7 +1066,9 @@ function confirmEdit() {
   };
   var isTagPull = editingTab === 'tagpull';
   if (isTagPull) {
-    updates.customer_name = gv('edit-customer');
+    updates.first_name = gv('edit-first-name');
+    updates.last_name = gv('edit-last-name');
+    updates.customer_name = [gv('edit-first-name'), gv('edit-last-name')].filter(Boolean).join(' ');
     var notesEl = document.getElementById('edit-notes');
     updates.notes = notesEl ? notesEl.value.trim() : '';
   }
@@ -1114,7 +1119,7 @@ function confirmEdit() {
 function openAddModal() {
   var m = document.getElementById('add-modal');
   if (m) m.classList.add('open');
-  var fields = ['add-order', 'add-sku', 'add-item', 'add-color', 'add-shipping', 'add-po', 'add-customer', 'add-notes'];
+  var fields = ['add-order', 'add-sku', 'add-item', 'add-color', 'add-shipping', 'add-po', 'add-first-name', 'add-last-name', 'add-notes'];
   fields.forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
@@ -1171,7 +1176,11 @@ function submitAdd() {
     body.eta    = (document.getElementById('add-eta') || {}).value || '';
     body.build_date = (document.getElementById('add-build') || {}).value || '';
     body.sent_to_powder = (document.getElementById('add-sent') || {}).value || '';
-    body.customer_name = (document.getElementById('add-customer') || {}).value || '';
+    var addFirst = (document.getElementById('add-first-name') || {}).value || '';
+    var addLast  = (document.getElementById('add-last-name')  || {}).value || '';
+    body.first_name    = addFirst;
+    body.last_name     = addLast;
+    body.customer_name = [addFirst, addLast].filter(Boolean).join(' ');
     body.notes = (document.getElementById('add-notes') || {}).value || '';
   }
 
@@ -1193,6 +1202,22 @@ function submitAdd() {
 }
 
 // ---- Search ----
+// ---- Calendar search highlight ----
+function highlightCalendarOrders(orderNums) {
+  var events = document.querySelectorAll('.cal-event');
+  if (!orderNums || !orderNums.length) {
+    events.forEach(function(el) { el.classList.remove('cal-event-highlight', 'cal-event-dimmed'); });
+    return;
+  }
+  events.forEach(function(el) {
+    var text = el.textContent || '';
+    var matched = orderNums.some(function(num) { return text.indexOf('#' + num) !== -1; });
+    el.classList.toggle('cal-event-highlight', matched);
+    el.classList.toggle('cal-event-dimmed', !matched);
+  });
+}
+
+
 function doSearch(val) {
   val = val.trim();
   var clearBtn = document.getElementById('search-clear');
@@ -1205,16 +1230,25 @@ function doSearch(val) {
   }
   expandAllStages();
   var found = false;
+  var valLower = val.toLowerCase();
+  var matchedOrderNums = [];
   cards.forEach(function (c) {
-    var num = c.querySelector('.order-num');
-    var txt = num ? num.textContent.replace('#', '').trim() : '';
-    if (txt.indexOf(val) !== -1) {
+    var id = c.getAttribute('data-id');
+    var o = id ? orderCache[id] : null;
+    var numEl = c.querySelector('.order-num');
+    var orderNum = numEl ? numEl.textContent.replace('#', '').trim() : '';
+    var customerName = o ? ((o.customer_name || '') + ' ' + (o.first_name || '') + ' ' + (o.last_name || '')).toLowerCase() : '';
+    var matches = orderNum.toLowerCase().indexOf(valLower) !== -1 || customerName.indexOf(valLower) !== -1;
+    if (matches) {
       c.classList.add('highlight'); c.classList.remove('dimmed');
+      matchedOrderNums.push(orderNum);
       if (!found) { c.scrollIntoView({ behavior: 'smooth', block: 'center' }); found = true; }
     } else {
       c.classList.add('dimmed'); c.classList.remove('highlight');
     }
   });
+  // Highlight matching order numbers in calendar
+  highlightCalendarOrders(matchedOrderNums);
 }
 
 function clearSearch() {
@@ -1225,6 +1259,7 @@ function clearSearch() {
   document.querySelectorAll('.order-card').forEach(function (c) {
     c.classList.remove('highlight', 'dimmed');
   });
+  highlightCalendarOrders([]);
   collapseAllStages();
   if (inp) inp.focus();
 }

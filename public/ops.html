@@ -287,8 +287,16 @@
       <input type="text" id="add-color" placeholder="e.g. Raw">
     </div>
     <div id="add-customer-wrap" style="display:none;">
-      <label>Customer Name</label>
-      <input type="text" id="add-customer" placeholder="e.g. John Smith">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label>First Name</label>
+          <input type="text" id="add-first-name" placeholder="e.g. John">
+        </div>
+        <div>
+          <label>Last Name</label>
+          <input type="text" id="add-last-name" placeholder="e.g. Smith">
+        </div>
+      </div>
     </div>
     <div id="add-notes-wrap" style="display:none;">
       <label>Notes</label>

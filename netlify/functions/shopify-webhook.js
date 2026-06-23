@@ -96,11 +96,11 @@ exports.handler = async (event) => {
   // Extract all color properties across all line items
   const color = extractColors(lineItems);
 
-  // Also capture customer name from shipping address or billing address
+  // Capture customer name from shipping address or billing address
   const shippingAddr = order.shipping_address || order.billing_address || {};
-  const customerName = [shippingAddr.first_name, shippingAddr.last_name].filter(Boolean).join(' ')
-    || (order.customer ? [order.customer.first_name, order.customer.last_name].filter(Boolean).join(' ') : '')
-    || '';
+  const firstName = shippingAddr.first_name || (order.customer && order.customer.first_name) || '';
+  const lastName  = shippingAddr.last_name  || (order.customer && order.customer.last_name)  || '';
+  const customerName = [firstName, lastName].filter(Boolean).join(' ');
 
   // Capture order notes
   const notes = order.note || '';
@@ -122,6 +122,8 @@ exports.handler = async (event) => {
       order_date:    orderDate,
       shipping:      shipping,
       customer_name: customerName,
+      first_name:    firstName,
+      last_name:     lastName,
       notes:         notes,
       total_price:   parseFloat(order.total_price || 0),
       po_num:        '',
