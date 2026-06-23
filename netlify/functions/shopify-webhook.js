@@ -98,8 +98,9 @@ exports.handler = async (event) => {
 
   // Capture customer name from shipping address or billing address
   const shippingAddr = order.shipping_address || order.billing_address || {};
-  const firstName = shippingAddr.first_name || (order.customer && order.customer.first_name) || '';
-  const lastName  = shippingAddr.last_name  || (order.customer && order.customer.last_name)  || '';
+  const firstName   = shippingAddr.first_name  || (order.customer && order.customer.first_name)  || '';
+  const lastName    = shippingAddr.last_name   || (order.customer && order.customer.last_name)   || '';
+  const companyName = shippingAddr.company     || (order.customer && order.customer.company)     || '';
   const customerName = [firstName, lastName].filter(Boolean).join(' ');
 
   // Capture order notes
@@ -124,6 +125,7 @@ exports.handler = async (event) => {
       customer_name: customerName,
       first_name:    firstName,
       last_name:     lastName,
+      company:       companyName,
       notes:         notes,
       total_price:   parseFloat(order.total_price || 0),
       po_num:        '',

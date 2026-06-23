@@ -590,23 +590,25 @@ body.light-mode .cal-legend { background: #fafafa; border-color: #e0e0e0; }
 .picker-cell:hover { background: #1a1a1a; color: #fff; }
 .picker-cell.picker-empty { cursor: default; }
 .picker-cell.picker-today {
-  background: #1a0a0a;
-  color: #e53935;
-  font-weight: 700;
+  background: #2a0000;
+  color: #ff5252;
+  font-weight: 800;
   border: 2px solid #e53935;
   border-radius: 6px;
   position: relative;
+  padding-bottom: 12px;
 }
 .picker-cell.picker-today::after {
   content: 'TODAY';
   position: absolute;
-  bottom: 1px;
+  bottom: 2px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 5px;
-  letter-spacing: .04em;
+  font-size: 6px;
+  letter-spacing: .06em;
   color: #e53935;
   font-weight: 700;
+  white-space: nowrap;
 }
 .picker-cell.picker-selected {
   background: #1565c0;
@@ -957,3 +959,37 @@ body.light-mode .status-select {
 .cal-event-dimmed {
   opacity: 0.2;
 }
+
+/* ---- Split order button & modal ---- */
+.split-btn {
+  font-size: 13px;
+  cursor: pointer;
+  color: #2a2a2a;
+  background: none;
+  border: none;
+  padding: 0 2px;
+  line-height: 1;
+}
+.split-btn:hover { color: #ffca28; }
+
+.split-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.split-item-row:hover { border-color: #3a3a3a; background: #1a1a1a; }
+.split-item-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: #e53935;
+  cursor: pointer;
+}
+.split-item-info { flex: 1; min-width: 0; }
+.split-item-name { font-size: 13px; color: #e0e0e0; font-weight: 500; }
+.split-item-sku  { font-size: 11px; color: #555; margin-top: 2px; }

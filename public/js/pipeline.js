@@ -203,6 +203,197 @@ function spinnerHTML() {
 }
 
 // ---- Card builder ----
+// ---- Split order ----
+function splitBtn(o) {
+  // Only show split button if item has multiple comma-separated items or multiple SKUs
+  var items = (o.item || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+  var skus  = (o.sku  || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+  if (items.length < 2 && skus.length < 2) return '';
+  return '<button class="split-btn" title="Split items" onclick="event.stopPropagation();openSplitModal(\'' + o.id + '\')" >&#x2702;</button>';
+}
+
+function parseSplitColors(colorStr) {
+  // Parse "Cage: Gloss Black, Roof: Raw" into { cage: 'Gloss Black', roof: 'Raw' }
+  // Also handles plain single color "Gloss Black"
+  var map = {};
+  if (!colorStr) return map;
+  if (colorStr.indexOf(':') === -1) {
+    map['_default'] = colorStr.trim();
+    return map;
+  }
+  colorStr.split(',').forEach(function(part) {
+    var colon = part.indexOf(':');
+    if (colon === -1) return;
+    var key = part.slice(0, colon).trim().toLowerCase();
+    var val = part.slice(colon + 1).trim();
+    map[key] = val;
+  });
+  return map;
+}
+
+function guessColorForItem(itemName, colorMap) {
+  // Try to match item name keywords to color map keys
+  var name = itemName.toLowerCase();
+  var keywords = [
+    { test: 'cage',        key: 'cage' },
+    { test: 'roof',        key: 'roof' },
+    { test: 'bumper',      key: 'bumper' },
+    { test: 'skid',        key: 'skid plate' },
+    { test: 'windshield',  key: 'windshield frame' },
+    { test: 'grille mesh', key: 'grille mesh' },
+    { test: 'grille',      key: 'grille frame' },
+    { test: 'rack bezel',  key: 'roof rack bezel' },
+    { test: 'rack',        key: 'roof rack frame' },
+    { test: 'enclosure',   key: 'enclosure' }
+  ];
+  for (var i = 0; i < keywords.length; i++) {
+    if (name.indexOf(keywords[i].test) !== -1 && colorMap[keywords[i].key]) {
+      return colorMap[keywords[i].key];
+    }
+  }
+  return colorMap['_default'] || '';
+}
+
+function openSplitModal(id) {
+  var o = orderCache[id];
+  if (!o) return;
+  var items = (o.item || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+  var skus  = (o.sku  || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+  var colorMap = parseSplitColors(o.color || '');
+
+  // Build all available color values for the dropdown
+  var colorValues = [''];
+  Object.values(colorMap).forEach(function(v) {
+    if (colorValues.indexOf(v) === -1) colorValues.push(v);
+  });
+  // Also allow manual entry option
+  colorValues.push('__custom__');
+
+  var rows = items.map(function(item, i) {
+    var sku = skus[i] || '';
+    var guessedColor = guessColorForItem(item, colorMap);
+    var opts = colorValues.map(function(c) {
+      if (c === '__custom__') return '<option value="__custom__">Enter manually...</option>';
+      return '<option value="' + c + '"' + (c === guessedColor ? ' selected' : '') + '>' + (c || '— No color —') + '</option>';
+    }).join('');
+
+    return '<div class="split-item-row" data-index="' + i + '">' +
+      '<input type="checkbox" class="split-checkbox" checked style="flex-shrink:0;width:16px;height:16px;accent-color:#e53935;cursor:pointer;"' +
+        ' data-item="' + item.replace(/"/g,'&quot;') + '"' +
+        ' data-sku="' + sku.replace(/"/g,'&quot;') + '">' +
+      '<div class="split-item-info">' +
+        '<div class="split-item-name">' + item + '</div>' +
+        (sku ? '<div class="split-item-sku">' + sku + '</div>' : '') +
+        '<div style="margin-top:6px;display:flex;gap:6px;align-items:center;">' +
+          '<select class="split-color-select" style="flex:1;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:5px 8px;font-size:12px;color:#e0e0e0;font-family:inherit;outline:none;" onchange="onSplitColorChange(this)">' +
+            opts +
+          '</select>' +
+          '<input type="text" class="split-color-custom" placeholder="Custom color..." style="display:none;flex:1;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:5px 8px;font-size:12px;color:#e0e0e0;font-family:inherit;outline:none;">' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  document.getElementById('split-order-num').textContent = '#' + o.order_num;
+  document.getElementById('split-items-list').innerHTML = rows;
+  document.getElementById('split-modal').dataset.orderId = id;
+  document.getElementById('split-modal').classList.add('open');
+}
+
+function onSplitColorChange(sel) {
+  var row = sel.closest('.split-item-row');
+  var custom = row ? row.querySelector('.split-color-custom') : null;
+  if (custom) custom.style.display = sel.value === '__custom__' ? 'block' : 'none';
+}
+
+function closeSplitModal() {
+  document.getElementById('split-modal').classList.remove('open');
+}
+
+function confirmSplit() {
+  var modal = document.getElementById('split-modal');
+  var id = modal.dataset.orderId;
+  if (!id) return;
+
+  var checked   = Array.from(document.querySelectorAll('.split-checkbox:checked'));
+  var unchecked = Array.from(document.querySelectorAll('.split-checkbox:not(:checked)'));
+  if (!checked.length)   { showBanner('Select at least one item to split off', 'error'); return; }
+  if (!unchecked.length) { showBanner('Leave at least one item on the original card', 'error'); return; }
+
+  function getRowColor(row) {
+    var sel    = row ? row.querySelector('.split-color-select') : null;
+    var custom = row ? row.querySelector('.split-color-custom') : null;
+    if (!sel) return '';
+    return sel.value === '__custom__' ? (custom ? custom.value.trim() : '') : sel.value;
+  }
+
+  // Build split cards from checked rows
+  var splitCards = checked.map(function(cb) {
+    var row = cb.closest('.split-item-row');
+    return {
+      item:  cb.getAttribute('data-item'),
+      sku:   cb.getAttribute('data-sku'),
+      color: getRowColor(row)
+    };
+  });
+
+  // Build what stays on original from unchecked rows
+  var remainItems  = unchecked.map(function(cb){ return cb.getAttribute('data-item'); }).filter(Boolean);
+  var remainSkus   = unchecked.map(function(cb){ return cb.getAttribute('data-sku');  }).filter(Boolean);
+  var remainColors = unchecked.map(function(cb){
+    return getRowColor(cb.closest('.split-item-row'));
+  }).filter(Boolean);
+
+  closeSplitModal();
+
+  // Re-fetch the CURRENT state of the original order from Supabase
+  // so we don't overwrite changes from a previous split in the same session
+  sbFetch('GET', '/rest/v1/orders?id=eq.' + id + '&select=*', null, function(err, rows) {
+    var o = (rows && rows[0]) || orderCache[id];
+    if (!o) { showBanner('Could not fetch order', 'error'); return; }
+
+    var done = 0;
+    var total = splitCards.length + 1;
+
+    function finish() {
+      done++;
+      if (done === total) {
+        showBanner('Split into ' + total + ' cards!', 'success');
+        logActivity('orders', 'update', {
+          recordId: id,
+          summary: 'Order #' + o.order_num + ' split: ' + splitCards.map(function(s){ return s.item; }).join(', ') + ' moved to new cards'
+        });
+        loadData(true);
+      }
+    }
+
+    // PATCH original card to only contain remaining items
+    sbFetch('PATCH', '/rest/v1/orders?id=eq.' + id, {
+      item:  remainItems.join(', '),
+      sku:   remainSkus.join(', '),
+      color: remainColors.join(', ')
+    }, function(pErr) {
+      if (pErr) showBanner('Error updating original card: ' + pErr, 'error');
+      finish();
+    });
+
+    // POST new card for each split item
+    splitCards.forEach(function(sc) {
+      var newOrder = Object.assign({}, o);
+      delete newOrder.id;
+      delete newOrder.created_at;
+      newOrder.item  = sc.item;
+      newOrder.sku   = sc.sku;
+      newOrder.color = sc.color;
+      sbFetch('POST', '/rest/v1/orders', newOrder, function(pErr) {
+        if (pErr) showBanner('Error creating split card: ' + pErr, 'error');
+        finish();
+      });
+    });
+  });
+}
+
+
 function buildCard(o, tab, metaHTML) {
   // Store in cache for edit lookup
   orderCache[o.id] = o;
@@ -234,6 +425,7 @@ function buildCard(o, tab, metaHTML) {
       '<a class="order-num" href="' + link + '" target="_blank">#' + o.order_num + '</a>' +
       '<div class="order-actions">' +
         '<span class="order-ship">' + shipLabel(o.shipping) + '</span>' +
+        splitBtn(o) +
         '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
         doneBtn(tab, o.id) +
       '</div>' +
@@ -429,6 +621,7 @@ function renderTagPull(items) {
       '<div class="order-top">' +
         '<a class="order-num" href="' + link + '" target="_blank">#' + o.order_num + '</a>' +
         '<div class="order-actions">' +
+          splitBtn(o) +
           '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
           doneBtn('tagpull', o.id) +
         '</div>' +
@@ -437,7 +630,7 @@ function renderTagPull(items) {
         (o.item || '') +
       '</div>' +
       '<div class="order-meta">' +
-        pill(o.customer_name ? 'Customer: ' + o.customer_name : '', 'pill-order') +
+        pill((o.company || o.customer_name) ? (o.company ? o.company + (o.customer_name ? ' — ' + o.customer_name : '') : o.customer_name) : '', 'pill-order') +
         (o.notes ? '<div style="font-size:11px;color:#888;margin-top:4px;width:100%;">' + o.notes + '</div>' : '') +
       '</div>' +
     '</div>';
@@ -471,6 +664,7 @@ function renderBackorder(items) {
         '<a class="order-num" href="' + link + '" target="_blank">#' + o.order_num + '</a>' +
         '<div class="order-actions">' +
           '<span class="order-ship">' + shipLabel(o.shipping) + '</span>' +
+          splitBtn(o) +
           '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
           doneBtn('backorder', o.id) +
         '</div>' +
@@ -553,6 +747,7 @@ function renderReadyToShip(items) {
       '<div class="order-top">' +
         '<a class="order-num" href="' + link + '" target="_blank"' + (isHigh ? ' style="color:#69f0ae;"' : '') + '>#' + o.order_num + '</a>' +
         '<div class="order-actions">' + shipSpan + starBtn +
+          splitBtn(o) +
           '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
           doneBtn('ready', o.id) +
         '</div>' +
@@ -976,11 +1171,13 @@ function openEditModal(tab, o) {
   f += labelHTML('SKU') + inputHTML('edit-sku', o.sku);
   f += labelHTML('Item Description') + inputHTML('edit-item', o.item);
   var isTagPull = tab === 'tagpull';
+  // First/Last name + Company on ALL order types
+  f += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;">'
+     + '<div>' + labelHTML('First Name') + inputHTML('edit-first-name', o.first_name || '') + '</div>'
+     + '<div>' + labelHTML('Last Name')  + inputHTML('edit-last-name',  o.last_name  || '') + '</div>'
+     + '</div>';
+  f += labelHTML('Company (optional)') + inputHTML('edit-company', o.company || '');
   if (isTagPull) {
-    f += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
-       + '<div>' + labelHTML('First Name') + inputHTML('edit-first-name', o.first_name || '') + '</div>'
-       + '<div>' + labelHTML('Last Name')  + inputHTML('edit-last-name',  o.last_name  || '') + '</div>'
-       + '</div>';
     f += labelHTML('Notes');
     f += '<textarea id="edit-notes" style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;min-height:70px;font-family:inherit;">' + (o.notes||'') + '</textarea>';
   }
@@ -1065,10 +1262,12 @@ function confirmEdit() {
     shipping:  gv('edit-shipping')
   };
   var isTagPull = editingTab === 'tagpull';
+  // Save first/last name + company on ALL orders
+  updates.first_name = gv('edit-first-name');
+  updates.last_name  = gv('edit-last-name');
+  updates.company    = gv('edit-company');
+  updates.customer_name = [gv('edit-first-name'), gv('edit-last-name')].filter(Boolean).join(' ');
   if (isTagPull) {
-    updates.first_name = gv('edit-first-name');
-    updates.last_name = gv('edit-last-name');
-    updates.customer_name = [gv('edit-first-name'), gv('edit-last-name')].filter(Boolean).join(' ');
     var notesEl = document.getElementById('edit-notes');
     updates.notes = notesEl ? notesEl.value.trim() : '';
   }
@@ -1119,7 +1318,7 @@ function confirmEdit() {
 function openAddModal() {
   var m = document.getElementById('add-modal');
   if (m) m.classList.add('open');
-  var fields = ['add-order', 'add-sku', 'add-item', 'add-color', 'add-shipping', 'add-po', 'add-first-name', 'add-last-name', 'add-notes'];
+  var fields = ['add-order', 'add-sku', 'add-item', 'add-color', 'add-shipping', 'add-po', 'add-first-name', 'add-last-name', 'add-company', 'add-notes'];
   fields.forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.value = '';
@@ -1149,8 +1348,8 @@ function updateAddFields() {
   show('add-eta-wrap',      t === 'backorder' || t === 'dropship' || t === 'powdercoat' || t === 'assembled');
   show('add-build-wrap',    t === 'assembled');
   show('add-sent-wrap',     t === 'powdercoat');
-  show('add-customer-wrap', t === 'tagpull');
-  show('add-notes-wrap',    t === 'tagpull');
+  show('add-customer-wrap', true); // show on all tabs
+  show('add-notes-wrap',    true); // show on all tabs
 }
 
 function submitAdd() {
@@ -1176,10 +1375,12 @@ function submitAdd() {
     body.eta    = (document.getElementById('add-eta') || {}).value || '';
     body.build_date = (document.getElementById('add-build') || {}).value || '';
     body.sent_to_powder = (document.getElementById('add-sent') || {}).value || '';
-    var addFirst = (document.getElementById('add-first-name') || {}).value || '';
-    var addLast  = (document.getElementById('add-last-name')  || {}).value || '';
+    var addFirst   = (document.getElementById('add-first-name') || {}).value || '';
+    var addLast    = (document.getElementById('add-last-name')  || {}).value || '';
+    var addCompany = (document.getElementById('add-company')    || {}).value || '';
     body.first_name    = addFirst;
     body.last_name     = addLast;
+    body.company       = addCompany;
     body.customer_name = [addFirst, addLast].filter(Boolean).join(' ');
     body.notes = (document.getElementById('add-notes') || {}).value || '';
   }
@@ -1237,8 +1438,11 @@ function doSearch(val) {
     var o = id ? orderCache[id] : null;
     var numEl = c.querySelector('.order-num');
     var orderNum = numEl ? numEl.textContent.replace('#', '').trim() : '';
-    var customerName = o ? ((o.customer_name || '') + ' ' + (o.first_name || '') + ' ' + (o.last_name || '')).toLowerCase() : '';
-    var matches = orderNum.toLowerCase().indexOf(valLower) !== -1 || customerName.indexOf(valLower) !== -1;
+    var customerName = o ? ((o.customer_name || '') + ' ' + (o.first_name || '') + ' ' + (o.last_name || '') + ' ' + (o.company || '')).toLowerCase() : '';
+    var skuItem = o ? ((o.sku || '') + ' ' + (o.item || '')).toLowerCase() : '';
+    var matches = orderNum.toLowerCase().indexOf(valLower) !== -1
+               || customerName.indexOf(valLower) !== -1
+               || skuItem.indexOf(valLower) !== -1;
     if (matches) {
       c.classList.add('highlight'); c.classList.remove('dimmed');
       matchedOrderNums.push(orderNum);
@@ -1397,4 +1601,13 @@ function runImport() {
     }
     next();
   });
-}
+}var isTagPull = tab === 'tagpull';
+  // Show first/last name on ALL order types
+  f += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+     + '<div>' + labelHTML('First Name') + inputHTML('edit-first-name', o.first_name || '') + '</div>'
+     + '<div>' + labelHTML('Last Name')  + inputHTML('edit-last-name',  o.last_name  || '') + '</div>'
+     + '</div>';
+  if (isTagPull) {
+    f += labelHTML('Notes');
+    f += '<textarea id="edit-notes" style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;min-height:70px;font-family:inherit;">' + (o.notes||'') + '</textarea>';
+  }

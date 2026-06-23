@@ -284,7 +284,9 @@ function renderPicker() {
   DAY_NAMES.forEach(function(d) { html += '<div class="cal-dayname">' + d + '</div>'; });
   for (var i = 0; i < firstDay; i++) html += '<div class="picker-cell picker-empty"></div>';
   for (var day = 1; day <= daysInMonth; day++) {
-    var key = pickerYear + '-' + pickerMonth + 1 < 10 ? '0' + (pickerMonth + 1) : '' + (pickerMonth + 1) + '-' + day < 10 ? '0' + day : '' + day;
+    var m2 = (pickerMonth + 1) < 10 ? '0' + (pickerMonth + 1) : '' + (pickerMonth + 1);
+    var d2 = day < 10 ? '0' + day : '' + day;
+    var key = pickerYear + '-' + m2 + '-' + d2;
     var cls = 'picker-cell' + (key === todayKey ? ' picker-today' : '') + (key === selectedKey ? ' picker-selected' : '');
     var m = pickerMonth + 1 < 10 ? '0' + (pickerMonth + 1) : '' + (pickerMonth + 1);
     var dd = day < 10 ? '0' + day : '' + day;
