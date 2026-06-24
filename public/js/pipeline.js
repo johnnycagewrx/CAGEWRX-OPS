@@ -630,6 +630,7 @@ function renderTagPull(items) {
         (o.item || '') +
       '</div>' +
       '<div class="order-meta">' +
+        pill(o.color, 'pill-color') +
         pill((o.company || o.customer_name) ? (o.company ? o.company + (o.customer_name ? ' — ' + o.customer_name : '') : o.customer_name) : '', 'pill-order') +
         (o.notes ? '<div style="font-size:11px;color:#888;margin-top:4px;width:100%;">' + o.notes + '</div>' : '') +
       '</div>' +
@@ -794,6 +795,7 @@ function renderData(data) {
   fillStage('col-dropship', 'cnt-dropship', 'stat-dropship', 'dropship', grouped.dropship, function (o) {
     return pill(o.color, 'pill-color') +
       pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order') +
+      pill(o.po_num ? 'PO: ' + o.po_num : '', 'pill-po') +
       pill(o.eta ? 'ETA: ' + fmtDate(o.eta) : '', 'pill-eta');
   });
   fillStage('col-assembled', 'cnt-assembled', 'stat-assembled', 'assembled', grouped.assembled, function (o) {
@@ -1146,10 +1148,9 @@ function openEditModal(tab, o) {
   }
   editingOrder = o;
   editingTab = tab;
-  var isKit = tab === 'cagekits';
   var f = '';
 
-  // Status / Move To dropdown at top of modal
+  // Status / Move To
   var allTabs = [
     { val: 'new',        label: 'New Order' },
     { val: 'backorder',  label: 'Backordered' },
@@ -1167,47 +1168,40 @@ function openEditModal(tab, o) {
   f += labelHTML('Status / Move To');
   f += '<select id="edit-tab-select" style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;font-family:inherit;margin-bottom:4px;">' + tabOpts + '</select>';
 
+  // Universal fields - same for every section
   f += labelHTML('Order #') + inputHTML('edit-order', o.order_num);
   f += labelHTML('SKU') + inputHTML('edit-sku', o.sku);
   f += labelHTML('Item Description') + inputHTML('edit-item', o.item);
-  var isTagPull = tab === 'tagpull';
-  // First/Last name + Company on ALL order types
+  f += labelHTML('Color') + inputHTML('edit-color', o.color);
+
+  // Customer info
   f += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;">'
      + '<div>' + labelHTML('First Name') + inputHTML('edit-first-name', o.first_name || '') + '</div>'
      + '<div>' + labelHTML('Last Name')  + inputHTML('edit-last-name',  o.last_name  || '') + '</div>'
      + '</div>';
-  f += labelHTML('Company (optional)') + inputHTML('edit-company', o.company || '');
-  if (isTagPull) {
-    f += labelHTML('Notes');
-    f += '<textarea id="edit-notes" style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;min-height:70px;font-family:inherit;">' + (o.notes||'') + '</textarea>';
-  }
-  if (!isKit && !isTagPull) {
-    f += labelHTML('Color') + inputHTML('edit-color', o.color);
-    if (tab === 'backorder') {
-      f += labelHTML('PO #') + inputHTML('edit-po', o.po_num);
-      f += labelHTML('ETA') + dateInputHTML('edit-eta', o.eta);
-    }
-    if (tab === 'assembled') {
-      f += labelHTML('Build Date') + dateInputHTML('edit-build', o.build_date);
-      f += labelHTML('ETA') + dateInputHTML('edit-eta', o.eta);
-    }
-    if (tab === 'powdercoat') {
-      f += labelHTML('Sent to Powder') + dateInputHTML('edit-sent', o.sent_to_powder);
-      f += labelHTML('ETA') + dateInputHTML('edit-eta', o.eta);
-    }
-    if (tab === 'new' || tab === 'ready' || tab === 'pickup') {
-      f += labelHTML('ETA') + dateInputHTML('edit-eta', o.eta);
-    }
-  }
+  f += labelHTML('Company') + inputHTML('edit-company', o.company || '');
+
+  // All date fields - always shown, leave blank if not applicable
   f += labelHTML('Order Date') + dateInputHTML('edit-orderdate', o.order_date);
+  f += labelHTML('ETA') + dateInputHTML('edit-eta', o.eta);
+  f += labelHTML('Build Date') + dateInputHTML('edit-build', o.build_date);
+  f += labelHTML('Sent to Powder') + dateInputHTML('edit-sent', o.sent_to_powder);
+
+  // PO # and shipping always shown
+  f += labelHTML('PO #') + inputHTML('edit-po', o.po_num);
   f += labelHTML('Shipping');
   var _sl = (o.shipping || '').toLowerCase();
   var sv = _sl.indexOf('pick') !== -1 ? 'pickup' : _sl.indexOf('drop') !== -1 ? 'dropship' : 'ship';
   f += '<select id="edit-shipping" style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;margin-top:4px;">';
-  f += '<option value="Pick Up"' + (sv === 'pickup' ? ' selected' : '') + '>PICKUP</option>';
-  f += '<option value="Ship"' + (sv === 'ship' ? ' selected' : '') + '>SHIP</option>';
-  f += '<option value="Drop Ship"' + (sv === 'dropship' ? ' selected' : '') + '>DROP SHIP</option>';
+  f += '<option value="Pick Up"'  + (sv === 'pickup'   ? ' selected' : '') + '>PICKUP</option>';
+  f += '<option value="Ship"'     + (sv === 'ship'     ? ' selected' : '') + '>SHIP</option>';
+  f += '<option value="Drop Ship"'+ (sv === 'dropship' ? ' selected' : '') + '>DROP SHIP</option>';
   f += '</select>';
+
+  // Notes always shown
+  f += labelHTML('Notes');
+  f += '<textarea id="edit-notes" style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;min-height:60px;font-family:inherit;">' + (o.notes||'') + '</textarea>';
+
   var ef = document.getElementById('edit-fields');
   if (ef) ef.innerHTML = f;
   var em = document.getElementById('edit-modal');
@@ -1253,31 +1247,25 @@ function confirmEdit() {
     return;
   }
 
-  var isKit = editingTab === 'cagekits';
+  // Universal updates - all fields always saved
   var updates = {
-    order_num: gv('edit-order'),
-    sku:       gv('edit-sku'),
-    item:      gv('edit-item'),
-    order_date: gv('edit-orderdate'),
-    shipping:  gv('edit-shipping')
+    order_num:      gv('edit-order'),
+    sku:            gv('edit-sku'),
+    item:           gv('edit-item'),
+    color:          gv('edit-color'),
+    order_date:     gv('edit-orderdate'),
+    eta:            gv('edit-eta'),
+    build_date:     gv('edit-build'),
+    sent_to_powder: gv('edit-sent'),
+    po_num:         gv('edit-po'),
+    shipping:       gv('edit-shipping'),
+    first_name:     gv('edit-first-name'),
+    last_name:      gv('edit-last-name'),
+    company:        gv('edit-company'),
+    customer_name:  [gv('edit-first-name'), gv('edit-last-name')].filter(Boolean).join(' ')
   };
-  var isTagPull = editingTab === 'tagpull';
-  // Save first/last name + company on ALL orders
-  updates.first_name = gv('edit-first-name');
-  updates.last_name  = gv('edit-last-name');
-  updates.company    = gv('edit-company');
-  updates.customer_name = [gv('edit-first-name'), gv('edit-last-name')].filter(Boolean).join(' ');
-  if (isTagPull) {
-    var notesEl = document.getElementById('edit-notes');
-    updates.notes = notesEl ? notesEl.value.trim() : '';
-  }
-  if (!isKit && !isTagPull) {
-    updates.color = gv('edit-color') || '';
-    if (document.getElementById('edit-po'))    updates.po_num        = gv('edit-po');
-    if (document.getElementById('edit-eta'))   updates.eta           = gv('edit-eta');
-    if (document.getElementById('edit-build')) updates.build_date    = gv('edit-build');
-    if (document.getElementById('edit-sent'))  updates.sent_to_powder = gv('edit-sent');
-  }
+  var notesEl = document.getElementById('edit-notes');
+  if (notesEl) updates.notes = notesEl.value.trim();
   var oid = editingOrder.id;
   var prev = JSON.parse(JSON.stringify(editingOrder));
   var oldBuildDate = prev.build_date || '';

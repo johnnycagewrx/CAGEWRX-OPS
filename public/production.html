@@ -213,8 +213,6 @@
   var _sess = requireAuth();
   initAvatarDropdown();
   renderAvatar(_sess);
-  fetchProfile(_sess, function (sess) { _sess = sess; renderAvatar(_sess); });
-
   renderSidebar('production');
   initProdSections();
   initDatePickers();
@@ -225,7 +223,24 @@
     if (tb) tb.textContent = '☾';
   }
 
-  loadTasks();
+  // Fetch profile then show welcome and load tasks
+  fetchProfile(_sess, function (sess) {
+    _sess = sess;
+    renderAvatar(_sess);
+
+    // Welcome message - runs after profile loaded so full_name is available
+    var _wName = (_sess.full_name || (_sess.user && _sess.user.email) || 'there').split(' ')[0];
+    var _wDays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var _wMonths = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var _wNow = new Date();
+    var _wDate = _wDays[_wNow.getDay()] + ', ' + _wMonths[_wNow.getMonth()] + ' ' + _wNow.getDate() + ', ' + _wNow.getFullYear();
+    var _wBar = document.getElementById('welcome-bar');
+    var _wMsg = document.getElementById('welcome-msg');
+    if (_wMsg) _wMsg.innerHTML = "&#x1F44B; Welcome, <strong>" + _wName + "</strong>. It's " + _wDate + ". Let's kick some ass today!";
+    if (_wBar) _wBar.style.display = 'block';
+
+    loadTasks();
+  });
 </script>
 
 <div class="banner" id="banner"></div>

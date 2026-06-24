@@ -6,6 +6,7 @@ var taskCache = {};
 var dragTaskData = null;
 var dragTaskFromSection = null;
 var editingTask = null;
+var activeAssigneeFilter = null;
 
 var SECTION_LABELS = {
   shipping:    'Shipping',
@@ -43,6 +44,37 @@ function toggleProdSection(sec) {
 }
 
 // ---- Data load ----
+function renderAssigneeFilters(tasks) {
+  var wrap = document.getElementById('assignee-filter-wrap');
+  if (!wrap) return;
+  var seen = {};
+  var assignees = [];
+  tasks.forEach(function(t) {
+    var name = (t.assigned_to || '').trim();
+    if (name && !seen[name.toLowerCase()]) {
+      seen[name.toLowerCase()] = true;
+      assignees.push(name);
+    }
+  });
+  assignees.sort();
+  if (!assignees.length) { wrap.innerHTML = '<span style="font-size:11px;color:#333;">No assigned tasks yet — assign tasks to see filter buttons here</span>'; return; }
+  var html = '<span style="font-size:11px;color:#555;margin-right:8px;">Filter:</span>';
+  html += '<button class="assignee-btn' + (!activeAssigneeFilter ? ' active' : '') + '" onclick="setAssigneeFilter(null)">All</button>';
+  assignees.forEach(function(name) {
+    var isActive = activeAssigneeFilter && activeAssigneeFilter.toLowerCase() === name.toLowerCase();
+    var cls = 'assignee-btn' + (isActive ? ' active' : '');
+    html += '<button class="' + cls + '" data-name="' + name + '" onclick="setAssigneeFilter(this.dataset.name)">' + name + '</button>';
+  });
+  wrap.innerHTML = html;
+}
+
+
+function setAssigneeFilter(name) {
+  activeAssigneeFilter = name;
+  loadTasks();
+}
+
+
 function loadTasks() {
   var ids = ['pcol-shipping', 'pcol-shop', 'pcol-sme', 'pcol-needtomake'];
   ids.forEach(function (id) {
@@ -65,8 +97,15 @@ function renderTasks(tasks) {
   });
 
   Object.keys(SECTION_LABELS).forEach(function (sec) {
-    fillProdSection(sec, grouped[sec]);
+    var items = grouped[sec];
+    if (activeAssigneeFilter) {
+      items = items.filter(function(t) {
+        return (t.assigned_to || '').toLowerCase() === activeAssigneeFilter.toLowerCase();
+      });
+    }
+    fillProdSection(sec, items);
   });
+  renderAssigneeFilters(tasks);
 }
 
 function fillProdSection(sec, items) {

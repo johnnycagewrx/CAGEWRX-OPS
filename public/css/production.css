@@ -243,3 +243,46 @@ body.light-mode .task-card { background: #fff; border-color: #e0e0e0; }
 body.light-mode .task-title { color: #222; }
 body.light-mode .task-desc { color: #777; }
 body.light-mode .task-empty { color: #ccc; }
+
+/* ---- Welcome bar ---- */
+.welcome-bar {
+  background: linear-gradient(135deg, #1a0a00 0%, #0a1a0a 100%);
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 14px 20px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #aaa;
+  line-height: 1.4;
+}
+.welcome-bar strong {
+  color: #fff;
+  font-size: 15px;
+}
+
+/* ---- Assignee filter bar ---- */
+.assignee-filter-bar {
+  margin-bottom: 16px;
+  min-height: 30px;
+}
+
+.assignee-btn {
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  border: 1px solid #2a2a2a;
+  background: #181818;
+  color: #666;
+  font-family: inherit;
+  font-weight: 600;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.assignee-btn:hover { color: #ccc; border-color: #3a3a3a; }
+.assignee-btn.active { background: #1a0d05; border-color: #ff7043; color: #ff7043; }
+
+@media (max-width: 768px) {
+  .welcome-bar { font-size: 13px; padding: 12px 14px; }
+  .assignee-btn { font-size: 11px; padding: 5px 12px; }
+}
