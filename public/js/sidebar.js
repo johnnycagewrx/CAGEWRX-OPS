@@ -97,3 +97,52 @@ function toggleSidebarPin() {
   var label = document.getElementById('pin-label');
   if (label) label.textContent = isPinned ? 'Unpin' : 'Pin open';
 }
+
+/**
+ * Render the shared page header.
+ * @param {object} config
+ *   label:     string  - page label e.g. "CAGEwrx Operations"
+ *   title:     string  - page title e.g. "ORDERS"
+ *   mountId:   string  - id of element to replace (default "header-mount")
+ *   buttons:   string  - HTML string of action buttons to inject in header-right
+ */
+function renderHeader(config) {
+  config = config || {};
+  var label   = config.label   || 'CAGEwrx Operations';
+  var title   = config.title   || '';
+  var buttons = config.buttons || '';
+  var mountId = config.mountId || 'header-mount';
+
+  var html = ''
+    + '<div class="shared-header">'
+    + '  <div class="shared-header-left">'
+    + '    <img class="shared-header-logo" src="img/cagewrx_logo.png" alt="CAGEWRX OPS">'
+    + '    <div>'
+    + '      <div class="shared-header-label">' + label + '</div>'
+    + '      <div class="shared-header-title">' + title + '</div>'
+    + '    </div>'
+    + '  </div>'
+    + '  <div class="shared-header-right">'
+    + buttons
+    + '    <button class="btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">&#x263C;</button>'
+    + '    <div class="avatar-wrap">'
+    + '      <div class="avatar-trigger" id="avatar-trigger">'
+    + '        <div id="user-avatar">?</div>'
+    + '        <span class="avatar-name-label" id="avatar-name-label"></span>'
+    + '        <span style="font-size:10px;color:#444;">&#x25BE;</span>'
+    + '      </div>'
+    + '      <div id="av-dd">'
+    + '        <div class="av-profile">'
+    + '          <div class="av-profile-name" id="avatar-name">Loading...</div>'
+    + '          <div class="av-profile-email" id="avatar-email"></div>'
+    + '          <span id="avatar-role-badge">User</span>'
+    + '        </div>'
+    + '        <button class="av-menu-item danger" onclick="signOut()">&#x2192; Sign Out</button>'
+    + '      </div>'
+    + '    </div>'
+    + '  </div>'
+    + '</div>';
+
+  var mount = document.getElementById(mountId);
+  if (mount) mount.outerHTML = html;
+}

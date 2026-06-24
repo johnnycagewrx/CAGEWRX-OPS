@@ -72,9 +72,12 @@ function fetchProfile(sess, callback) {
  * Render avatar UI elements from session data
  */
 function renderAvatar(sess) {
-  var name = (sess && sess.full_name) || (sess && sess.user && sess.user.email) || '';
-  var role = (sess && sess.role) || 'user';
+  var fullName = (sess && sess.full_name) || '';
+  var email    = (sess && sess.user && sess.user.email) || '';
+  var name     = fullName || email;
+  var role     = (sess && sess.role) || 'user';
 
+  // Avatar circle initials
   var av = document.getElementById('user-avatar');
   if (av && name) {
     var parts = name.trim().split(' ');
@@ -83,11 +86,21 @@ function renderAvatar(sess) {
       : name.slice(0, 2).toUpperCase();
   }
 
+  // Name label next to avatar (shows first name or email prefix)
+  var nameLabel = document.getElementById('avatar-name-label');
+  if (nameLabel) {
+    var displayName = fullName
+      ? fullName.split(' ')[0]
+      : email.split('@')[0];
+    nameLabel.textContent = displayName;
+  }
+
+  // Dropdown profile details
   var nameEl = document.getElementById('avatar-name');
-  if (nameEl) nameEl.textContent = name;
+  if (nameEl) nameEl.textContent = fullName || email;
 
   var emailEl = document.getElementById('avatar-email');
-  if (emailEl) emailEl.textContent = (sess && sess.user && sess.user.email) || '';
+  if (emailEl) emailEl.textContent = email;
 
   var roleEl = document.getElementById('avatar-role-badge');
   if (roleEl) roleEl.textContent = role.charAt(0).toUpperCase() + role.slice(1);
@@ -100,19 +113,21 @@ function renderAvatar(sess) {
  * Set up avatar dropdown toggle
  */
 function initAvatarDropdown() {
+  // Close dropdown when clicking outside
   document.addEventListener('click', function (e) {
     if (!e.target.closest) return;
-    if (!e.target.closest('#user-avatar') && !e.target.closest('#av-dd')) {
+    if (!e.target.closest('.avatar-trigger') && !e.target.closest('#av-dd')) {
       var dd = document.getElementById('av-dd');
       if (dd) dd.style.display = 'none';
     }
   });
 
-  var av = document.getElementById('user-avatar');
-  if (av) {
-    av.addEventListener('click', function () {
+  // Open/close when clicking the trigger (avatar + name label)
+  document.addEventListener('click', function (e) {
+    var trigger = e.target.closest('.avatar-trigger');
+    if (trigger) {
       var dd = document.getElementById('av-dd');
-      if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
-    });
-  }
+      if (dd) dd.style.display = dd.style.display === 'none' || !dd.style.display ? 'block' : 'none';
+    }
+  });
 }

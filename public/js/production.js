@@ -59,11 +59,11 @@ function renderAssigneeFilters(tasks) {
   assignees.sort();
   if (!assignees.length) { wrap.innerHTML = '<span style="font-size:11px;color:#333;">No assigned tasks yet — assign tasks to see filter buttons here</span>'; return; }
   var html = '<span style="font-size:11px;color:#555;margin-right:8px;">Filter:</span>';
-  html += '<button class="assignee-btn' + (!activeAssigneeFilter ? ' active' : '') + '" onclick="setAssigneeFilter(null)">All</button>';
+  html += '<button class="assignee-btn' + (!activeAssigneeFilter ? ' active' : '') + '" data-name="__all__">All</button>';
   assignees.forEach(function(name) {
     var isActive = activeAssigneeFilter && activeAssigneeFilter.toLowerCase() === name.toLowerCase();
     var cls = 'assignee-btn' + (isActive ? ' active' : '');
-    html += '<button class="' + cls + '" data-name="' + name + '" onclick="setAssigneeFilter(this.dataset.name)">' + name + '</button>';
+    html += '<button class="' + cls + '" data-name="' + name + '">' + name + '</button>';
   });
   wrap.innerHTML = html;
 }
@@ -85,6 +85,17 @@ function loadTasks() {
   sbFetch('GET', '/rest/v1/tasks?select=*&order=created_at.asc', null, function (err, data) {
     var tasks = (err || !Array.isArray(data)) ? [] : data;
     renderTasks(tasks);
+  });
+}
+
+function initAssigneeFilter() {
+  var wrap = document.getElementById('assignee-filter-wrap');
+  if (!wrap) return;
+  wrap.addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-name]');
+    if (!btn) return;
+    var name = btn.getAttribute('data-name');
+    setAssigneeFilter(name === '__all__' ? null : name);
   });
 }
 

@@ -24,51 +24,17 @@
 <div class="app-content">
 
 <!-- ===== HEADER ===== -->
-<div class="hero">
-  <div class="hero-content">
+<div id="header-mount"></div>
 
-    <div class="hero-left">
-      <img class="hero-logo" id="hero-logo" src="img/cagewrx_logo.png" alt="CAGEWRX OPS">
-      <div>
-        <div class="hero-label">CAGEwrx Operations</div>
-        <div class="hero-title">CAGEWRX OPS</div>
-      </div>
-    </div>
-
-    <div class="hero-right">
-      <div class="search-wrap">
-        <span style="color:#2a4a6a;font-size:14px;">&#x2315;</span>
-        <input class="search-input" id="search-input" type="text"
-          placeholder="Search order #..."
-          oninput="doSearch(this.value)"
-          onkeydown="if(event.key==='Escape') clearSearch()">
-        <span class="search-clear" id="search-clear" onclick="clearSearch()">&#x00D7;</span>
-      </div>
-
-      <div class="btn-group">
-        <a class="btn btn-blue" id="admin-btn" href="docs.html" style="display:none;">
-          &#x1F512; Admin
-        </a>
-        <button class="btn btn-green" onclick="openAddModal()">+ Add Order</button>
-        <button class="btn" id="undo-btn" onclick="undoLast()" disabled title="Undo last action" style="opacity:0.4;">&#x21A9; Undo</button>
-        <button class="btn" onclick="loadData(false)">&#x21BB; Refresh</button>
-        <button class="btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">&#x263C;</button>
-
-        <!-- Avatar -->
-        <div class="avatar-wrap">
-          <div id="user-avatar">?</div>
-          <div id="av-dd">
-            <div class="av-profile">
-              <div class="av-profile-name" id="avatar-name">Loading...</div>
-              <div class="av-profile-email" id="avatar-email"></div>
-              <span id="avatar-role-badge">User</span>
-            </div>
-            <button class="av-menu-item danger" onclick="signOut()">&#x2192; Sign Out</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
+<!-- Search bar below shared header (ops-specific) -->
+<div class="ops-search-bar">
+  <div class="search-wrap" style="flex:1;max-width:320px;">
+    <span style="color:#2a4a6a;font-size:14px;">&#x2315;</span>
+    <input class="search-input" id="search-input" type="text"
+      placeholder="Search order # or customer..."
+      oninput="doSearch(this.value)"
+      onkeydown="if(event.key==='Escape') clearSearch()">
+    <span class="search-clear" id="search-clear" onclick="clearSearch()">&#x00D7;</span>
   </div>
 </div>
 
@@ -425,13 +391,21 @@
 
   // Apply session data immediately then verify from Supabase
   renderAvatar(_sess);
+  renderHeader({
+    title: 'CAGEWRX OPS',
+    buttons: '<a class="btn btn-blue" id="admin-btn" href="docs.html" style="display:none;">&#x1F512; Admin</a>' +
+             '<button class="btn btn-green" onclick="openAddModal()">+ Add Order</button>' +
+             '<button class="btn" id="undo-btn" onclick="undoLast()" disabled title="Undo last action" style="opacity:0.4;">&#x21A9; Undo</button>' +
+             '<button class="btn" onclick="loadData(false)">&#x21BB; Refresh</button>'
+  });
+  renderSidebar('orders');
+
   fetchProfile(_sess, function(sess) {
     _sess = sess;
     renderAvatar(_sess);
   });
 
   // Render sidebar nav
-  renderSidebar('orders');
 
   // Init stages (open on desktop, collapsed on mobile)
   initStages();

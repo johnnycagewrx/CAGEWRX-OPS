@@ -44,40 +44,7 @@
 <div id="sidebar-mount"></div>
 <div class="app-content">
 
-  <!-- Header -->
-  <div class="doc-header">
-    <div class="doc-header-left">
-      <img class="doc-header-logo" src="img/cagewrx_logo.png" alt="CAGEWRX OPS"
-        onerror="this.style.display='none'">
-      <div>
-        <div class="doc-header-label">CAGEwrx</div>
-        <div class="doc-header-title">ADMIN PANEL</div>
-      </div>
-    </div>
-
-    <div class="doc-header-right">
-      <button class="btn btn-green" id="upload-btn"
-        onclick="openUploadModal()" style="display:none;">
-        + Upload File
-      </button>
-      <button class="btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">&#x263C;</button>
-
-      <!-- Avatar -->
-      <div class="avatar-wrap">
-        <div id="user-avatar">?</div>
-        <div id="av-dd">
-          <div class="av-profile">
-            <div class="av-profile-name" id="avatar-name">Loading...</div>
-            <div class="av-profile-email" id="avatar-email"></div>
-            <span id="avatar-role-badge">User</span>
-          </div>
-          <button class="av-menu-item danger" onclick="doSignOut()">
-            &#x2192; Sign Out
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div id="header-mount"></div>
 
   <!-- Main content -->
   <div class="doc-main">
@@ -223,6 +190,11 @@
 <script>
   // Check for ?tab=users in URL to auto-switch tab on mobile
   var urlTab = new URLSearchParams(window.location.search).get('tab');
+  renderHeader({
+    label: 'CAGEwrx',
+    title: 'ADMIN PANEL',
+    buttons: '<button class="btn btn-green" id="upload-btn" onclick="openUploadModal()" style="display:none;">+ Upload File</button>'
+  });
   renderSidebar(urlTab || 'docs');
   if (localStorage.getItem('cw_theme') === 'light') {
     document.body.classList.add('light-mode');

@@ -22,40 +22,20 @@
 <div class="app-content">
 
 <!-- ===== HEADER ===== -->
-<div class="prod-header">
-  <div class="prod-header-content">
-    <div class="prod-header-left">
-      <img class="prod-logo" src="img/cagewrx_logo.png" alt="CAGEWRX OPS">
-      <div>
-        <div class="prod-label">CAGEwrx Operations</div>
-        <div class="prod-title">PRODUCTION</div>
-      </div>
-    </div>
-
-    <div class="prod-header-right">
-      <button class="btn btn-green" onclick="openAddTaskModal()">+ Add Task</button>
-      <button class="btn" onclick="loadTasks()">&#x21BB; Refresh</button>
-      <button class="btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">&#x263C;</button>
-
-      <div class="avatar-wrap">
-        <div id="user-avatar">?</div>
-        <div id="av-dd">
-          <div class="av-profile">
-            <div class="av-profile-name" id="avatar-name">Loading...</div>
-            <div class="av-profile-email" id="avatar-email"></div>
-            <span id="avatar-role-badge">User</span>
-          </div>
-          <button class="av-menu-item danger" onclick="signOut()">&#x2192; Sign Out</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<div id="header-mount"></div>
 
 <!-- ===== MAIN ===== -->
 <div class="prod-main">
 
-  
+  <!-- Welcome message -->
+  <div class="welcome-bar" id="welcome-bar" style="display:none;">
+    <span id="welcome-msg"></span>
+  </div>
+
+  <!-- Assignee filter -->
+  <div class="assignee-filter-bar">
+    <div id="assignee-filter-wrap" style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;"></div>
+  </div>
 
   <div class="prod-pipeline">
 
@@ -213,6 +193,7 @@
   var _sess = requireAuth();
   initAvatarDropdown();
   renderAvatar(_sess);
+  renderHeader({ title: 'PRODUCTION', buttons: '<button class="btn btn-green" onclick="openAddTaskModal()">+ Add Task</button><button class="btn" onclick="loadTasks()">&#x21BB; Refresh</button>' });
   renderSidebar('production');
   initProdSections();
   initDatePickers();
@@ -228,17 +209,19 @@
     _sess = sess;
     renderAvatar(_sess);
 
-    // Welcome message - runs after profile loaded so full_name is available
-    var _wName = (_sess.full_name || (_sess.user && _sess.user.email) || 'there').split(' ')[0];
+    // Welcome message - use full_name, fall back to first part of email
+    var _rawName = _sess.full_name || (_sess.user && _sess.user.email) || 'there';
+    var _wName = _rawName.indexOf('@') !== -1 ? _rawName.split('@')[0] : _rawName.split(' ')[0];
     var _wDays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     var _wMonths = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     var _wNow = new Date();
     var _wDate = _wDays[_wNow.getDay()] + ', ' + _wMonths[_wNow.getMonth()] + ' ' + _wNow.getDate() + ', ' + _wNow.getFullYear();
     var _wBar = document.getElementById('welcome-bar');
     var _wMsg = document.getElementById('welcome-msg');
-    if (_wMsg) _wMsg.innerHTML = "&#x1F44B; Welcome, <strong>" + _wName + "</strong>. It's " + _wDate + ". Let's kick some ass today!";
+    if (_wMsg) _wMsg.innerHTML = "&#x1F44B; Welcome back, <strong>" + _wName + "</strong>! It's " + _wDate + ". Let's kick some ass today!";
     if (_wBar) _wBar.style.display = 'block';
 
+    initAssigneeFilter();
     loadTasks();
   });
 </script>

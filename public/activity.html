@@ -22,34 +22,7 @@
 <div class="app-content">
 
 <!-- ===== HEADER ===== -->
-<div class="act-header">
-  <div class="act-header-content">
-    <div class="act-header-left">
-      <img class="act-logo" src="img/cagewrx_logo.png" alt="CAGEWRX OPS">
-      <div>
-        <div class="act-label">CAGEwrx Operations</div>
-        <div class="act-title">ACTIVITY LOG</div>
-      </div>
-    </div>
-
-    <div class="act-header-right">
-      <button class="btn" onclick="loadActivityLog(false)">&#x21BB; Refresh</button>
-      <button class="btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">&#x263C;</button>
-
-      <div class="avatar-wrap">
-        <div id="user-avatar">?</div>
-        <div id="av-dd">
-          <div class="av-profile">
-            <div class="av-profile-name" id="avatar-name">Loading...</div>
-            <div class="av-profile-email" id="avatar-email"></div>
-            <span id="avatar-role-badge">User</span>
-          </div>
-          <button class="av-menu-item danger" onclick="signOut()">&#x2192; Sign Out</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<div id="header-mount"></div>
 
 <!-- ===== MAIN ===== -->
 <div class="act-main">
@@ -98,11 +71,13 @@
 <script src="js/activity-page.js"></script>
 <script>
   var _sess = requireAuth();
+  renderHeader({ title: 'ACTIVITY LOG', buttons: '<button class="btn" onclick="loadActivityLog(false)">&#x21BB; Refresh</button>' });
+  renderSidebar('activity');
   initAvatarDropdown();
   renderAvatar(_sess);
   fetchProfile(_sess, function (sess) { _sess = sess; renderAvatar(_sess); });
 
-  renderSidebar('activity');
+
 
   if (localStorage.getItem('cw_theme') === 'light') {
     document.body.classList.add('light-mode');

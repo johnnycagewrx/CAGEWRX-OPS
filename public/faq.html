@@ -22,34 +22,7 @@
 <div class="app-content">
 
 <!-- ===== HEADER ===== -->
-<div class="faq-header">
-  <div class="faq-header-content">
-    <div class="faq-header-left">
-      <img class="faq-logo" src="img/cagewrx_logo.png" alt="CAGEWRX OPS">
-      <div>
-        <div class="faq-label">CAGEwrx Operations</div>
-        <div class="faq-title">FAQ</div>
-      </div>
-    </div>
-
-    <div class="faq-header-right">
-      <button class="btn btn-green" id="faq-add-btn" onclick="openFaqModal()" style="display:none;">+ Add Question</button>
-      <button class="btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">&#x263C;</button>
-
-      <div class="avatar-wrap">
-        <div id="user-avatar">?</div>
-        <div id="av-dd">
-          <div class="av-profile">
-            <div class="av-profile-name" id="avatar-name">Loading...</div>
-            <div class="av-profile-email" id="avatar-email"></div>
-            <span id="avatar-role-badge">User</span>
-          </div>
-          <button class="av-menu-item danger" onclick="signOut()">&#x2192; Sign Out</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<div id="header-mount"></div>
 
 <!-- ===== MAIN ===== -->
 <div class="faq-main">
@@ -102,6 +75,8 @@
 <script src="js/faq.js"></script>
 <script>
   var _sess = requireAuth();
+  renderHeader({ title: 'FAQ', buttons: '<button class="btn btn-green" id="faq-add-btn" onclick="openFaqModal()" style="display:none;">+ Add Question</button>' });
+  renderSidebar('faq');
   initAvatarDropdown();
   renderAvatar(_sess);
   fetchProfile(_sess, function (sess) {
@@ -113,7 +88,7 @@
     loadFaqs();
   });
 
-  renderSidebar('faq');
+
 
   if (localStorage.getItem('cw_theme') === 'light') {
     document.body.classList.add('light-mode');
