@@ -144,8 +144,33 @@
   var SUPABASE_URL_LOCAL = 'https://jkgftyxavjppgmquueqx.supabase.co';
   var ANON_KEY_LOCAL = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZ2Z0eXhhdmpwcGdtcXV1ZXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzU2MDQsImV4cCI6MjA5NzIxMTYwNH0.bkmtBbDvHPwqDMJnwtF9Bml3B7cs_t579c7FOqstvUo';
 
-  // Already logged in? Go straight to ops
+  // Handle Supabase recovery redirect
+  // Supabase may send token in hash (#) or query string (?)
   (function () {
+    function parseParams(str) {
+      var params = {};
+      str.split('&').forEach(function(p) {
+        var kv = p.split('=');
+        if (kv.length >= 2) params[decodeURIComponent(kv[0])] = decodeURIComponent(kv.slice(1).join('='));
+      });
+      return params;
+    }
+
+    // Check hash first (#access_token=...&type=recovery)
+    var hashParams = parseParams(window.location.hash.slice(1));
+    if (hashParams['type'] === 'recovery' && hashParams['access_token']) {
+      window.location.href = 'reset-password.html' + window.location.hash;
+      return;
+    }
+
+    // Check query string (?access_token=...&type=recovery)
+    var queryParams = parseParams(window.location.search.slice(1));
+    if (queryParams['type'] === 'recovery' && queryParams['access_token']) {
+      window.location.href = 'reset-password.html#access_token=' + queryParams['access_token'] + '&type=recovery';
+      return;
+    }
+
+    // Already logged in? Go straight to ops
     var sess = getSession();
     if (sess && sess.access_token) {
       window.location.href = 'ops.html';
@@ -233,7 +258,7 @@
     btn.disabled = true;
     btn.textContent = 'Sending...';
 
-    fetch(SUPABASE_URL_LOCAL + '/auth/v1/recover?redirect_to=' + encodeURIComponent('https://ops.cagewrx.com/reset-password.html'), {
+    fetch(SUPABASE_URL_LOCAL + '/auth/v1/recover', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

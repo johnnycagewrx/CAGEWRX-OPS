@@ -137,6 +137,7 @@ function renderHeader(config) {
     + '          <div class="av-profile-email" id="avatar-email"></div>'
     + '          <span id="avatar-role-badge">User</span>'
     + '        </div>'
+    + '        <button class="av-menu-item" onclick="openChangePasswordModal()">&#x1F511; Change Password</button>'
     + '        <button class="av-menu-item danger" onclick="signOut()">&#x2192; Sign Out</button>'
     + '      </div>'
     + '    </div>'
@@ -145,4 +146,108 @@ function renderHeader(config) {
 
   var mount = document.getElementById(mountId);
   if (mount) mount.outerHTML = html;
+}
+
+
+// ---- Change Password Modal ----
+function openChangePasswordModal() {
+  // Close avatar dropdown
+  var dd = document.getElementById('av-dd');
+  if (dd) dd.style.display = 'none';
+
+  // Create modal if it doesn't exist
+  if (!document.getElementById('change-pw-modal')) {
+    var modal = document.createElement('div');
+    modal.id = 'change-pw-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = ''
+      + '<div class="modal" style="max-width:380px;">'
+      + '  <div class="modal-title">&#x1F511; Change Password</div>'
+      + '  <label>New Password</label>'
+      + '  <input type="password" id="cp-new" placeholder="Min. 8 characters" style="margin-bottom:4px;">'
+      + '  <div style="height:4px;background:#1a1a1a;border-radius:2px;margin-bottom:12px;overflow:hidden;">'
+      + '    <div id="cp-strength-bar" style="height:100%;width:0;border-radius:2px;transition:all 0.3s;"></div>'
+      + '  </div>'
+      + '  <label>Confirm Password</label>'
+      + '  <input type="password" id="cp-confirm" placeholder="Repeat new password">'
+      + '  <div id="cp-error" style="display:none;background:#2a0d0d;border:1px solid #c62828;color:#ff8a80;border-radius:6px;padding:8px 12px;font-size:12px;margin-top:8px;"></div>'
+      + '  <div id="cp-success" style="display:none;background:#0d2a0d;border:1px solid #2e7d32;color:#81c784;border-radius:6px;padding:8px 12px;font-size:12px;margin-top:8px;"></div>'
+      + '  <div class="modal-btns" style="margin-top:16px;">'
+      + '    <button class="modal-btn modal-btn-cancel" onclick="closeChangePasswordModal()">Cancel</button>'
+      + '    <button class="modal-btn modal-btn-save" onclick="submitChangePassword()">Update Password</button>'
+      + '  </div>'
+      + '</div>';
+    document.body.appendChild(modal);
+
+    // Strength meter
+    document.getElementById('cp-new').addEventListener('input', function() {
+      var pw = this.value;
+      var score = 0;
+      if (pw.length >= 8) score++;
+      if (/[A-Z]/.test(pw)) score++;
+      if (/[0-9]/.test(pw)) score++;
+      if (/[^A-Za-z0-9]/.test(pw)) score++;
+      var bar = document.getElementById('cp-strength-bar');
+      var colors = ['#ef5350','#ff9800','#ffca28','#4caf50'];
+      bar.style.width = (score * 25) + '%';
+      bar.style.background = colors[score - 1] || '#1a1a1a';
+    });
+  }
+
+  document.getElementById('cp-new').value = '';
+  document.getElementById('cp-confirm').value = '';
+  document.getElementById('cp-error').style.display = 'none';
+  document.getElementById('cp-success').style.display = 'none';
+  document.getElementById('cp-strength-bar').style.width = '0';
+  document.getElementById('change-pw-modal').classList.add('open');
+}
+
+function closeChangePasswordModal() {
+  var m = document.getElementById('change-pw-modal');
+  if (m) m.classList.remove('open');
+}
+
+function submitChangePassword() {
+  var pw  = document.getElementById('cp-new').value;
+  var pw2 = document.getElementById('cp-confirm').value;
+  var err = document.getElementById('cp-error');
+  var ok  = document.getElementById('cp-success');
+  err.style.display = 'none';
+  ok.style.display  = 'none';
+
+  if (pw.length < 8) { err.textContent = 'Password must be at least 8 characters'; err.style.display = 'block'; return; }
+  if (pw !== pw2)    { err.textContent = 'Passwords do not match'; err.style.display = 'block'; return; }
+
+  var sess = typeof getSession === 'function' ? getSession() : null;
+  if (!sess || !sess.access_token) { err.textContent = 'Not logged in'; err.style.display = 'block'; return; }
+
+  var btn = document.querySelector('#change-pw-modal .modal-btn-save');
+  if (btn) { btn.disabled = true; btn.textContent = 'Updating...'; }
+
+  fetch('https://jkgftyxavjppgmquueqx.supabase.co/auth/v1/user', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZ2Z0eXhhdmpwcGdtcXV1ZXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2MzU2MDQsImV4cCI6MjA5NzIxMTYwNH0.bkmtBbDvHPwqDMJnwtF9Bml3B7cs_t579c7FOqstvUo',
+      'Authorization': 'Bearer ' + sess.access_token
+    },
+    body: JSON.stringify({ password: pw })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Update Password'; }
+    if (data.error || data.msg) {
+      err.textContent = data.msg || data.error || 'Update failed';
+      err.style.display = 'block';
+    } else {
+      ok.textContent = 'Password updated successfully!';
+      ok.style.display = 'block';
+      setTimeout(function() { closeChangePasswordModal(); }, 2000);
+    }
+  })
+  .catch(function() {
+    if (btn) { btn.disabled = false; btn.textContent = 'Update Password'; }
+    err.textContent = 'Something went wrong. Please try again.';
+    err.style.display = 'block';
+  });
 }

@@ -393,7 +393,7 @@ function updateRole(userId, role) {
 
 function removeUser(userId) {
   if (!confirm('Remove this user? They will no longer be able to log in.')) return;
-  fetch('/.netlify/functions/admin-api', {
+  fetch('https://cagewrx-admin-api.sales-8e3.workers.dev', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'delete_user', user_id: userId })
@@ -415,7 +415,7 @@ function inviteUser() {
   var role    = roleEl  ? roleEl.value          : 'user';
   if (!email) { showBanner('Email is required', 'error'); return; }
 
-  fetch('/.netlify/functions/admin-api', {
+  fetch('https://cagewrx-admin-api.sales-8e3.workers.dev', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'create_user', email: email, full_name: name, role: role })
