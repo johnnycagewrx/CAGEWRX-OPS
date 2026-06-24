@@ -60,7 +60,10 @@ function fetchProfile(sess, callback) {
   .then(function (rows) {
     if (Array.isArray(rows) && rows.length) {
       sess.role = rows[0].role || 'user';
-      sess.full_name = rows[0].full_name || '';
+      // Use profile full_name, fall back to Auth metadata name
+      var profileName = rows[0].full_name || '';
+      var metaName = (sess.user && sess.user.user_metadata && sess.user.user_metadata.full_name) || '';
+      sess.full_name = profileName || metaName || '';
       saveSession(sess);
     }
     callback(sess);
