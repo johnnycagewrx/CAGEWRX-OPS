@@ -121,6 +121,21 @@
   <button class="login-btn" id="signin-btn" onclick="signIn()">Sign In</button>
   <div class="login-error" id="login-error"></div>
   <div class="login-loading" id="login-loading">Signing in...</div>
+  <div style="text-align:center;margin-top:14px;">
+    <button onclick="showForgotPassword()" style="background:none;border:none;color:#555;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline;">Forgot password?</button>
+  </div>
+</div>
+
+<!-- Forgot password panel (hidden by default) -->
+<div id="forgot-panel" style="display:none;margin-top:16px;">
+  <div style="font-size:12px;color:#888;margin-bottom:10px;text-align:center;">Enter your email and we'll send a reset link.</div>
+  <input class="login-input" type="email" id="reset-email" placeholder="you@cagewrx.com" autocomplete="email">
+  <button class="login-btn" id="reset-btn" onclick="sendResetEmail()" style="margin-top:10px;">Send Reset Link</button>
+  <div id="reset-success" style="display:none;background:#0d2a0d;border:1px solid #2e7d32;color:#81c784;border-radius:8px;padding:10px 14px;font-size:12px;margin-top:10px;text-align:center;"></div>
+  <div id="reset-error" style="display:none;background:#2a0d0d;border:1px solid #c62828;color:#ff8a80;border-radius:8px;padding:10px 14px;font-size:12px;margin-top:10px;text-align:center;"></div>
+  <div style="text-align:center;margin-top:10px;">
+    <button onclick="hideForgotPassword()" style="background:none;border:none;color:#555;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline;">Back to sign in</button>
+  </div>
 </div>
 
 <script src="js/supabase.js"></script>
@@ -193,6 +208,56 @@
   document.getElementById('password').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') signIn();
   });
+
+  function showForgotPassword() {
+    document.getElementById('forgot-panel').style.display = 'block';
+    document.getElementById('reset-email').value = document.getElementById('email').value || '';
+    document.getElementById('reset-success').style.display = 'none';
+    document.getElementById('reset-error').style.display = 'none';
+    document.getElementById('reset-email').focus();
+  }
+
+  function hideForgotPassword() {
+    document.getElementById('forgot-panel').style.display = 'none';
+  }
+
+  function sendResetEmail() {
+    var email = (document.getElementById('reset-email').value || '').trim();
+    if (!email) {
+      var err = document.getElementById('reset-error');
+      err.textContent = 'Please enter your email address';
+      err.style.display = 'block';
+      return;
+    }
+    var btn = document.getElementById('reset-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    fetch(SUPABASE_URL_LOCAL + '/auth/v1/recover', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': ANON_KEY_LOCAL
+      },
+      body: JSON.stringify({ email: email })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function() {
+      btn.disabled = false;
+      btn.textContent = 'Send Reset Link';
+      var ok = document.getElementById('reset-success');
+      ok.textContent = 'Reset link sent to ' + email + '. Check your inbox (and spam folder).';
+      ok.style.display = 'block';
+      document.getElementById('reset-error').style.display = 'none';
+    })
+    .catch(function(e) {
+      btn.disabled = false;
+      btn.textContent = 'Send Reset Link';
+      var err = document.getElementById('reset-error');
+      err.textContent = 'Something went wrong. Please try again.';
+      err.style.display = 'block';
+    });
+  }
   document.getElementById('email').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') signIn();
   });
