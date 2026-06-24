@@ -239,7 +239,11 @@
         'Content-Type': 'application/json',
         'apikey': ANON_KEY_LOCAL
       },
-      body: JSON.stringify({ email: email })
+      body: JSON.stringify({
+        email: email,
+        gotrue_meta_security: {},
+        redirect_to: 'https://ops.cagewrx.com/reset-password.html'
+      })
     })
     .then(function(r) { return r.json(); })
     .then(function() {
