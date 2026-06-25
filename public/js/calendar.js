@@ -344,7 +344,11 @@ function initDatePickers() {
     var btn = e.target.closest('[data-picker-target]');
     if (btn) { var targetId = btn.getAttribute('data-picker-target'); if (targetId) openDatePicker(targetId); }
     var ev = e.target.closest('[data-id][data-tab]');
-    if (ev && !e.target.closest('[data-priority-id]') && !e.target.closest('.edit-btn') && !e.target.closest('.done-btn')) {
+    if (ev && !e.target.closest('[data-priority-id]')
+           && !e.target.closest('.edit-btn')
+           && !e.target.closest('.done-btn')
+           && !e.target.closest('.order-num')
+           && !e.target.closest('.split-btn')) {
       var id = ev.getAttribute('data-id');
       var tab = ev.getAttribute('data-tab');
       if (id && tab) editFromId(id, tab);

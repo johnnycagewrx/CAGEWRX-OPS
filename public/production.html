@@ -144,7 +144,11 @@
     <textarea id="task-desc" placeholder="Additional details..."></textarea>
 
     <label>Assigned To (optional)</label>
-    <input type="text" id="task-assigned" placeholder="e.g. Johnny">
+    <div id="task-assigned-wrap">
+      <select id="task-assigned" style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;font-family:inherit;margin-top:4px;">
+        <option value="">— Unassigned —</option>
+      </select>
+    </div>
 
     <label>Due Date (optional)</label>
     <input type="hidden" id="task-due" value="">
@@ -222,7 +226,9 @@
     if (_wBar) _wBar.style.display = 'block';
 
     initAssigneeFilter();
-    loadTasks();
+    loadProdUsers(function() {
+      loadTasks();
+    });
   });
 </script>
 

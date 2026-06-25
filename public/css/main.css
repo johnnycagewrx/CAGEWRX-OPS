@@ -263,3 +263,80 @@ body {
 .purple { color: #b39ddb; }
 .orange { color: #ff7043; }
 .pink   { color: #f48fb1; }
+
+/* ============================================
+   Date Picker styles
+   ============================================ */
+
+.date-input-wrap {
+  position: relative;
+}
+
+.date-input-btn {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #e0e0e0;
+  outline: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.date-input-btn:hover { border-color: #42a5f5; }
+.date-input-btn .placeholder { color: #333; }
+
+.picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0 14px;
+}
+
+.picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.picker-cell {
+  text-align: center;
+  padding: 7px 4px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #bbb;
+}
+.picker-cell:hover { background: #1a1a1a; color: #fff; }
+.picker-cell.picker-empty { cursor: default; }
+.picker-cell.picker-today {
+  background: #2a0000;
+  color: #ff5252;
+  font-weight: 800;
+  border: 2px solid #e53935;
+  border-radius: 6px;
+  position: relative;
+  padding-bottom: 12px;
+}
+.picker-cell.picker-today::after {
+  content: 'TODAY';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 6px;
+  letter-spacing: .06em;
+  color: #e53935;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.picker-cell.picker-selected {
+  background: #1565c0;
+  color: #fff;
+  font-weight: 700;
+}

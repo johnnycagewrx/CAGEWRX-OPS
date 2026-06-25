@@ -286,3 +286,13 @@ body.light-mode .task-empty { color: #ccc; }
   .welcome-bar { font-size: 13px; padding: 12px 14px; }
   .assignee-btn { font-size: 11px; padding: 5px 12px; }
 }
+
+/* ---- Drag to reorder within section ---- */
+.task-card.drag-above {
+  border-top: 3px solid #42a5f5;
+  margin-top: -1px;
+}
+.task-card.drag-below {
+  border-bottom: 3px solid #42a5f5;
+  margin-bottom: -1px;
+}

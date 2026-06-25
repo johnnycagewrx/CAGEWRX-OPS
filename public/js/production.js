@@ -50,10 +50,13 @@ function renderAssigneeFilters(tasks) {
   var seen = {};
   var assignees = [];
   tasks.forEach(function(t) {
-    var name = (t.assigned_to || '').trim();
-    if (name && !seen[name.toLowerCase()]) {
-      seen[name.toLowerCase()] = true;
-      assignees.push(name);
+    var fullName = (t.assigned_to || '').trim();
+    if (!fullName) return;
+    // Use first name only for display, but track by first name to avoid dupes
+    var firstName = fullName.split(' ')[0];
+    if (!seen[firstName.toLowerCase()]) {
+      seen[firstName.toLowerCase()] = true;
+      assignees.push(firstName);
     }
   });
   assignees.sort();
@@ -75,6 +78,31 @@ function setAssigneeFilter(name) {
 }
 
 
+// ---- Load users for assigned-to dropdown ----
+var _prodUsers = [];
+
+function loadProdUsers(callback) {
+  sbFetch('GET', '/rest/v1/profiles?select=full_name,email&order=full_name.asc', null, function(err, data) {
+    _prodUsers = (data || []).filter(function(u) { return u.full_name || u.email; });
+    if (callback) callback();
+  });
+}
+
+function buildAssignedDropdown(currentVal) {
+  var opts = '<option value="">— Unassigned —</option>';
+  _prodUsers.forEach(function(u) {
+    var name = u.full_name || u.email.split('@')[0];
+    var selected = name === currentVal ? ' selected' : '';
+    opts += '<option value="' + name + '"' + selected + '>' + name + '</option>';
+  });
+  // If current value not in list, add it
+  if (currentVal && !_prodUsers.find(function(u){ return (u.full_name || u.email.split('@')[0]) === currentVal; })) {
+    opts += '<option value="' + currentVal + '" selected>' + currentVal + '</option>';
+  }
+  return '<select id="task-assigned" style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;font-family:inherit;margin-top:4px;">' + opts + '</select>';
+}
+
+
 function loadTasks() {
   var ids = ['pcol-shipping', 'pcol-shop', 'pcol-sme', 'pcol-needtomake'];
   ids.forEach(function (id) {
@@ -82,7 +110,7 @@ function loadTasks() {
     if (el) el.innerHTML = '<div style="padding:18px;text-align:center;"><div class="spinner"></div></div>';
   });
 
-  sbFetch('GET', '/rest/v1/tasks?select=*&order=created_at.asc', null, function (err, data) {
+  sbFetch('GET', '/rest/v1/tasks?select=*&order=sort_order.asc,created_at.asc', null, function (err, data) {
     var tasks = (err || !Array.isArray(data)) ? [] : data;
     renderTasks(tasks);
   });
@@ -128,6 +156,15 @@ function fillProdSection(sec, items) {
   if (!el) return;
   if (!items.length) { el.innerHTML = '<div class="task-empty">No tasks</div>'; return; }
 
+  // Sort by priority: high → medium → low → none
+  var priorityOrder = { high: 0, medium: 1, low: 2, '': 3 };
+  items = items.slice().sort(function(a, b) {
+    var pa = priorityOrder[a.priority || ''];
+    var pb = priorityOrder[b.priority || ''];
+    if (pa !== pb) return pa - pb;
+    return new Date(a.created_at) - new Date(b.created_at);
+  });
+
   var h = '';
   items.forEach(function (t) {
     h += buildTaskCard(t);
@@ -142,14 +179,17 @@ function buildTaskCard(t) {
     .replace(/"/g, '&quot;');
 
   var pills = '';
-  if (t.assigned_to) pills += '<span class="task-pill task-pill-assigned">' + t.assigned_to + '</span>';
+  if (t.assigned_to) pills += '<span class="task-pill task-pill-assigned">' + t.assigned_to.split(' ')[0] + '</span>';
   if (t.due_date)    pills += '<span class="task-pill task-pill-due">Due: ' + t.due_date + '</span>';
   if (t.priority)    pills += '<span class="task-pill task-pill-priority-' + t.priority + '">' + (PRIORITY_LABELS[t.priority] || t.priority) + '</span>';
 
   return '<div class="task-card" draggable="true"' +
-    ' data-id="' + t.id + '" data-section="' + t.section + '"' +
+    ' data-id="' + t.id + '" data-section="' + t.section + '" data-priority="' + (t.priority || '') + '"' +
     ' ondragstart="onTaskDragStart(event,\'' + t.section + '\',\'' + safeJson + '\')"' +
-    ' ondragend="onTaskDragEnd()">' +
+    ' ondragend="onTaskDragEnd()"' +
+    ' ondragover="onTaskCardDragOver(event)"' +
+    ' ondragleave="onTaskCardDragLeave(event)"' +
+    ' ondrop="onTaskCardDrop(event)">' +
     '<div class="task-top">' +
       '<div class="task-title" onclick="editTaskFromCard(this.closest(\'.task-card\'))">' + (t.title || '') + '</div>' +
       '<div class="task-actions">' +
@@ -207,6 +247,109 @@ function onTaskDrop(e, toSection) {
   });
 }
 
+// ---- Drag to reorder within section ----
+function onTaskCardDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  var card = e.currentTarget;
+  var rect = card.getBoundingClientRect();
+  var midY = rect.top + rect.height / 2;
+  card.classList.remove('drag-above', 'drag-below');
+  card.classList.add(e.clientY < midY ? 'drag-above' : 'drag-below');
+}
+
+function onTaskCardDragLeave(e) {
+  e.currentTarget.classList.remove('drag-above', 'drag-below');
+}
+
+function onTaskCardDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  var targetCard = e.currentTarget;
+  targetCard.classList.remove('drag-above', 'drag-below');
+
+  if (!dragTaskData) return;
+  var dragId = dragTaskData.id;
+  var targetId = targetCard.getAttribute('data-id');
+  if (!targetId || dragId === targetId) return;
+
+  var rect = targetCard.getBoundingClientRect();
+  var isAbove = e.clientY < (rect.top + rect.height / 2);
+  var section = targetCard.getAttribute('data-section');
+  var body = document.getElementById('pcol-' + section);
+  if (!body) return;
+
+  // Get all current cards in DOM order
+  var cards = Array.from(body.querySelectorAll('.task-card'));
+  var dragCard = body.querySelector('[data-id="' + dragId + '"]');
+  if (!dragCard) return;
+
+  // Move card in DOM immediately for visual feedback
+  if (isAbove) {
+    body.insertBefore(dragCard, targetCard);
+  } else {
+    var next = targetCard.nextElementSibling;
+    if (next) body.insertBefore(dragCard, next);
+    else body.appendChild(dragCard);
+  }
+
+  // Determine new priority based on neighbors after DOM move
+  var allCards = Array.from(body.querySelectorAll('.task-card'));
+  var newIdx = allCards.indexOf(dragCard);
+  var priorityOrder = ['high', 'medium', 'low', ''];
+
+  // Find the priority of surrounding cards to determine new priority
+  var prevCard = allCards[newIdx - 1];
+  var nextCard = allCards[newIdx + 1];
+  var prevPriority = prevCard ? (prevCard.getAttribute('data-priority') || '') : '';
+  var nextPriority = nextCard ? (nextCard.getAttribute('data-priority') || '') : '';
+
+  // New priority = higher of the two neighbors (or target card's priority)
+  var targetPriority = targetCard.getAttribute('data-priority') || '';
+  var newPriority = targetPriority; // inherit from what we dropped near
+
+  // If dropped above target, take target's priority
+  // If dropped below target, take target's priority (same section)
+  // But upgrade if neighbor above is higher priority
+  if (prevCard) {
+    var prevRank = priorityOrder.indexOf(prevPriority);
+    var newRank  = priorityOrder.indexOf(newPriority);
+    // Lower index = higher priority
+    if (prevRank < newRank) newPriority = prevPriority;
+  }
+
+  var draggedTask = taskCache[dragId];
+  if (!draggedTask) { loadTasks(); return; }
+
+  // Update data-priority on moved card
+  dragCard.setAttribute('data-priority', newPriority);
+
+  if (draggedTask.priority !== newPriority) {
+    sbFetch('PATCH', '/rest/v1/tasks?id=eq.' + dragId, { priority: newPriority }, function(err) {
+      if (err) showBanner('Error updating priority', 'error');
+      else showBanner('Task moved — priority set to ' + (newPriority || 'none'), 'success');
+      loadTasks(); // reload to persist sort
+    });
+  }
+  // Save new sort order for all cards in section
+  var finalCards = Array.from(body.querySelectorAll('.task-card'));
+  var updates = [];
+  finalCards.forEach(function(c, idx) {
+    var cid = c.getAttribute('data-id');
+    if (cid) updates.push({ id: cid, sort_order: (idx + 1) * 10 });
+  });
+  var saved = 0;
+  updates.forEach(function(u) {
+    sbFetch('PATCH', '/rest/v1/tasks?id=eq.' + u.id, { sort_order: u.sort_order }, function() {
+      saved++;
+      if (saved === updates.length && draggedTask.priority === newPriority) {
+        showBanner('Task reordered', 'success');
+      }
+    });
+  });
+}
+
+
 // ---- Mark done ----
 function markTaskDone(e, id) {
   if (!confirm('Mark this task as complete and remove it?')) return;
@@ -246,9 +389,14 @@ function openTaskModal(t) {
   document.getElementById('task-section').value = (t && t.section) || 'shipping';
   document.getElementById('task-title').value = (t && t.title) || '';
   document.getElementById('task-desc').value = (t && t.description) || '';
-  document.getElementById('task-assigned').value = (t && t.assigned_to) || '';
   resetDateBtn('task-due', (t && t.due_date) || '');
   setPriority((t && t.priority) || '');
+
+  // Replace assigned field with dropdown
+  var assignedWrap = document.getElementById('task-assigned-wrap');
+  if (assignedWrap) {
+    assignedWrap.innerHTML = buildAssignedDropdown((t && t.assigned_to) || '');
+  }
 
   document.getElementById('task-modal').classList.add('open');
 }
@@ -272,11 +420,14 @@ function confirmTaskSave() {
   var title = tgv('task-title');
   if (!title) { showBanner('Task title is required', 'error'); return; }
 
+  var assignedEl = document.getElementById('task-assigned');
+  var assignedVal = assignedEl ? assignedEl.value : '';
+
   var body = {
     section: tgv('task-section'),
     title: title,
     description: tgv('task-desc'),
-    assigned_to: tgv('task-assigned'),
+    assigned_to: assignedVal,
     due_date: tgv('task-due'),
     priority: tgv('task-priority')
   };
