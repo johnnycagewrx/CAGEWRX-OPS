@@ -437,14 +437,10 @@ body.light-mode .sidebar-brand { color: #1a1a1a; }
 
 /* Pipeline stages */
 body.light-mode .stage { background: #fff; border-color: #b0b8c4; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-body.light-mode .stage-header,
-body.light-mode .stage-header.stage-toggle {
-  background: #d0d5dc !important;
-  border-bottom-color: #b8bec8 !important;
-}
-body.light-mode .stage-title { color: #1a1a1a !important; }
-body.light-mode .stage-count { background: rgba(0,0,0,0.1) !important; color: #222 !important; }
-body.light-mode .stage-body { background: #e4e8ee; }
+body.light-mode .stage-body { background: #c8cdd5; }
+body.light-mode .kits-body { background: #c8cdd5; }
+body.light-mode .backorder-body { background: #c8cdd5; }
+body.light-mode .tagpull-body { background: #c8cdd5; }
 body.light-mode .stage-chevron { color: #444 !important; }
 body.light-mode .stage-header span { opacity: 1; filter: none; }
 
@@ -622,23 +618,117 @@ body.light-mode .mobile-nav-item.active { color: #c62828; }
 body.light-mode .app-content { background: #f0ede8; }
 body.light-mode .app-shell { background: #f0ede8; }
 
+/* ---- Light mode: color-coded section headers (lighter versions) ---- */
+/* Keep inline background/color from dark mode, override with lighter tones */
 
-/* Light mode: force all inline-styled section headers to light gray */
-body.light-mode .oos-header { background: #d0d5dc !important; }
-body.light-mode .oos-header .stage-title { color: #1a1a1a !important; }
-body.light-mode .stage-count[style] { background: rgba(0,0,0,0.1) !important; color: #333 !important; }
-
-/* Prod stage headers */
-body.light-mode .prod-stage-header { background: #d0d5dc !important; border-bottom-color: #b8bec8 !important; }
-body.light-mode .prod-stage-title { color: #1a1a1a !important; }
-
-/* Make main page header (shared-header) darker in light mode */
-body.light-mode .shared-header { background: #2c3440 !important; }
-
-/* Override ALL inline-styled stage title and count colors in light mode */
-body.light-mode .stage-header p,
-body.light-mode .stage-header .stage-title { color: #1a1a1a !important; }
-body.light-mode .stage-header .stage-count { 
-  background: rgba(0,0,0,0.12) !important; 
-  color: #1a1a1a !important; 
+/* New Orders — orange tint */
+body.light-mode [id="stage-new"] .stage-header,
+body.light-mode [id="stage-new"] .stage-header.stage-toggle {
+  background: #ffe0cc !important; border-bottom-color: #ffb38a !important;
 }
+body.light-mode [id="stage-new"] .stage-title { color: #7a2e00 !important; }
+body.light-mode [id="stage-new"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #7a2e00 !important; }
+
+/* Ready to Ship — green tint */
+body.light-mode [id="stage-ready"] .stage-header,
+body.light-mode [id="stage-ready"] .stage-header.stage-toggle {
+  background: #c8efd0 !important; border-bottom-color: #8fd4a0 !important;
+}
+body.light-mode [id="stage-ready"] .stage-title { color: #1b4d2a !important; }
+body.light-mode [id="stage-ready"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #1b4d2a !important; }
+
+/* Drop Shipping — purple tint */
+body.light-mode [id="stage-dropship"] .stage-header,
+body.light-mode [id="stage-dropship"] .stage-header.stage-toggle {
+  background: #e8d5f5 !important; border-bottom-color: #c49ee0 !important;
+}
+body.light-mode [id="stage-dropship"] .stage-title { color: #4a1a7a !important; }
+body.light-mode [id="stage-dropship"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #4a1a7a !important; }
+
+/* Assembled — blue tint */
+body.light-mode [id="stage-assembled"] .stage-header,
+body.light-mode [id="stage-assembled"] .stage-header.stage-toggle {
+  background: #cce3f8 !important; border-bottom-color: #90c4ee !important;
+}
+body.light-mode [id="stage-assembled"] .stage-title { color: #0d3a6e !important; }
+body.light-mode [id="stage-assembled"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #0d3a6e !important; }
+
+/* Powder Coat — amber tint */
+body.light-mode [id="stage-powdercoat"] .stage-header,
+body.light-mode [id="stage-powdercoat"] .stage-header.stage-toggle {
+  background: #ffeacc !important; border-bottom-color: #ffc570 !important;
+}
+body.light-mode [id="stage-powdercoat"] .stage-title { color: #7a3d00 !important; }
+body.light-mode [id="stage-powdercoat"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #7a3d00 !important; }
+
+/* Ready for Pickup — teal tint */
+body.light-mode [id="stage-pickup"] .stage-header,
+body.light-mode [id="stage-pickup"] .stage-header.stage-toggle {
+  background: #c8eeed !important; border-bottom-color: #80cbc4 !important;
+}
+body.light-mode [id="stage-pickup"] .stage-title { color: #004d40 !important; }
+body.light-mode [id="stage-pickup"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #004d40 !important; }
+
+/* Cage Kits — purple tint */
+body.light-mode [id="stage-kits"] .stage-header {
+  background: #e5d8f8 !important; border-bottom-color: #c0a0e8 !important;
+}
+body.light-mode [id="stage-kits"] .stage-title { color: #3a1a6e !important; }
+body.light-mode [id="stage-kits"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #3a1a6e !important; }
+
+/* Tag & Pull — gold tint */
+body.light-mode [id="stage-tagpull"] .stage-header,
+body.light-mode [id="stage-tagpull"] .stage-header.stage-toggle {
+  background: #fef3c0 !important; border-bottom-color: #f5d060 !important;
+}
+body.light-mode [id="stage-tagpull"] .stage-title { color: #5a3e00 !important; }
+body.light-mode [id="stage-tagpull"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #5a3e00 !important; }
+
+/* Backordered — red tint */
+body.light-mode [id="stage-backorder"] .stage-header,
+body.light-mode [id="stage-backorder"] .stage-header.stage-toggle {
+  background: #ffd5d5 !important; border-bottom-color: #f5a0a0 !important;
+}
+body.light-mode [id="stage-backorder"] .stage-title { color: #7a0000 !important; }
+body.light-mode [id="stage-backorder"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #7a0000 !important; }
+
+/* Out of Stock — yellow tint */
+body.light-mode [id="stage-oos"] .stage-header,
+body.light-mode [id="stage-oos"] .stage-header.stage-toggle {
+  background: #fff9c0 !important; border-bottom-color: #f0d840 !important;
+}
+body.light-mode [id="stage-oos"] .stage-title { color: #5a4a00 !important; }
+body.light-mode [id="stage-oos"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #5a4a00 !important; }
+
+/* ---- Powder coat SENT date sub-headers ---- */
+body.light-mode .powder-group-label {
+  background: #ffddb0 !important;
+  color: #7a3d00 !important;
+  border-left-color: #ffa726 !important;
+}
+body.light-mode .powder-group + .powder-group {
+  border-top-color: #b8bec8 !important;
+}
+
+/* ---- Stage body — unified medium gray (no blue tint) ---- */
+body.light-mode .stage-body,
+body.light-mode .kits-body,
+body.light-mode .backorder-body,
+body.light-mode .tagpull-body,
+body.light-mode .pc-group-body,
+body.light-mode .oos-body { background: #c8cdd5 !important; }
+
+/* Stage card area (white bg with gray body looks patchy) */
+body.light-mode .stage { background: #c8cdd5 !important; border-color: #a8adb8; }
+body.light-mode .order-card { background: #ffffff !important; }
+
+/* ---- Calendar day-name row (top key) — dark text ---- */
+body.light-mode .cal-dayname { color: #1a1a1a !important; border-color: #b0b8c4; }
+body.light-mode .cal-daynames-row { background: #c8cdd5 !important; }
+
+/* ---- Main shared header — keep it dark ---- */
+body.light-mode .shared-header { background: #2c3440 !important; border-bottom-color: #1e2530 !important; }
+
+/* ---- Prod stage headers ---- */
+body.light-mode .prod-stage-header { background: #c8cdd5 !important; border-bottom-color: #a8adb8 !important; }
+body.light-mode .prod-stage-title { color: #1a1a1a !important; }

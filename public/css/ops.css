@@ -531,7 +531,7 @@
 
 /* ---- Light mode ---- */
 body.light-mode .calendar-section { background: #fff; border-color: #e53935; }
-body.light-mode .cal-daynames-row { background: #37474f; }
+body.light-mode .cal-daynames-row { background: #c8cdd5; }
 body.light-mode .cal-cell { background: #fff; border-color: #e0e0e0; }
 body.light-mode .cal-cell.cal-today { background: #b8bec8; border: 2px solid #6b7280; }
 body.light-mode .cal-month-label { background: #b8bec8; color: #1a1a1a; border-color: #9aa0aa; }
