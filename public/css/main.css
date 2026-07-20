@@ -348,7 +348,7 @@ body {
    Light Mode — warm neutral palette
    ============================================ */
 body.light-mode {
-  background: #dde1e7;
+  background: #ffffff;
   color: #1a1a1a;
 }
 
@@ -421,7 +421,7 @@ body.light-mode .banner.success { background: #e6f4ea; border-color: #8bc49a; co
 body.light-mode .banner.error   { background: #fdecea; border-color: #e57373; color: #b71c1c; }
 
 /* Main layout */
-body.light-mode .main { background: #dde1e7; }
+body.light-mode .main { background: #ffffff; }
 
 /* Stats bar */
 body.light-mode .stat { background: #fff; border-color: #d8d4cf; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
@@ -541,7 +541,7 @@ body.light-mode .picker-cell.picker-selected { background: #c62828; color: #fff;
 body.light-mode .picker-header { background: #f5f2ee; border-color: #d8d4cf; color: #333; }
 
 /* ---- Light mode: Production page ---- */
-body.light-mode .prod-main { background: #dde1e7; }
+body.light-mode .prod-main { background: #ffffff; }
 body.light-mode .prod-stage { background: #fff; border-color: #d8d4cf; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
 body.light-mode .prod-stage-header { background: #c8cdd5; border-bottom-color: #b0b8c4; }
 body.light-mode .prod-stage-title { color: #1a1a1a; }
@@ -563,7 +563,7 @@ body.light-mode .assignee-btn:hover { background: #f0ede8; color: #1a1a1a; }
 body.light-mode .assignee-btn.active { background: #fdecea; border-color: #e53935; color: #c62828; }
 
 /* ---- Light mode: FAQ page ---- */
-body.light-mode .faq-main { background: #dde1e7; }
+body.light-mode .faq-main { background: #ffffff; }
 body.light-mode .faq-search-wrap { background: #fff; border-color: #d8d4cf; }
 body.light-mode .faq-search-input { color: #1a1a1a; background: transparent; }
 body.light-mode .faq-cat-btn { background: #fff; border-color: #d8d4cf; color: #555; }
@@ -573,7 +573,7 @@ body.light-mode .faq-question { color: #1a1a1a; }
 body.light-mode .faq-answer { color: #444; background: #f5f2ee; border-top-color: #e0dbd5; }
 
 /* ---- Light mode: Activity Log ---- */
-body.light-mode .act-main { background: #dde1e7; }
+body.light-mode .act-main { background: #ffffff; }
 body.light-mode .act-search-wrap { background: #fff; border-color: #d8d4cf; }
 body.light-mode .act-search-input { color: #1a1a1a; background: transparent; }
 body.light-mode .act-select { background: #fff; border-color: #d8d4cf; color: #444; }
@@ -583,7 +583,7 @@ body.light-mode .act-changes { background: #f5f2ee; color: #555; }
 body.light-mode .act-timestamp { color: #888; }
 
 /* ---- Light mode: Admin Panel ---- */
-body.light-mode .doc-main { background: #dde1e7; }
+body.light-mode .doc-main { background: #ffffff; }
 body.light-mode .doc-toolbar { background: #fff; border-color: #d8d4cf; }
 body.light-mode .doc-search-wrap { background: #f5f2ee; border-color: #ccc8c3; }
 body.light-mode .doc-search-input { color: #1a1a1a; background: transparent; }
@@ -615,8 +615,8 @@ body.light-mode .mobile-nav-item { color: #888; }
 body.light-mode .mobile-nav-item.active { color: #c62828; }
 
 /* ---- Light mode: App shell ---- */
-body.light-mode .app-content { background: #f0ede8; }
-body.light-mode .app-shell { background: #f0ede8; }
+body.light-mode .app-content { background: #ffffff; }
+body.light-mode .app-shell { background: #ffffff; }
 
 /* ---- Light mode: color-coded section headers (lighter versions) ---- */
 /* Keep inline background/color from dark mode, override with lighter tones */
@@ -732,3 +732,18 @@ body.light-mode .shared-header { background: #2c3440 !important; border-bottom-c
 /* ---- Prod stage headers ---- */
 body.light-mode .prod-stage-header { background: #c8cdd5 !important; border-bottom-color: #a8adb8 !important; }
 body.light-mode .prod-stage-title { color: #1a1a1a !important; }
+
+/* ---- Light mode: dark color-coded borders per section ---- */
+body.light-mode [id="stage-new"]       { border: 2px solid #c45000 !important; }
+body.light-mode [id="stage-ready"]     { border: 2px solid #2a7a40 !important; }
+body.light-mode [id="stage-dropship"]  { border: 2px solid #7a2ab0 !important; }
+body.light-mode [id="stage-assembled"] { border: 2px solid #0d4a9e !important; }
+body.light-mode [id="stage-powdercoat"]{ border: 2px solid #b05a00 !important; }
+body.light-mode [id="stage-pickup"]    { border: 2px solid #006650 !important; }
+body.light-mode [id="stage-kits"]      { border: 2px solid #5a1aaa !important; }
+body.light-mode [id="stage-tagpull"]   { border: 2px solid #8a6000 !important; }
+body.light-mode [id="stage-backorder"] { border: 2px solid #aa0000 !important; }
+body.light-mode [id="stage-oos"]       { border: 2px solid #aa8800 !important; }
+
+/* ---- Light mode: calendar events - force white text to read on colored bg ---- */
+body.light-mode .cal-event { color: #ffffff !important; font-weight: 600; }

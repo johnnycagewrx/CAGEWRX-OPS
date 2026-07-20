@@ -972,3 +972,11 @@ body.light-mode .status-select {
 
 /* ---- Light mode: SHIP NOW badge always white text ---- */
 body.light-mode .ship-now { color: #fff; }
+
+/* ---- Light mode: Out of Stock pills dark red ---- */
+body.light-mode [id="col-oos"] > div {
+  background: #8b0000 !important;
+  border-color: #aa0000 !important;
+}
+body.light-mode [id="col-oos"] > div span,
+body.light-mode [id="col-oos"] > div button { color: #fff !important; }
