@@ -52,11 +52,13 @@ function renderAssigneeFilters(tasks) {
   tasks.forEach(function(t) {
     var fullName = (t.assigned_to || '').trim();
     if (!fullName) return;
-    // Use first name only for display, but track by first name to avoid dupes
+    // Use first name only, normalize case, dedupe
     var firstName = fullName.split(' ')[0];
-    if (!seen[firstName.toLowerCase()]) {
-      seen[firstName.toLowerCase()] = true;
-      assignees.push(firstName);
+    var key = firstName.toLowerCase();
+    if (!seen[key]) {
+      seen[key] = true;
+      // Prefer title case display
+      assignees.push(firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase());
     }
   });
   assignees.sort();
@@ -92,7 +94,7 @@ function buildAssignedDropdown(currentVal) {
   var opts = '<option value="">— Unassigned —</option>';
   _prodUsers.forEach(function(u) {
     var name = u.full_name || u.email.split('@')[0];
-    var selected = name === currentVal ? ' selected' : '';
+    var selected = name.toLowerCase() === (currentVal || '').toLowerCase() ? ' selected' : '';
     opts += '<option value="' + name + '"' + selected + '>' + name + '</option>';
   });
   // If current value not in list, add it
@@ -138,8 +140,10 @@ function renderTasks(tasks) {
   Object.keys(SECTION_LABELS).forEach(function (sec) {
     var items = grouped[sec];
     if (activeAssigneeFilter) {
+      var filterFirst = activeAssigneeFilter.split(' ')[0].toLowerCase();
       items = items.filter(function(t) {
-        return (t.assigned_to || '').toLowerCase() === activeAssigneeFilter.toLowerCase();
+        var taskFirst = (t.assigned_to || '').split(' ')[0].toLowerCase();
+        return taskFirst === filterFirst;
       });
     }
     fillProdSection(sec, items);
@@ -421,7 +425,11 @@ function confirmTaskSave() {
   if (!title) { showBanner('Task title is required', 'error'); return; }
 
   var assignedEl = document.getElementById('task-assigned');
-  var assignedVal = assignedEl ? assignedEl.value : '';
+  var assignedRaw = assignedEl ? assignedEl.value.trim() : '';
+  // Normalize to title case to avoid case mismatches
+  var assignedVal = assignedRaw ? assignedRaw.split(' ').map(function(w) {
+    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+  }).join(' ') : '';
 
   var body = {
     section: tgv('task-section'),
