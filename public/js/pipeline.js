@@ -813,8 +813,12 @@ function renderOos(items) {
   var cnt = document.getElementById('cnt-oos');
   if (cnt) cnt.textContent = items.length;
   if (!el) return;
-  // Keep open state
-  el.style.display = oosOpen ? 'block' : 'none';
+  el.style.display = oosOpen ? 'flex' : 'none';
+  el.style.flexDirection = 'row';
+  el.style.flexWrap = 'wrap';
+  el.style.gap = '10px';
+  el.style.alignItems = 'center';
+  el.style.padding = '14px';
   var chv = document.getElementById('chv-oos');
   if (chv) chv.classList.toggle('open', oosOpen);
 
@@ -822,18 +826,19 @@ function renderOos(items) {
 
   items.forEach(function(o) {
     var etaLabel = o.eta ? 'ETA: ' + fmtDate(o.eta) : 'Set ETA';
-    h += '<div class="oos-pill">' +
+    var poLabel  = o.po_num ? 'PO: ' + o.po_num : '';
+    h += '<div style="display:inline-flex;flex-direction:row;align-items:center;gap:10px;background:#1a1500;border:1px solid #ffe000;border-radius:8px;padding:8px 14px;font-size:12px;color:#fff;">' +
       '<div style="display:flex;flex-direction:column;gap:2px;">' +
-        '<span class="oos-pill-sku">' + (o.sku || '') + '</span>' +
-        (o.title ? '<span class="oos-pill-title">' + o.title + '</span>' : '') +
+        '<span style="font-weight:700;color:#fff;">' + (o.sku || '') + '</span>' +
+        (o.title ? '<span style="color:#ddd;font-size:11px;">' + o.title + '</span>' : '') +
       '</div>' +
-      '<span class="oos-pill-eta" onclick="editOosEta(\'' + o.id + '\')">' + etaLabel + '</span>' +
-      '<button class="oos-pill-del" onclick="deleteOos(\'' + o.id + '\')" title="Remove">&#x2715;</button>' +
+      (poLabel ? '<span style="background:#2a2200;border:1px solid #ffe00055;border-radius:4px;padding:2px 7px;font-size:10px;color:#fff;font-weight:600;">' + poLabel + '</span>' : '') +
+      '<span style="background:#2a2200;border:1px solid #ffe00055;border-radius:4px;padding:2px 7px;font-size:10px;color:#fff;font-weight:600;cursor:pointer;" onclick="editOosEta(\'' + o.id + '\')">' + etaLabel + '</span>' +
+      '<button style="font-size:13px;color:#666;cursor:pointer;background:none;border:none;padding:0;line-height:1;" onclick="deleteOos(\'' + o.id + '\')" title="Remove">&#x2715;</button>' +
     '</div>';
   });
 
-  // Add item button
-  h += '<button class="oos-add-btn" onclick="openOosModal(null)">&#x2B; ADD OUT OF STOCK ITEM</button>';
+  h += '<button style="display:inline-flex;align-items:center;gap:6px;background:#e53935;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;white-space:nowrap;" onclick="openOosModal(null)">&#x2B; ADD OUT OF STOCK ITEM</button>';
 
   el.innerHTML = h;
 }
@@ -842,8 +847,10 @@ function openOosModal(item) {
   editingOos = item || null;
   var titleEl = document.getElementById('oos-modal-title');
   if (titleEl) titleEl.textContent = item ? '⚠ Edit Out of Stock Item' : '⚠ Add Out of Stock Item';
-  document.getElementById('oos-sku').value   = (item && item.sku)   || '';
-  document.getElementById('oos-title').value = (item && item.title) || '';
+  document.getElementById('oos-sku').value   = (item && item.sku)    || '';
+  document.getElementById('oos-title').value = (item && item.title)  || '';
+  var poEl = document.getElementById('oos-po');
+  if (poEl) poEl.value = (item && item.po_num) || '';
   resetDateBtn('oos-eta', (item && item.eta) || '');
   document.getElementById('oos-modal').classList.add('open');
   setTimeout(function(){ document.getElementById('oos-sku').focus(); }, 50);
@@ -858,9 +865,10 @@ function confirmOosSave() {
   var sku = (document.getElementById('oos-sku').value || '').trim();
   if (!sku) { showBanner('SKU is required', 'error'); return; }
   var body = {
-    sku:   sku,
-    title: (document.getElementById('oos-title').value || '').trim(),
-    eta:   (document.getElementById('oos-eta').value || '').trim()
+    sku:    sku,
+    title:  (document.getElementById('oos-title').value || '').trim(),
+    po_num: (document.getElementById('oos-po')    && document.getElementById('oos-po').value || '').trim(),
+    eta:    (document.getElementById('oos-eta').value || '').trim()
   };
   if (editingOos) {
     var id = editingOos.id;

@@ -343,3 +343,11 @@ body {
   color: #fff;
   font-weight: 700;
 }
+
+
+/* Shared header light mode */
+body.light-mode .shared-header {
+  background: #ffffff;
+  border-bottom-color: #d0ccc7;
+}
+body.light-mode .shared-header-title { color: #1a1a1a; }
