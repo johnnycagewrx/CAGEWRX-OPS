@@ -618,87 +618,87 @@ body.light-mode .mobile-nav-item.active { color: #c62828; }
 body.light-mode .app-content { background: #ffffff; }
 body.light-mode .app-shell { background: #ffffff; }
 
-/* ---- Light mode: color-coded section headers (lighter versions) ---- */
-/* Keep inline background/color from dark mode, override with lighter tones */
+/* ---- Light mode: vivid color-coded section headers — white text ---- */
 
-/* New Orders — orange tint */
+/* New Orders — vivid orange */
 body.light-mode [id="stage-new"] .stage-header,
 body.light-mode [id="stage-new"] .stage-header.stage-toggle {
-  background: #ffe0cc !important; border-bottom-color: #ffb38a !important;
+  background: #e65100 !important; border-bottom-color: #bf360c !important;
 }
-body.light-mode [id="stage-new"] .stage-title { color: #7a2e00 !important; }
-body.light-mode [id="stage-new"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #7a2e00 !important; }
+body.light-mode [id="stage-new"] .stage-title { color: #fff !important; }
+body.light-mode [id="stage-new"] .stage-count { background: rgba(255,255,255,0.25) !important; color: #fff !important; }
 
-/* Ready to Ship — green tint */
+/* Ready to Ship — vivid green */
 body.light-mode [id="stage-ready"] .stage-header,
 body.light-mode [id="stage-ready"] .stage-header.stage-toggle {
-  background: #c8efd0 !important; border-bottom-color: #8fd4a0 !important;
+  background: #2e7d32 !important; border-bottom-color: #1b5e20 !important;
 }
-body.light-mode [id="stage-ready"] .stage-title { color: #1b4d2a !important; }
-body.light-mode [id="stage-ready"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #1b4d2a !important; }
+body.light-mode [id="stage-ready"] .stage-title { color: #fff !important; }
+body.light-mode [id="stage-ready"] .stage-count { background: rgba(255,255,255,0.25) !important; color: #fff !important; }
 
-/* Drop Shipping — purple tint */
+/* Drop Shipping — vivid purple */
 body.light-mode [id="stage-dropship"] .stage-header,
 body.light-mode [id="stage-dropship"] .stage-header.stage-toggle {
-  background: #e8d5f5 !important; border-bottom-color: #c49ee0 !important;
+  background: #7b1fa2 !important; border-bottom-color: #6a1b9a !important;
 }
-body.light-mode [id="stage-dropship"] .stage-title { color: #4a1a7a !important; }
-body.light-mode [id="stage-dropship"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #4a1a7a !important; }
+body.light-mode [id="stage-dropship"] .stage-title { color: #fff !important; }
+body.light-mode [id="stage-dropship"] .stage-count { background: rgba(255,255,255,0.25) !important; color: #fff !important; }
 
-/* Assembled — blue tint */
+/* Assembled — vivid blue */
 body.light-mode [id="stage-assembled"] .stage-header,
 body.light-mode [id="stage-assembled"] .stage-header.stage-toggle {
-  background: #cce3f8 !important; border-bottom-color: #90c4ee !important;
+  background: #1565c0 !important; border-bottom-color: #0d47a1 !important;
 }
-body.light-mode [id="stage-assembled"] .stage-title { color: #0d3a6e !important; }
-body.light-mode [id="stage-assembled"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #0d3a6e !important; }
+body.light-mode [id="stage-assembled"] .stage-title { color: #fff !important; }
+body.light-mode [id="stage-assembled"] .stage-count { background: rgba(255,255,255,0.25) !important; color: #fff !important; }
 
-/* Powder Coat — amber tint */
+/* Powder Coat — vivid amber */
 body.light-mode [id="stage-powdercoat"] .stage-header,
 body.light-mode [id="stage-powdercoat"] .stage-header.stage-toggle {
-  background: #ffeacc !important; border-bottom-color: #ffc570 !important;
+  background: #e65100 !important; border-bottom-color: #bf360c !important;
 }
-body.light-mode [id="stage-powdercoat"] .stage-title { color: #7a3d00 !important; }
-body.light-mode [id="stage-powdercoat"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #7a3d00 !important; }
+body.light-mode [id="stage-powdercoat"] .stage-title { color: #fff !important; }
+body.light-mode [id="stage-powdercoat"] .stage-count { background: rgba(255,255,255,0.25) !important; color: #fff !important; }
 
-/* Ready for Pickup — teal tint */
+/* Ready for Pickup — vivid teal */
 body.light-mode [id="stage-pickup"] .stage-header,
 body.light-mode [id="stage-pickup"] .stage-header.stage-toggle {
-  background: #c8eeed !important; border-bottom-color: #80cbc4 !important;
+  background: #00695c !important; border-bottom-color: #004d40 !important;
 }
-body.light-mode [id="stage-pickup"] .stage-title { color: #004d40 !important; }
-body.light-mode [id="stage-pickup"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #004d40 !important; }
+body.light-mode [id="stage-pickup"] .stage-title { color: #fff !important; }
+body.light-mode [id="stage-pickup"] .stage-count { background: rgba(255,255,255,0.25) !important; color: #fff !important; }
 
-/* Cage Kits — purple tint */
-body.light-mode [id="stage-kits"] .stage-header {
-  background: #e5d8f8 !important; border-bottom-color: #c0a0e8 !important;
+/* Cage Kits — vivid deep purple */
+body.light-mode [id="stage-kits"] .stage-header,
+body.light-mode [id="stage-kits"] .stage-header.stage-toggle {
+  background: #4527a0 !important; border-bottom-color: #311b92 !important;
 }
-body.light-mode [id="stage-kits"] .stage-title { color: #3a1a6e !important; }
-body.light-mode [id="stage-kits"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #3a1a6e !important; }
+body.light-mode [id="stage-kits"] .stage-title { color: #fff !important; }
+body.light-mode [id="stage-kits"] .stage-count { background: rgba(255,255,255,0.25) !important; color: #fff !important; }
 
-/* Tag & Pull — gold tint */
+/* Tag & Pull — vivid gold/brown */
 body.light-mode [id="stage-tagpull"] .stage-header,
 body.light-mode [id="stage-tagpull"] .stage-header.stage-toggle {
-  background: #fef3c0 !important; border-bottom-color: #f5d060 !important;
+  background: #f57f17 !important; border-bottom-color: #e65100 !important;
 }
-body.light-mode [id="stage-tagpull"] .stage-title { color: #5a3e00 !important; }
-body.light-mode [id="stage-tagpull"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #5a3e00 !important; }
+body.light-mode [id="stage-tagpull"] .stage-title { color: #fff !important; }
+body.light-mode [id="stage-tagpull"] .stage-count { background: rgba(255,255,255,0.25) !important; color: #fff !important; }
 
-/* Backordered — red tint */
+/* Backordered — vivid red */
 body.light-mode [id="stage-backorder"] .stage-header,
 body.light-mode [id="stage-backorder"] .stage-header.stage-toggle {
-  background: #ffd5d5 !important; border-bottom-color: #f5a0a0 !important;
+  background: #c62828 !important; border-bottom-color: #b71c1c !important;
 }
-body.light-mode [id="stage-backorder"] .stage-title { color: #7a0000 !important; }
-body.light-mode [id="stage-backorder"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #7a0000 !important; }
+body.light-mode [id="stage-backorder"] .stage-title { color: #fff !important; }
+body.light-mode [id="stage-backorder"] .stage-count { background: rgba(255,255,255,0.25) !important; color: #fff !important; }
 
-/* Out of Stock — yellow tint */
+/* Out of Stock — vivid dark yellow */
 body.light-mode [id="stage-oos"] .stage-header,
 body.light-mode [id="stage-oos"] .stage-header.stage-toggle {
-  background: #fff9c0 !important; border-bottom-color: #f0d840 !important;
+  background: #f9a825 !important; border-bottom-color: #f57f17 !important;
 }
-body.light-mode [id="stage-oos"] .stage-title { color: #5a4a00 !important; }
-body.light-mode [id="stage-oos"] .stage-count { background: rgba(0,0,0,0.1) !important; color: #5a4a00 !important; }
+body.light-mode [id="stage-oos"] .stage-title { color: #fff !important; }
+body.light-mode [id="stage-oos"] .stage-count { background: rgba(255,255,255,0.25) !important; color: #fff !important; }
 
 /* ---- Powder coat SENT date sub-headers ---- */
 body.light-mode .powder-group-label {
@@ -727,7 +727,7 @@ body.light-mode .cal-dayname { color: #1a1a1a !important; border-color: #b0b8c4;
 body.light-mode .cal-daynames-row { background: #c8cdd5 !important; }
 
 /* ---- Main shared header — keep it dark ---- */
-body.light-mode .shared-header { background: #2c3440 !important; border-bottom-color: #1e2530 !important; }
+body.light-mode .shared-header { background: #111827 !important; border-bottom-color: #0a0f1a !important; }
 
 /* ---- Prod stage headers ---- */
 body.light-mode .prod-stage-header { background: #c8cdd5 !important; border-bottom-color: #a8adb8 !important; }
@@ -747,3 +747,15 @@ body.light-mode [id="stage-oos"]       { border: 2px solid #aa8800 !important; }
 
 /* ---- Light mode: calendar events - force white text to read on colored bg ---- */
 body.light-mode .cal-event { color: #ffffff !important; font-weight: 600; }
+
+/* ---- Light mode: stat counter boxes color-coded ---- */
+body.light-mode .stat { background: #fff; border: 1px solid #d0d5dc; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+body.light-mode .stat-label { color: #555; }
+body.light-mode #stat-new      { color: #e65100; }
+body.light-mode #stat-ready    { color: #2e7d32; }
+body.light-mode #stat-back     { color: #c62828; }
+body.light-mode #stat-dropship { color: #7b1fa2; }
+body.light-mode #stat-assembled{ color: #1565c0; }
+body.light-mode #stat-powder   { color: #e65100; }
+body.light-mode #stat-pickup   { color: #00695c; }
+body.light-mode #stat-kits     { color: #4527a0; }
