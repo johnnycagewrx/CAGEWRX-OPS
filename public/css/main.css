@@ -178,6 +178,9 @@ body {
 }
 .modal-overlay.open { display: flex; }
 
+/* Date picker always floats above other modals */
+#date-picker-modal { z-index: 3000; }
+
 .modal {
   background: #1e1e1e;
   border: 1px solid #2a2a2a;

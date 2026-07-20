@@ -789,7 +789,7 @@ function togglePriority(id, priority) {
 // ============================================
 var oosCache = {};
 var editingOos = null;
-var oosOpen = false;
+var oosOpen = true;
 
 function toggleOosSection() {
   var body = document.getElementById('col-oos');
@@ -813,6 +813,10 @@ function renderOos(items) {
   var cnt = document.getElementById('cnt-oos');
   if (cnt) cnt.textContent = items.length;
   if (!el) return;
+  // Keep open state
+  el.style.display = oosOpen ? 'block' : 'none';
+  var chv = document.getElementById('chv-oos');
+  if (chv) chv.classList.toggle('open', oosOpen);
 
   var h = '';
 

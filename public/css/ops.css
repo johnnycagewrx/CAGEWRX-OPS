@@ -1088,5 +1088,6 @@ body.light-mode .status-select {
   color: #555;
   cursor: pointer;
   font-family: inherit;
+  margin-left: 6px;
 }
 .oos-add-btn:hover { border-color: #ffe000; color: #ffe000; }
