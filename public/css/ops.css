@@ -1007,3 +1007,86 @@ body.light-mode .status-select {
 @media (max-width: 768px) {
   .ops-search-bar { padding: 8px 12px; }
 }
+
+/* ---- Out of Stock section ---- */
+.oos-stage {
+  background: rgba(40, 35, 0, 0.6);
+  border: 2px solid #ffe000 !important;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.oos-header {
+  background: #1a1500 !important;
+}
+
+.oos-body {
+  padding: 12px;
+  background: rgba(40, 35, 0, 0.3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.oos-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #1a1500;
+  border: 1px solid #ffe000;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #ffe000;
+  position: relative;
+}
+
+.oos-pill-sku {
+  font-weight: 700;
+  color: #ffe000;
+}
+
+.oos-pill-title {
+  color: #bba000;
+  font-size: 11px;
+}
+
+.oos-pill-eta {
+  background: #2a2200;
+  border: 1px solid #ffe00055;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 10px;
+  color: #ffd000;
+  font-weight: 600;
+  cursor: pointer;
+}
+.oos-pill-eta:hover { border-color: #ffe000; }
+
+.oos-pill-del {
+  font-size: 13px;
+  color: #444;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 1;
+  margin-left: 2px;
+}
+.oos-pill-del:hover { color: #ef5350; }
+
+.oos-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #111;
+  border: 1px dashed #444;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: #555;
+  cursor: pointer;
+  font-family: inherit;
+}
+.oos-add-btn:hover { border-color: #ffe000; color: #ffe000; }

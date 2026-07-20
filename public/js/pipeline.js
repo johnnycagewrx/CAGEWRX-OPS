@@ -784,6 +784,110 @@ function togglePriority(id, priority) {
 }
 
 
+// ============================================
+// OUT OF STOCK section
+// ============================================
+var oosCache = {};
+var editingOos = null;
+var oosOpen = false;
+
+function toggleOosSection() {
+  var body = document.getElementById('col-oos');
+  var chv  = document.getElementById('chv-oos');
+  if (!body) return;
+  oosOpen = body.style.display === 'none';
+  body.style.display = oosOpen ? 'block' : 'none';
+  if (chv) chv.classList.toggle('open', oosOpen);
+}
+
+function loadOos() {
+  sbFetch('GET', '/rest/v1/out_of_stock?select=*&order=created_at.asc', null, function(err, data) {
+    var items = (err || !Array.isArray(data)) ? [] : data;
+    items.forEach(function(o) { oosCache[o.id] = o; });
+    renderOos(items);
+  });
+}
+
+function renderOos(items) {
+  var el = document.getElementById('col-oos');
+  var cnt = document.getElementById('cnt-oos');
+  if (cnt) cnt.textContent = items.length;
+  if (!el) return;
+
+  var h = '';
+
+  items.forEach(function(o) {
+    var etaLabel = o.eta ? 'ETA: ' + fmtDate(o.eta) : 'Set ETA';
+    h += '<div class="oos-pill">' +
+      '<div>' +
+        '<div class="oos-pill-sku">' + (o.sku || '') + '</div>' +
+        (o.title ? '<div class="oos-pill-title">' + o.title + '</div>' : '') +
+      '</div>' +
+      '<span class="oos-pill-eta" onclick="editOosEta(\'' + o.id + '\')">' + etaLabel + '</span>' +
+      '<button class="oos-pill-del" onclick="deleteOos(\'' + o.id + '\')" title="Remove">&#x2715;</button>' +
+    '</div>';
+  });
+
+  // Add item button
+  h += '<button class="oos-add-btn" onclick="openOosModal(null)">&#x2B; ADD OUT OF STOCK ITEM</button>';
+
+  el.innerHTML = h;
+}
+
+function openOosModal(item) {
+  editingOos = item || null;
+  var titleEl = document.getElementById('oos-modal-title');
+  if (titleEl) titleEl.textContent = item ? '⚠ Edit Out of Stock Item' : '⚠ Add Out of Stock Item';
+  document.getElementById('oos-sku').value   = (item && item.sku)   || '';
+  document.getElementById('oos-title').value = (item && item.title) || '';
+  resetDateBtn('oos-eta', (item && item.eta) || '');
+  document.getElementById('oos-modal').classList.add('open');
+  setTimeout(function(){ document.getElementById('oos-sku').focus(); }, 50);
+}
+
+function closeOosModal() {
+  document.getElementById('oos-modal').classList.remove('open');
+  editingOos = null;
+}
+
+function confirmOosSave() {
+  var sku = (document.getElementById('oos-sku').value || '').trim();
+  if (!sku) { showBanner('SKU is required', 'error'); return; }
+  var body = {
+    sku:   sku,
+    title: (document.getElementById('oos-title').value || '').trim(),
+    eta:   (document.getElementById('oos-eta').value || '').trim()
+  };
+  if (editingOos) {
+    var id = editingOos.id;
+    closeOosModal();
+    sbFetch('PATCH', '/rest/v1/out_of_stock?id=eq.' + id, body, function(err) {
+      if (err) showBanner('Save failed', 'error');
+      else { showBanner('Updated!', 'success'); loadOos(); }
+    });
+  } else {
+    closeOosModal();
+    sbFetch('POST', '/rest/v1/out_of_stock', body, function(err) {
+      if (err) showBanner('Add failed', 'error');
+      else { showBanner('Item added!', 'success'); loadOos(); }
+    });
+  }
+}
+
+function editOosEta(id) {
+  var item = oosCache[id];
+  if (item) openOosModal(item);
+}
+
+function deleteOos(id) {
+  if (!confirm('Remove this out of stock item?')) return;
+  sbFetch('DELETE', '/rest/v1/out_of_stock?id=eq.' + id, null, function(err) {
+    if (err) showBanner('Delete failed', 'error');
+    else { showBanner('Removed', 'success'); loadOos(); }
+  });
+}
+
+
 function renderData(data) {
   orderCache = {};
   var grouped = { new: [], ready: [], backorder: [], dropship: [], assembled: [], powdercoat: [], pickup: [], tagpull: [] };
@@ -855,6 +959,7 @@ function loadData(background) {
     if (results.orders !== null && results.kits !== null) {
       hideIndicator();
       renderData(results);
+      loadOos();
       scheduleAutoRefresh();
     }
   }

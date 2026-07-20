@@ -57,6 +57,19 @@
 
   <!-- Cage Kits (full width) -->
   <div style="margin-bottom:20px;">
+    <!-- Out of Stock Section -->
+    <div class="stage oos-stage" id="stage-oos" style="margin-bottom:14px;">
+      <div class="stage-header stage-toggle oos-header" onclick="toggleOosSection()" style="cursor:pointer;background:#1a1500;">
+        <span style="font-size:15px;">&#x26A0;</span>
+        <p class="stage-title" style="color:#ffe000;letter-spacing:.06em;">CAGE KITS OUT OF STOCK</p>
+        <span class="stage-count" id="cnt-oos" style="background:#2a2200;color:#ffe000;">-</span>
+        <span class="stage-chevron" id="chv-oos">&#x25BE;</span>
+      </div>
+      <div class="oos-body" id="col-oos" style="display:none;">
+        <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+
     <div class="stage" id="stage-kits"
       ondragover="onDragOver(event,'kits')"
       ondragleave="onDragLeave('kits')"
@@ -455,6 +468,27 @@
     <div class="modal-btns">
       <button class="modal-btn modal-btn-cancel" onclick="closeSplitModal()">Cancel</button>
       <button class="modal-btn modal-btn-save" onclick="confirmSplit()">&#x2702; Split Items</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== OUT OF STOCK MODAL ===== -->
+<div class="modal-overlay" id="oos-modal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-title" id="oos-modal-title">&#x26A0; Add Out of Stock Item</div>
+    <label>SKU / Part Number</label>
+    <input type="text" id="oos-sku" placeholder="e.g. CW-RZR-PRO-001">
+    <label>Title / Description</label>
+    <input type="text" id="oos-title" placeholder="e.g. RZR Pro R Roof Panel">
+    <label>ETA (optional)</label>
+    <input type="hidden" id="oos-eta" value="">
+    <button type="button" class="date-input-btn" data-picker-target="oos-eta">
+      <span style="color:#333;">Select date...</span>
+      <span style="color:#555;font-size:12px;"> &#x1F4C5;</span>
+    </button>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeOosModal()">Cancel</button>
+      <button class="modal-btn modal-btn-save" onclick="confirmOosSave()">Save</button>
     </div>
   </div>
 </div>
