@@ -1025,8 +1025,8 @@ body.light-mode .status-select {
   background: rgba(40, 35, 0, 0.3);
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  align-items: flex-start;
+  gap: 10px;
+  align-items: center;
 }
 
 .oos-pill {
@@ -1038,17 +1038,17 @@ body.light-mode .status-select {
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 12px;
-  color: #ffe000;
+  color: #fff;
   position: relative;
 }
 
 .oos-pill-sku {
   font-weight: 700;
-  color: #ffe000;
+  color: #fff;
 }
 
 .oos-pill-title {
-  color: #bba000;
+  color: #ddd;
   font-size: 11px;
 }
 
@@ -1058,7 +1058,7 @@ body.light-mode .status-select {
   border-radius: 4px;
   padding: 2px 7px;
   font-size: 10px;
-  color: #ffd000;
+  color: #fff;
   font-weight: 600;
   cursor: pointer;
 }
@@ -1066,7 +1066,7 @@ body.light-mode .status-select {
 
 .oos-pill-del {
   font-size: 13px;
-  color: #444;
+  color: #666;
   cursor: pointer;
   background: none;
   border: none;
@@ -1080,14 +1080,15 @@ body.light-mode .status-select {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #111;
-  border: 1px dashed #444;
+  background: #e53935;
+  border: none;
   border-radius: 8px;
-  padding: 8px 14px;
+  padding: 8px 16px;
   font-size: 12px;
-  color: #555;
+  font-weight: 700;
+  color: #fff;
   cursor: pointer;
   font-family: inherit;
-  margin-left: 6px;
+  white-space: nowrap;
 }
-.oos-add-btn:hover { border-color: #ffe000; color: #ffe000; }
+.oos-add-btn:hover { background: #c62828; }
