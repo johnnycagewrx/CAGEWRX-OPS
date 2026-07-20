@@ -354,11 +354,52 @@ body.light-mode {
 
 /* Header */
 body.light-mode .shared-header {
-  background: #ffffff;
-  border-bottom-color: #d0ccc7;
+  background: #2c3440;
+  border-bottom-color: #1e2530;
 }
-body.light-mode .shared-header-title { color: #1a1a1a; }
-body.light-mode .shared-header-label { color: #e53935; }
+body.light-mode .shared-header-title { color: #ffffff; }
+body.light-mode .shared-header-label { color: #ff6b6b; }
+body.light-mode .shared-header-logo { filter: brightness(1.1); }
+
+/* Buttons in header need to pop against dark header */
+body.light-mode .shared-header-right .btn {
+  background: #3d4654;
+  border-color: #4a5568;
+  color: #e0e0e0;
+}
+body.light-mode .shared-header-right .btn:hover {
+  background: #4a5568;
+  color: #fff;
+}
+body.light-mode .shared-header-right .btn-green {
+  background: #2e7d32;
+  border-color: #1b5e20;
+  color: #fff;
+}
+body.light-mode .shared-header-right .btn-blue {
+  background: #1565c0;
+  border-color: #0d47a1;
+  color: #fff;
+}
+body.light-mode .avatar-name-label { color: #ccc; }
+body.light-mode .avatar-trigger:hover { background: rgba(255,255,255,0.1); }
+body.light-mode #user-avatar {
+  background: #e53935;
+  color: #fff;
+}
+
+/* Search bar below header (ops page) */
+body.light-mode .ops-search-bar {
+  background: #3a4452;
+  border-bottom-color: #2c3440;
+}
+body.light-mode .ops-search-bar .search-wrap {
+  background: #4a5568;
+  border-color: #5a6680;
+}
+body.light-mode .ops-search-bar .search-input { color: #fff; }
+body.light-mode .ops-search-bar .search-input::placeholder { color: #aab; }
+body.light-mode .ops-search-bar .search-clear { color: #aab; }
 
 /* Search */
 body.light-mode .search-wrap { background: #e8e4df; border-color: #c0bcb7; }
