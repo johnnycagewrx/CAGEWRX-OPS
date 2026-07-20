@@ -969,3 +969,6 @@ body.light-mode .status-select {
   height: fit-content;
 }
 .oos-add-btn:hover { background: #c62828; }
+
+/* ---- Light mode: SHIP NOW badge always white text ---- */
+body.light-mode .ship-now { color: #fff; }
