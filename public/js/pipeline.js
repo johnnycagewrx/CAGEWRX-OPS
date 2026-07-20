@@ -681,10 +681,12 @@ function renderBackorder(items) {
 // ---- Cascade build date modal ----
 var _cascadeDelta = 0;
 var _cascadePivot = '';
+var _cascadeExcludeId = null;
 
-function showCascadeModal(days, direction, delta, pivotDate) {
+function showCascadeModal(days, direction, delta, pivotDate, excludeId) {
   _cascadeDelta = delta;
   _cascadePivot = pivotDate;
+  _cascadeExcludeId = excludeId || null;
   var el = document.getElementById('cascade-modal');
   var msg = document.getElementById('cascade-msg');
   var allBtn = document.getElementById('cascade-all-btn');
@@ -706,7 +708,7 @@ function cascadeThisOnly() {
 function cascadeAll() {
   closeCascadeModal();
   showBanner('Adjusting build schedule...', 'success');
-  cascadeBuildDates(_cascadePivot, _cascadeDelta, function() { loadData(true); });
+  cascadeBuildDates(_cascadePivot, _cascadeDelta, function() { loadData(true); }, _cascadeExcludeId);
 }
 
 
@@ -972,13 +974,14 @@ function getNextBuildDate(cb) {
   });
 }
 
-function cascadeBuildDates(pivotDateStr, weekdayDelta, cb) {
+function cascadeBuildDates(pivotDateStr, weekdayDelta, cb, excludeId) {
   if (!weekdayDelta) { if (cb) cb(); return; }
   sbFetch('GET', '/rest/v1/orders?select=id,order_num,build_date&build_date=neq.&order=build_date.asc', null, function(err, rows) {
     if (err || !rows || !rows.length) { if (cb) cb(); return; }
     var pivotDate = parseBuildDate(pivotDateStr);
     if (!pivotDate) { if (cb) cb(); return; }
     var toUpdate = rows.filter(function(r) {
+      if (excludeId && r.id === excludeId) return false; // skip the edited order
       var d = parseBuildDate(r.build_date);
       return d && d > pivotDate;
     });
@@ -1291,7 +1294,7 @@ function confirmEdit() {
           if (delta !== 0) {
             var direction = delta > 0 ? 'push back' : 'move forward';
             var days = Math.abs(delta);
-            showCascadeModal(days, direction, delta, oldBuildDate);
+            showCascadeModal(days, direction, delta, oldBuildDate, oid);
             return; // loadData called inside modal handlers
           }
         }
