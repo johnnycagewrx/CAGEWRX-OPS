@@ -538,7 +538,8 @@ body.light-mode .cal-month-label { background: #b8bec8; color: #1a1a1a; border-c
 body.light-mode .cal-load-more-btn { background: #f5f5f5; color: #aaa; border-color: #e0e0e0; }
 body.light-mode .cal-load-more-btn:hover { background: #eee; color: #666; }
 body.light-mode .cal-legend { background: #e8eaed; border-color: #b0b8c4; }
-body.light-mode .cal-legend-item { color: #111827; font-weight: 600; }
+body.light-mode .cal-legend-item { color: #000 !important; font-weight: 700 !important; }
+body.light-mode .cal-legend-item span[style] { color: #000 !important; }
 
 /* ============================================
    Date Picker styles

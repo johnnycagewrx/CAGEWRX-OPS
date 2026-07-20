@@ -838,7 +838,7 @@ function renderOos(items) {
     '</div>';
   });
 
-  h += '<button style="display:inline-flex;align-items:center;gap:6px;background:#e53935;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;white-space:nowrap;" onclick="openOosModal(null)">&#x2B; ADD OUT OF STOCK ITEM</button>';
+  h += '<button class="oos-add-btn" onclick="openOosModal(null)">&#x2B; ADD OUT OF STOCK ITEM</button>';
 
   el.innerHTML = h;
 }
