@@ -692,10 +692,10 @@ body.light-mode [id="stage-backorder"] .stage-header.stage-toggle {
 body.light-mode [id="stage-backorder"] .stage-title { color: #fff !important; }
 body.light-mode [id="stage-backorder"] .stage-count { background: rgba(255,255,255,0.25) !important; color: #fff !important; }
 
-/* Out of Stock — vivid dark yellow */
+/* Out of Stock — dark red */
 body.light-mode [id="stage-oos"] .stage-header,
 body.light-mode [id="stage-oos"] .stage-header.stage-toggle {
-  background: #f9a825 !important; border-bottom-color: #f57f17 !important;
+  background: #8b0000 !important; border-bottom-color: #6a0000 !important;
 }
 body.light-mode [id="stage-oos"] .stage-title { color: #fff !important; }
 body.light-mode [id="stage-oos"] .stage-count { background: rgba(255,255,255,0.25) !important; color: #fff !important; }
@@ -743,7 +743,7 @@ body.light-mode [id="stage-pickup"]    { border: 2px solid #006650 !important; }
 body.light-mode [id="stage-kits"]      { border: 2px solid #5a1aaa !important; }
 body.light-mode [id="stage-tagpull"]   { border: 2px solid #8a6000 !important; }
 body.light-mode [id="stage-backorder"] { border: 2px solid #aa0000 !important; }
-body.light-mode [id="stage-oos"]       { border: 2px solid #aa8800 !important; }
+body.light-mode [id="stage-oos"]       { border: 2px solid #8b0000 !important; }
 
 /* ---- Light mode: calendar events - force white text to read on colored bg ---- */
 body.light-mode .cal-event { color: #ffffff !important; font-weight: 600; }

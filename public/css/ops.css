@@ -537,7 +537,8 @@ body.light-mode .cal-cell.cal-today { background: #b8bec8; border: 2px solid #6b
 body.light-mode .cal-month-label { background: #b8bec8; color: #1a1a1a; border-color: #9aa0aa; }
 body.light-mode .cal-load-more-btn { background: #f5f5f5; color: #aaa; border-color: #e0e0e0; }
 body.light-mode .cal-load-more-btn:hover { background: #eee; color: #666; }
-body.light-mode .cal-legend { background: #fafafa; border-color: #e0e0e0; }
+body.light-mode .cal-legend { background: #e8eaed; border-color: #b0b8c4; }
+body.light-mode .cal-legend-item { color: #111827; font-weight: 600; }
 
 /* ============================================
    Date Picker styles
@@ -980,3 +981,8 @@ body.light-mode [id="col-oos"] > div {
 }
 body.light-mode [id="col-oos"] > div span,
 body.light-mode [id="col-oos"] > div button { color: #fff !important; }
+
+/* Light mode: OOS add button matches dark red pill background */
+body.light-mode [id="col-oos"] button.oos-add-btn,
+body.light-mode .oos-add-btn { background: #8b0000 !important; }
+body.light-mode .oos-add-btn:hover { background: #6a0000 !important; }
