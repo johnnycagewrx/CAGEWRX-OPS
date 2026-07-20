@@ -437,14 +437,16 @@ body.light-mode .sidebar-brand { color: #1a1a1a; }
 
 /* Pipeline stages */
 body.light-mode .stage { background: #fff; border-color: #b0b8c4; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-body.light-mode .stage-header {
-  background: #c8cdd5;
-  border-bottom-color: #b0b8c4;
+body.light-mode .stage-header,
+body.light-mode .stage-header.stage-toggle {
+  background: #d0d5dc !important;
+  border-bottom-color: #b8bec8 !important;
 }
-body.light-mode .stage-title { color: #333; }
-body.light-mode .stage-count { background: #e8e4df; color: #555; }
-body.light-mode .stage-body { background: #e8ecf0; }
-body.light-mode .stage-chevron { color: #888; }
+body.light-mode .stage-title { color: #1a1a1a !important; }
+body.light-mode .stage-count { background: rgba(0,0,0,0.1) !important; color: #222 !important; }
+body.light-mode .stage-body { background: #e4e8ee; }
+body.light-mode .stage-chevron { color: #444 !important; }
+body.light-mode .stage-header span { opacity: 1; filter: none; }
 
 /* Order cards */
 body.light-mode .order-card { background: #fff; border-color: #d8d4cf; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
@@ -619,3 +621,24 @@ body.light-mode .mobile-nav-item.active { color: #c62828; }
 /* ---- Light mode: App shell ---- */
 body.light-mode .app-content { background: #f0ede8; }
 body.light-mode .app-shell { background: #f0ede8; }
+
+
+/* Light mode: force all inline-styled section headers to light gray */
+body.light-mode .oos-header { background: #d0d5dc !important; }
+body.light-mode .oos-header .stage-title { color: #1a1a1a !important; }
+body.light-mode .stage-count[style] { background: rgba(0,0,0,0.1) !important; color: #333 !important; }
+
+/* Prod stage headers */
+body.light-mode .prod-stage-header { background: #d0d5dc !important; border-bottom-color: #b8bec8 !important; }
+body.light-mode .prod-stage-title { color: #1a1a1a !important; }
+
+/* Make main page header (shared-header) darker in light mode */
+body.light-mode .shared-header { background: #2c3440 !important; }
+
+/* Override ALL inline-styled stage title and count colors in light mode */
+body.light-mode .stage-header p,
+body.light-mode .stage-header .stage-title { color: #1a1a1a !important; }
+body.light-mode .stage-header .stage-count { 
+  background: rgba(0,0,0,0.12) !important; 
+  color: #1a1a1a !important; 
+}
