@@ -823,9 +823,9 @@ function renderOos(items) {
   items.forEach(function(o) {
     var etaLabel = o.eta ? 'ETA: ' + fmtDate(o.eta) : 'Set ETA';
     h += '<div class="oos-pill">' +
-      '<div>' +
-        '<div class="oos-pill-sku">' + (o.sku || '') + '</div>' +
-        (o.title ? '<div class="oos-pill-title">' + o.title + '</div>' : '') +
+      '<div style="display:flex;flex-direction:column;gap:2px;">' +
+        '<span class="oos-pill-sku">' + (o.sku || '') + '</span>' +
+        (o.title ? '<span class="oos-pill-title">' + o.title + '</span>' : '') +
       '</div>' +
       '<span class="oos-pill-eta" onclick="editOosEta(\'' + o.id + '\')">' + etaLabel + '</span>' +
       '<button class="oos-pill-del" onclick="deleteOos(\'' + o.id + '\')" title="Remove">&#x2715;</button>' +

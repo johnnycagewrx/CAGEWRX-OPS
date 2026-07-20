@@ -1021,25 +1021,26 @@ body.light-mode .status-select {
 }
 
 .oos-body {
-  padding: 12px;
+  padding: 14px;
   background: rgba(40, 35, 0, 0.3);
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
   gap: 10px;
-  align-items: center;
+  align-items: stretch;
 }
 
 .oos-pill {
-  display: inline-flex;
+  display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background: #1a1500;
   border: 1px solid #ffe000;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 8px 14px;
   font-size: 12px;
   color: #fff;
-  position: relative;
 }
 
 .oos-pill-sku {
@@ -1077,8 +1078,9 @@ body.light-mode .status-select {
 .oos-pill-del:hover { color: #ef5350; }
 
 .oos-add-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  align-self: center;
   gap: 6px;
   background: #e53935;
   border: none;
@@ -1090,5 +1092,6 @@ body.light-mode .status-select {
   cursor: pointer;
   font-family: inherit;
   white-space: nowrap;
+  height: fit-content;
 }
 .oos-add-btn:hover { background: #c62828; }
