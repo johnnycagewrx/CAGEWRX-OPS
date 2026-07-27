@@ -6,7 +6,12 @@ var isMonday = today.getDay() === 1;
 
 // Live data. shopify and googleAds start null so widgets can show a
 // loading/empty state correctly until their fetches resolve.
-var LIVE = { deadlines: [], shopify: null, googleAdsWeekend: null, googleAdsWtd: null };
+var LIVE = {
+  deadlines: [],
+  shopify: null, shopifyPrev: null,
+  googleAdsWeekend: null, googleAdsWtd: null,
+  googleAdsMtd: null, googleAdsMtdPrev: null
+};
 
 var _sess = null;
 
@@ -96,15 +101,17 @@ function fetchDeadlines(cb) {
 // shopify-briefing-worker Cloudflare Worker on a schedule.
 // ---------------------------------------------------------------------
 function fetchShopifyMTD(cb) {
-  sbFetch('GET', '/rest/v1/briefing_report_cache?report_type=eq.shopify_mtd'
-    + '&select=payload,period_start,period_end&order=fetched_at.desc&limit=1', null, function (err, rows) {
-    if (err || !rows || !rows.length) {
+  sbFetch('GET', '/rest/v1/briefing_report_cache?report_type=in.(shopify_mtd,shopify_mtd_prev)'
+    + '&select=report_type,payload&order=fetched_at.desc&limit=2', null, function (err, rows) {
+    if (err || !rows) {
       console.error('Could not load Shopify MTD data:', err);
-      LIVE.shopify = null;
       cb();
       return;
     }
-    LIVE.shopify = rows[0].payload;
+    rows.forEach(function (row) {
+      if (row.report_type === 'shopify_mtd') LIVE.shopify = row.payload;
+      if (row.report_type === 'shopify_mtd_prev') LIVE.shopifyPrev = row.payload;
+    });
     cb();
   });
 }
@@ -114,8 +121,8 @@ function fetchShopifyMTD(cb) {
 // google-ads-briefing-worker Cloudflare Worker on a schedule.
 // ---------------------------------------------------------------------
 function fetchGoogleAds(cb) {
-  sbFetch('GET', '/rest/v1/briefing_report_cache?report_type=in.(google_ads_weekend,google_ads_wtd)'
-    + '&select=report_type,payload&order=fetched_at.desc&limit=2', null, function (err, rows) {
+  sbFetch('GET', '/rest/v1/briefing_report_cache?report_type=in.(google_ads_weekend,google_ads_wtd,google_ads_mtd,google_ads_mtd_prev)'
+    + '&select=report_type,payload&order=fetched_at.desc&limit=4', null, function (err, rows) {
     if (err || !rows) {
       console.error('Could not load Google Ads data:', err);
       cb();
@@ -124,6 +131,8 @@ function fetchGoogleAds(cb) {
     rows.forEach(function (row) {
       if (row.report_type === 'google_ads_weekend') LIVE.googleAdsWeekend = row.payload;
       if (row.report_type === 'google_ads_wtd') LIVE.googleAdsWtd = row.payload;
+      if (row.report_type === 'google_ads_mtd') LIVE.googleAdsMtd = row.payload;
+      if (row.report_type === 'google_ads_mtd_prev') LIVE.googleAdsMtdPrev = row.payload;
     });
     cb();
   });
@@ -191,8 +200,9 @@ var WIDGET_DEFS = [
       if (d.topProducts && d.topProducts.length) {
         topHtml = '<p class="briefing-top-title">Top 3 sellers this month</p><div>'
           + d.topProducts.map(function (p, i) {
-            return '<div class="briefing-row">'
-              + '<div><p class="briefing-top-product">' + (i + 1) + '. ' + p.title + '</p></div>'
+            return '<div class="briefing-row briefing-top-row">'
+              + '<p class="briefing-top-product">' + (i + 1) + '. ' + p.title + '</p>'
+              + '<span class="briefing-top-qty">Qty: ' + p.quantity + '</span>'
               + '<span class="briefing-top-value">$' + p.revenue.toLocaleString() + '</span>'
               + '</div>';
           }).join('') + '</div>';
@@ -203,8 +213,64 @@ var WIDGET_DEFS = [
         + stat('AOV', '$' + d.aov.toFixed(2))
         + '</div>' + topHtml;
     }
+  },
+  {
+    id: 'googleads_trend', title: 'Google Ads - month over month', accent: '#42a5f5', fullWidth: true,
+    meta: function () { return 'vs. same period last month'; },
+    render: function () {
+      var cur = LIVE.googleAdsMtd, prev = LIVE.googleAdsMtdPrev;
+      if (!cur || !prev) return '<p class="briefing-empty">Not enough data yet for a month-over-month comparison.</p>';
+      return '<div class="briefing-trend-grid">'
+        + trendMetric('Impressions', cur.impressions, prev.impressions, function (v) { return v.toLocaleString(); })
+        + trendMetric('Clicks', cur.clicks, prev.clicks, function (v) { return v.toLocaleString(); })
+        + trendMetric('Conversions', cur.conversions, prev.conversions, function (v) { return v.toLocaleString(); })
+        + trendMetric('ROAS', cur.roas, prev.roas, function (v) { return v.toFixed(1) + 'x'; })
+        + '</div>';
+    }
+  },
+  {
+    id: 'shopify_trend', title: 'Shopify - month over month', accent: '#4caf50', fullWidth: true,
+    meta: function () { return 'vs. same period last month'; },
+    render: function () {
+      var cur = LIVE.shopify, prev = LIVE.shopifyPrev;
+      if (!cur || !prev) return '<p class="briefing-empty">Not enough data yet for a month-over-month comparison.</p>';
+      return '<div class="briefing-trend-grid">'
+        + trendMetric('Revenue', cur.revenue, prev.revenue, function (v) { return '$' + v.toLocaleString(); })
+        + trendMetric('Orders', cur.orders, prev.orders, function (v) { return v.toLocaleString(); })
+        + trendMetric('AOV', cur.aov, prev.aov, function (v) { return '$' + v.toFixed(2); })
+        + '</div>';
+    }
   }
 ];
+
+function trendMetric(label, current, previous, formatFn) {
+  var max = Math.max(current, previous, 1);
+  var curPct = Math.round((current / max) * 100);
+  var prevPct = Math.round((previous / max) * 100);
+  var deltaLabel;
+  if (previous === 0) {
+    deltaLabel = current === 0 ? '0%' : 'New';
+  } else {
+    var deltaPct = ((current - previous) / previous) * 100;
+    deltaLabel = (deltaPct >= 0 ? '+' : '') + deltaPct.toFixed(1) + '%';
+  }
+  var deltaClass = current >= previous ? 'up' : 'down';
+
+  return '<div class="briefing-trend-metric">'
+    + '<div class="briefing-trend-label-row">'
+    + '<span class="briefing-trend-label">' + label + '</span>'
+    + '<span class="briefing-trend-delta ' + deltaClass + '">' + deltaLabel + '</span>'
+    + '</div>'
+    + '<div class="briefing-trend-bar-row">'
+    + '<div class="briefing-trend-bar-track"><div class="briefing-trend-bar current" style="width:' + curPct + '%"></div></div>'
+    + '<span class="briefing-trend-value">' + formatFn(current) + '</span>'
+    + '</div>'
+    + '<div class="briefing-trend-bar-row">'
+    + '<div class="briefing-trend-bar-track"><div class="briefing-trend-bar previous" style="width:' + prevPct + '%"></div></div>'
+    + '<span class="briefing-trend-value muted">' + formatFn(previous) + ' last month</span>'
+    + '</div>'
+    + '</div>';
+}
 
 function stat(label, value) {
   return '<div class="briefing-stat">'
@@ -267,7 +333,8 @@ function renderWidgets() {
     .map(function (c) { return WIDGET_DEFS.filter(function (w) { return w.id === c.id; })[0]; })
     .filter(Boolean)
     .map(function (w) {
-      return '<div class="briefing-card" style="border-top:2px solid ' + w.accent + '">'
+      var spanStyle = w.fullWidth ? 'grid-column:1/-1;' : '';
+      return '<div class="briefing-card" style="' + spanStyle + 'border-top:2px solid ' + w.accent + '">'
         + '<div class="briefing-card-head"><h3>' + w.title + '</h3>'
         + '<span class="briefing-card-meta">' + w.meta() + '</span></div>'
         + '<div class="briefing-card-body">' + w.render() + '</div>'

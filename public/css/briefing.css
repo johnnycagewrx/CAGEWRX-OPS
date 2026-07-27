@@ -193,3 +193,64 @@
 .briefing-scrim.open { display: block; }
 
 .briefing-save-status { font-size: 11.5px; margin-top: 10px; height: 14px; }
+
+/* ---- Top sellers row with QTY column ---- */
+.briefing-top-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.briefing-top-row .briefing-top-product { flex: 1; min-width: 0; }
+.briefing-top-qty {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #999;
+  width: 52px;
+  text-align: center;
+}
+
+/* ---- Month-over-month trend charts ---- */
+.briefing-trend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+}
+.briefing-trend-metric { display: flex; flex-direction: column; gap: 6px; }
+.briefing-trend-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.briefing-trend-label {
+  font-size: 12px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.briefing-trend-delta { font-size: 12px; font-weight: 700; }
+.briefing-trend-delta.up { color: #4caf50; }
+.briefing-trend-delta.down { color: #ef5350; }
+.briefing-trend-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.briefing-trend-bar-track {
+  flex: 1;
+  height: 8px;
+  background: #1a1a1a;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.briefing-trend-bar { height: 100%; border-radius: 4px; }
+.briefing-trend-bar.current { background: #42a5f5; }
+.briefing-trend-bar.previous { background: #3a3a3a; }
+.briefing-trend-value {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e0e0e0;
+  min-width: 70px;
+  text-align: right;
+}
+.briefing-trend-value.muted { color: #666; font-weight: 400; }
