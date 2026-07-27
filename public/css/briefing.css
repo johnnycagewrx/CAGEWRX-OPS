@@ -278,3 +278,42 @@
 .tooltip-row b { color: #fff; }
 .tooltip-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .tooltip-prev { color: #666; font-size: 11px; margin-left: auto; padding-left: 10px; }
+
+.briefing-toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 26px;
+  height: 15px;
+  border-radius: 8px;
+  background: #333;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.briefing-toggle-switch .knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #999;
+  transition: left 0.15s ease, background 0.15s ease;
+}
+.briefing-toggle-switch.on { background: #2a3a2a; }
+.briefing-toggle-switch.on .knob { left: 13px; background: #4caf50; }
+.briefing-toggle-switch.off .knob { background: #666; }
+
+.briefing-chart-xaxis {
+  position: relative;
+  height: 18px;
+  margin-top: 4px;
+}
+.briefing-chart-xaxis-label {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 10.5px;
+  color: #666;
+  white-space: nowrap;
+}

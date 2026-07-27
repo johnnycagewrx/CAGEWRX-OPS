@@ -111,13 +111,14 @@ function fetchDeadlines(cb) {
 // ---------------------------------------------------------------------
 function fetchShopifyMTD(cb) {
   sbFetch('GET', '/rest/v1/briefing_report_cache?report_type=in.(shopify_mtd,shopify_mtd_prev)'
-    + '&select=report_type,payload&order=fetched_at.desc&limit=2', null, function (err, rows) {
+    + '&select=report_type,payload,period_start&order=fetched_at.desc&limit=2', null, function (err, rows) {
     if (err || !rows) {
       console.error('Could not load Shopify MTD data:', err);
       cb();
       return;
     }
     rows.forEach(function (row) {
+      row.payload.periodStart = row.period_start;
       if (row.report_type === 'shopify_mtd') LIVE.shopify = row.payload;
       if (row.report_type === 'shopify_mtd_prev') LIVE.shopifyPrev = row.payload;
     });
@@ -131,13 +132,14 @@ function fetchShopifyMTD(cb) {
 // ---------------------------------------------------------------------
 function fetchGoogleAds(cb) {
   sbFetch('GET', '/rest/v1/briefing_report_cache?report_type=in.(google_ads_weekend,google_ads_wtd,google_ads_mtd,google_ads_mtd_prev)'
-    + '&select=report_type,payload&order=fetched_at.desc&limit=4', null, function (err, rows) {
+    + '&select=report_type,payload,period_start&order=fetched_at.desc&limit=4', null, function (err, rows) {
     if (err || !rows) {
       console.error('Could not load Google Ads data:', err);
       cb();
       return;
     }
     rows.forEach(function (row) {
+      row.payload.periodStart = row.period_start;
       if (row.report_type === 'google_ads_weekend') LIVE.googleAdsWeekend = row.payload;
       if (row.report_type === 'google_ads_wtd') LIVE.googleAdsWtd = row.payload;
       if (row.report_type === 'google_ads_mtd') LIVE.googleAdsMtd = row.payload;
@@ -231,7 +233,7 @@ var WIDGET_DEFS = [
       if (!cur || !prev || !cur.dailySeries || !prev.dailySeries) {
         return '<p class="briefing-empty">Not enough data yet for a month-over-month comparison.</p>';
       }
-      return buildOverlappingChart('googleads', [
+      return buildOverlappingChart('googleads', cur.periodStart, [
         { key: 'impressions', label: 'Impressions', color: '#42a5f5', current: cur.dailySeries.impressions, previous: prev.dailySeries.impressions, format: function (v) { return Math.round(v).toLocaleString(); } },
         { key: 'clicks', label: 'Clicks', color: '#4db6ac', current: cur.dailySeries.clicks, previous: prev.dailySeries.clicks, format: function (v) { return Math.round(v).toLocaleString(); } },
         { key: 'conversions', label: 'Conversions', color: '#ffa726', current: cur.dailySeries.conversions, previous: prev.dailySeries.conversions, format: function (v) { return v.toFixed(1); } },
@@ -247,7 +249,7 @@ var WIDGET_DEFS = [
       if (!cur || !prev || !cur.dailySeries || !prev.dailySeries) {
         return '<p class="briefing-empty">Not enough data yet for a month-over-month comparison.</p>';
       }
-      return buildOverlappingChart('shopify', [
+      return buildOverlappingChart('shopify', cur.periodStart, [
         { key: 'revenue', label: 'Revenue', color: '#4caf50', current: cur.dailySeries.revenue, previous: prev.dailySeries.revenue, format: function (v) { return '$' + Math.round(v).toLocaleString(); } },
         { key: 'orders', label: 'Orders', color: '#42a5f5', current: cur.dailySeries.orders, previous: prev.dailySeries.orders, format: function (v) { return Math.round(v).toLocaleString(); } },
         { key: 'aov', label: 'AOV', color: '#ffa726', current: cur.dailySeries.aov, previous: prev.dailySeries.aov, format: function (v) { return '$' + v.toFixed(2); } }
@@ -267,7 +269,14 @@ var WIDGET_DEFS = [
 // ---------------------------------------------------------------------
 var CHART_REGISTRY = {};
 
-function buildOverlappingChart(chartId, metrics) {
+function formatChartDate(periodStart, index) {
+  if (!periodStart) return 'Day ' + (index + 1);
+  var d = new Date(periodStart + 'T00:00:00');
+  d.setDate(d.getDate() + index);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function buildOverlappingChart(chartId, periodStart, metrics) {
   var w = 860, h = 240, padL = 8, padR = 8, padT = 10, padB = 10;
   var n = metrics[0].current.length;
 
@@ -280,7 +289,7 @@ function buildOverlappingChart(chartId, metrics) {
       normPrevious: m.previous.map(function (v) { return max ? v / max : 0; })
     };
   });
-  CHART_REGISTRY[chartId] = { series: series, n: n, w: w, h: h, padL: padL, padR: padR };
+  CHART_REGISTRY[chartId] = { series: series, n: n, w: w, h: h, padL: padL, padR: padR, periodStart: periodStart, hidden: {} };
 
   function toPath(norm) {
     if (norm.length < 2) return '';
@@ -304,18 +313,33 @@ function buildOverlappingChart(chartId, metrics) {
   svg += '<rect class="chart-overlay" data-chart="' + chartId + '" x="0" y="0" width="' + w + '" height="' + h + '" fill="transparent" />';
   svg += '</svg>';
 
+  // x-axis date labels - built as HTML, not SVG text, since the SVG uses
+  // preserveAspectRatio="none" to stretch lines to full width, which
+  // would squash real text sideways.
+  var tickCount = Math.min(6, n);
+  var step = n > 1 ? (n - 1) / (tickCount - 1) : 0;
+  var xAxisHtml = '<div class="briefing-chart-xaxis">';
+  for (var t = 0; t < tickCount; t++) {
+    var idx = Math.round(t * step);
+    var leftPct = n > 1 ? (idx / (n - 1)) * 100 : 50;
+    xAxisHtml += '<span class="briefing-chart-xaxis-label" style="left:' + leftPct + '%">'
+      + formatChartDate(periodStart, idx) + '</span>';
+  }
+  xAxisHtml += '</div>';
+
   var legend = '<div class="briefing-chart-legend">'
     + '<span class="briefing-chart-legend-note">'
     + '<span class="swatch-line"></span> This month&nbsp;&nbsp;<span class="swatch-line dashed"></span> Last month'
     + '</span>'
     + series.map(function (s) {
       return '<span class="briefing-chart-legend-item" data-chart="' + chartId + '" data-key="' + s.key + '">'
+        + '<span class="briefing-toggle-switch on" data-chart="' + chartId + '" data-key="' + s.key + '"><span class="knob"></span></span>'
         + '<span class="dot" style="background:' + s.color + '"></span>' + s.label + '</span>';
     }).join('') + '</div>';
 
   var tooltip = '<div class="briefing-chart-tooltip" id="tooltip-' + chartId + '" style="display:none;"></div>';
 
-  return '<div class="briefing-chart-wrap" id="wrap-' + chartId + '">' + legend + svg + tooltip + '</div>';
+  return '<div class="briefing-chart-wrap" id="wrap-' + chartId + '">' + legend + svg + xAxisHtml + tooltip + '</div>';
 }
 
 function initTrendCharts() {
@@ -329,10 +353,36 @@ function initTrendCharts() {
     var seriesGroups = svg.querySelectorAll('.chart-series');
     var legendItems = wrap.querySelectorAll('.briefing-chart-legend-item');
 
+    function seriesGroupFor(key) {
+      return svg.querySelector('.chart-series[data-key="' + key + '"]');
+    }
+
+    function applyVisibility() {
+      seriesGroups.forEach(function (g) {
+        var key = g.getAttribute('data-key');
+        g.style.display = data.hidden[key] ? 'none' : '';
+      });
+    }
+
+    // Toggle switches - click to permanently show/hide a metric's lines
+    var toggles = wrap.querySelectorAll('.briefing-toggle-switch');
+    toggles.forEach(function (toggle) {
+      toggle.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var key = toggle.getAttribute('data-key');
+        data.hidden[key] = !data.hidden[key];
+        toggle.classList.toggle('on', !data.hidden[key]);
+        toggle.classList.toggle('off', !!data.hidden[key]);
+        applyVisibility();
+      });
+    });
+
+    // Hover a legend item - dim every other (still-visible) metric
     legendItems.forEach(function (item) {
       item.addEventListener('mouseenter', function () {
         var key = item.getAttribute('data-key');
         seriesGroups.forEach(function (g) {
+          if (data.hidden[g.getAttribute('data-key')]) return;
           g.style.opacity = (g.getAttribute('data-key') === key) ? '1' : '0.1';
         });
       });
@@ -354,8 +404,9 @@ function initTrendCharts() {
       crosshair.setAttribute('x2', xPos);
       crosshair.style.display = 'block';
 
-      var html = '<div class="tooltip-day">Day ' + (idx + 1) + '</div>';
+      var html = '<div class="tooltip-day">' + formatChartDate(data.periodStart, idx) + '</div>';
       data.series.forEach(function (s) {
+        if (data.hidden[s.key]) return;
         html += '<div class="tooltip-row">'
           + '<span class="tooltip-dot" style="background:' + s.color + '"></span>'
           + s.label + ': <b>' + s.format(s.current[idx]) + '</b>'
