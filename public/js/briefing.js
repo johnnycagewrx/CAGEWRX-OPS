@@ -70,6 +70,15 @@ function formatDueDate(dueDate) {
   return 'in ' + diffDays + ' days';
 }
 
+function isAssignedToCurrentUser(assignedTo) {
+  if (!assignedTo || !_sess) return false;
+  var a = assignedTo.trim().toLowerCase();
+  var fullName = (_sess.full_name || '').trim().toLowerCase();
+  var firstName = fullName.split(' ')[0];
+  if (!a || !fullName) return false;
+  return a === fullName || a === firstName || a.indexOf(firstName) !== -1;
+}
+
 function fetchDeadlines(cb) {
   sbFetch('GET', '/rest/v1/briefing_deadlines?select=title,due_date', null, function (err1, manualRows) {
     sbFetch('GET', '/rest/v1/tasks?select=title,due_date,assigned_to', null, function (err2, taskRows) {
@@ -83,10 +92,10 @@ function fetchDeadlines(cb) {
 
       (err2 || !taskRows ? [] : taskRows).forEach(function (row) {
         if (!row.due_date) return; // only tasks with a due date belong on the briefing
+        if (!isAssignedToCurrentUser(row.assigned_to)) return; // only this user's tasks
         var d = parseDateFlexible(row.due_date);
         if (!d) return;
-        var label = row.title + (row.assigned_to ? ' \u2014 ' + row.assigned_to : '');
-        combined.push({ name: label, dateObj: d, tag: computeUrgencyTag(d), due: formatDueDate(d) });
+        combined.push({ name: row.title, dateObj: d, tag: computeUrgencyTag(d), due: formatDueDate(d) });
       });
 
       combined.sort(function (a, b) { return a.dateObj - b.dateObj; });
@@ -219,12 +228,16 @@ var WIDGET_DEFS = [
     meta: function () { return 'vs. same period last month'; },
     render: function () {
       var cur = LIVE.googleAdsMtd, prev = LIVE.googleAdsMtdPrev;
-      if (!cur || !prev) return '<p class="briefing-empty">Not enough data yet for a month-over-month comparison.</p>';
-      return '<div class="briefing-trend-grid">'
-        + trendMetric('Impressions', cur.impressions, prev.impressions, function (v) { return v.toLocaleString(); })
-        + trendMetric('Clicks', cur.clicks, prev.clicks, function (v) { return v.toLocaleString(); })
-        + trendMetric('Conversions', cur.conversions, prev.conversions, function (v) { return v.toLocaleString(); })
-        + trendMetric('ROAS', cur.roas, prev.roas, function (v) { return v.toFixed(1) + 'x'; })
+      if (!cur || !prev || !cur.dailySeries || !prev.dailySeries) {
+        return '<p class="briefing-empty">Not enough data yet for a month-over-month comparison.</p>';
+      }
+      return '<p class="briefing-trend-legend"><span class="swatch-line"></span> This month'
+        + '&nbsp;&nbsp;<span class="swatch-line dashed"></span> Last month</p>'
+        + '<div class="briefing-linechart-grid">'
+        + lineChartBlock('Impressions', cur.dailySeries.impressions, prev.dailySeries.impressions, '#42a5f5')
+        + lineChartBlock('Clicks', cur.dailySeries.clicks, prev.dailySeries.clicks, '#4db6ac')
+        + lineChartBlock('Conversions', cur.dailySeries.conversions, prev.dailySeries.conversions, '#ffa726')
+        + lineChartBlock('ROAS', cur.dailySeries.roas, prev.dailySeries.roas, '#b39ddb')
         + '</div>';
     }
   },
@@ -233,43 +246,59 @@ var WIDGET_DEFS = [
     meta: function () { return 'vs. same period last month'; },
     render: function () {
       var cur = LIVE.shopify, prev = LIVE.shopifyPrev;
-      if (!cur || !prev) return '<p class="briefing-empty">Not enough data yet for a month-over-month comparison.</p>';
-      return '<div class="briefing-trend-grid">'
-        + trendMetric('Revenue', cur.revenue, prev.revenue, function (v) { return '$' + v.toLocaleString(); })
-        + trendMetric('Orders', cur.orders, prev.orders, function (v) { return v.toLocaleString(); })
-        + trendMetric('AOV', cur.aov, prev.aov, function (v) { return '$' + v.toFixed(2); })
+      if (!cur || !prev || !cur.dailySeries || !prev.dailySeries) {
+        return '<p class="briefing-empty">Not enough data yet for a month-over-month comparison.</p>';
+      }
+      return '<p class="briefing-trend-legend"><span class="swatch-line"></span> This month'
+        + '&nbsp;&nbsp;<span class="swatch-line dashed"></span> Last month</p>'
+        + '<div class="briefing-linechart-grid">'
+        + lineChartBlock('Revenue', cur.dailySeries.revenue, prev.dailySeries.revenue, '#4caf50')
+        + lineChartBlock('Orders', cur.dailySeries.orders, prev.dailySeries.orders, '#42a5f5')
+        + lineChartBlock('AOV', cur.dailySeries.aov, prev.dailySeries.aov, '#ffa726')
         + '</div>';
     }
   }
 ];
 
-function trendMetric(label, current, previous, formatFn) {
-  var max = Math.max(current, previous, 1);
-  var curPct = Math.round((current / max) * 100);
-  var prevPct = Math.round((previous / max) * 100);
-  var deltaLabel;
-  if (previous === 0) {
-    deltaLabel = current === 0 ? '0%' : 'New';
-  } else {
-    var deltaPct = ((current - previous) / previous) * 100;
-    deltaLabel = (deltaPct >= 0 ? '+' : '') + deltaPct.toFixed(1) + '%';
-  }
-  var deltaClass = current >= previous ? 'up' : 'down';
-
-  return '<div class="briefing-trend-metric">'
-    + '<div class="briefing-trend-label-row">'
-    + '<span class="briefing-trend-label">' + label + '</span>'
-    + '<span class="briefing-trend-delta ' + deltaClass + '">' + deltaLabel + '</span>'
-    + '</div>'
-    + '<div class="briefing-trend-bar-row">'
-    + '<div class="briefing-trend-bar-track"><div class="briefing-trend-bar current" style="width:' + curPct + '%"></div></div>'
-    + '<span class="briefing-trend-value">' + formatFn(current) + '</span>'
-    + '</div>'
-    + '<div class="briefing-trend-bar-row">'
-    + '<div class="briefing-trend-bar-track"><div class="briefing-trend-bar previous" style="width:' + prevPct + '%"></div></div>'
-    + '<span class="briefing-trend-value muted">' + formatFn(previous) + ' last month</span>'
-    + '</div>'
+// Builds one small-multiple line chart: solid line for the current
+// period, dashed + lower-opacity line (same color) for the previous
+// period. Each metric gets its own chart so wildly different scales
+// (impressions vs. ROAS) don't crush each other flat on a shared axis.
+function lineChartBlock(label, currentSeries, previousSeries, color) {
+  var svg = buildLineChartSvg(currentSeries, previousSeries, color);
+  var latestCur = currentSeries.length ? currentSeries[currentSeries.length - 1] : 0;
+  return '<div class="briefing-linechart-block">'
+    + '<p class="briefing-linechart-label" style="color:' + color + '">' + label + '</p>'
+    + svg
     + '</div>';
+}
+
+function buildLineChartSvg(currentSeries, previousSeries, color) {
+  var w = 280, h = 70, pad = 6;
+  var maxVal = Math.max.apply(null, currentSeries.concat(previousSeries).concat([1]));
+
+  function toPoints(series) {
+    if (series.length < 2) return '';
+    return series.map(function (v, i) {
+      var x = pad + (i / (series.length - 1)) * (w - pad * 2);
+      var y = h - pad - (v / maxVal) * (h - pad * 2);
+      return x.toFixed(1) + ',' + y.toFixed(1);
+    }).join(' ');
+  }
+
+  var curPoints = toPoints(currentSeries);
+  var prevPoints = toPoints(previousSeries);
+
+  var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" preserveAspectRatio="none">';
+  if (prevPoints) {
+    svg += '<polyline points="' + prevPoints + '" fill="none" stroke="' + color + '" stroke-width="2" '
+      + 'stroke-dasharray="5,4" opacity="0.45" />';
+  }
+  if (curPoints) {
+    svg += '<polyline points="' + curPoints + '" fill="none" stroke="' + color + '" stroke-width="2.5" />';
+  }
+  svg += '</svg>';
+  return svg;
 }
 
 function stat(label, value) {
