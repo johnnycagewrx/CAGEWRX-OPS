@@ -12,6 +12,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="img/favicon.png">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/ops.css">
   <link rel="stylesheet" href="css/briefing.css">
 </head>
 <body>
@@ -20,23 +21,60 @@
   <div id="sidebar-mount"></div>
 
   <div class="app-content">
-    <div class="briefing-header">
-      <div>
+
+    <!-- ===== HEADER - same structure as ops.html ===== -->
+    <div class="hero">
+      <div class="hero-content">
+
+        <div class="hero-left">
+          <img class="hero-logo" id="hero-logo" src="img/cagewrx_logo.png" alt="CAGEwrx">
+          <div>
+            <div class="hero-label">CAGEwrx Operations</div>
+            <div class="hero-title">Morning Briefing</div>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <div class="btn-group">
+            <button class="btn btn-green" onclick="openAddDeadlineModal()">+ Add Deadline</button>
+            <button class="btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">&#x263C;</button>
+
+            <div class="avatar-wrap">
+              <div id="user-avatar">?</div>
+              <div id="av-dd">
+                <div class="av-profile">
+                  <div class="av-profile-name" id="avatar-name">Loading...</div>
+                  <div class="av-profile-email" id="avatar-email"></div>
+                  <span id="avatar-role-badge">User</span>
+                </div>
+                <button class="av-menu-item" onclick="openBriefingCustomize()">&#x2699; Customize this page</button>
+                <button class="av-menu-item danger" onclick="signOut()">&#x2192; Sign Out</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== MAIN ===== -->
+    <div class="briefing-main">
+      <div class="banner" id="banner"></div>
+
+      <div class="briefing-subhead">
         <div class="briefing-greeting" id="briefing-greeting">Good morning</div>
         <div class="briefing-dateline" id="briefing-dateline">-</div>
       </div>
-      <button class="btn" id="briefing-customize-btn">&#x2699; Customize this page</button>
-    </div>
 
-    <div class="briefing-main">
-      <div class="banner" id="banner"></div>
       <div class="briefing-grid" id="briefing-grid">
         <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
       </div>
     </div>
+
   </div>
 </div>
 
+<!-- ===== CUSTOMIZE PANEL ===== -->
 <div class="briefing-scrim" id="briefing-scrim"></div>
 <div class="briefing-panel" id="briefing-panel">
   <h2>Customize your briefing</h2>
@@ -49,6 +87,22 @@
   <div class="briefing-save-status" id="briefing-save-status"></div>
 </div>
 
+<!-- ===== ADD DEADLINE MODAL ===== -->
+<div class="modal-overlay" id="add-deadline-modal">
+  <div class="modal">
+    <div class="modal-title">Add Deadline</div>
+    <label>Title</label>
+    <input type="text" id="deadline-title" placeholder="e.g. Dealer terms due">
+    <label>Due Date</label>
+    <input type="date" id="deadline-due">
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeAddDeadlineModal()">Cancel</button>
+      <button class="modal-btn modal-btn-save" onclick="confirmAddDeadline()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
 <script src="js/supabase.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/sidebar.js"></script>

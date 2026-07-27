@@ -3,17 +3,12 @@
    CAGEwrx Ops
    ============================================ */
 
-.briefing-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 24px 28px 0;
+.briefing-subhead {
+  padding: 20px 0 4px;
 }
 
 .briefing-greeting {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 800;
   color: #fff;
   margin-bottom: 4px;
@@ -27,7 +22,7 @@
 }
 
 .briefing-main {
-  padding: 20px 28px 60px;
+  padding: 0 28px 60px;
 }
 
 .briefing-grid {
@@ -209,37 +204,77 @@
   text-align: center;
 }
 
-/* ---- Month-over-month line charts ---- */
-.briefing-trend-legend {
-  font-size: 11.5px;
-  color: #999;
-  margin: 0 0 14px;
+/* ---- Month-over-month combined chart ---- */
+.briefing-chart-wrap { position: relative; }
+
+.briefing-chart-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.briefing-chart-legend-note {
+  font-size: 11px;
+  color: #777;
   display: flex;
   align-items: center;
   gap: 4px;
+  margin-right: 6px;
 }
 .swatch-line {
   display: inline-block;
-  width: 18px;
+  width: 16px;
   height: 0;
   border-top: 2.5px solid #999;
-  margin-right: 4px;
+  margin-right: 3px;
 }
-.swatch-line.dashed {
-  border-top-style: dashed;
-  opacity: 0.6;
+.swatch-line.dashed { border-top-style: dashed; opacity: 0.6; }
+
+.briefing-chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #ccc;
+  cursor: default;
+  padding: 3px 8px;
+  border-radius: 5px;
 }
-.briefing-linechart-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 24px;
+.briefing-chart-legend-item:hover { background: #1a1a1a; }
+.briefing-chart-legend-item .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
-.briefing-linechart-block { display: flex; flex-direction: column; }
-.briefing-linechart-label {
+
+.briefing-chart-svg { display: block; }
+.chart-series { transition: opacity 0.12s ease; }
+.chart-overlay { cursor: crosshair; }
+
+.briefing-chart-tooltip {
+  position: absolute;
+  background: #161616;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 12px;
   font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  margin: 0 0 6px;
+  pointer-events: none;
+  z-index: 10;
+  min-width: 170px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5);
 }
-.briefing-linechart-block svg { display: block; }
+.tooltip-day { font-size: 11px; color: #777; margin-bottom: 6px; font-weight: 600; }
+.tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #ccc;
+  padding: 2px 0;
+  white-space: nowrap;
+}
+.tooltip-row b { color: #fff; }
+.tooltip-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.tooltip-prev { color: #666; font-size: 11px; margin-left: auto; padding-left: 10px; }
