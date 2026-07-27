@@ -1709,13 +1709,4 @@ function runImport() {
     }
     next();
   });
-}var isTagPull = tab === 'tagpull';
-  // Show first/last name on ALL order types
-  f += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
-     + '<div>' + labelHTML('First Name') + inputHTML('edit-first-name', o.first_name || '') + '</div>'
-     + '<div>' + labelHTML('Last Name')  + inputHTML('edit-last-name',  o.last_name  || '') + '</div>'
-     + '</div>';
-  if (isTagPull) {
-    f += labelHTML('Notes');
-    f += '<textarea id="edit-notes" style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;min-height:70px;font-family:inherit;">' + (o.notes||'') + '</textarea>';
-  }
+}
