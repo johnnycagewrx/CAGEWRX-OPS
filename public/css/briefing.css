@@ -17,6 +17,8 @@
   font-weight: 800;
   color: #fff;
   margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .briefing-dateline {
@@ -119,6 +121,29 @@
 }
 
 .briefing-empty { font-size: 12.5px; color: #444; padding: 4px 0; }
+
+.briefing-top-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 14px 0 8px;
+  padding-top: 12px;
+  border-top: 1px solid #1a1a1a;
+}
+.briefing-top-product {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+.briefing-top-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4caf50;
+  flex-shrink: 0;
+}
 
 /* ---- Customize panel ---- */
 .briefing-panel {

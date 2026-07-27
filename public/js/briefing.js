@@ -4,15 +4,9 @@
 var today = new Date();
 var isMonday = today.getDay() === 1;
 
-// ---------------------------------------------------------------------
-// STILL MOCK - Google Ads, until its Worker cron job is set up too.
-// ---------------------------------------------------------------------
-var MOCK_ADS_WEEKEND = { spend: 412.18, clicks: 289, conv: 6, ctr: 3.8, cpa: 68.70, roas: 2.9 };
-var MOCK_ADS_WTD      = { spend: 918.44, clicks: 671, conv: 15, ctr: 4.1, cpa: 61.23, roas: 3.4 };
-
-// Live data. shopify starts null so the widget can show a loading/empty
-// state correctly until fetchShopifyMTD() resolves.
-var LIVE = { deadlines: [], shopify: null };
+// Live data. shopify and googleAds start null so widgets can show a
+// loading/empty state correctly until their fetches resolve.
+var LIVE = { deadlines: [], shopify: null, googleAdsWeekend: null, googleAdsWtd: null };
 
 var _sess = null;
 
@@ -88,6 +82,26 @@ function fetchShopifyMTD(cb) {
 }
 
 // ---------------------------------------------------------------------
+// GOOGLE ADS - real data from briefing_report_cache, written by the
+// google-ads-briefing-worker Cloudflare Worker on a schedule.
+// ---------------------------------------------------------------------
+function fetchGoogleAds(cb) {
+  sbFetch('GET', '/rest/v1/briefing_report_cache?report_type=in.(google_ads_weekend,google_ads_wtd)'
+    + '&select=report_type,payload&order=fetched_at.desc&limit=2', null, function (err, rows) {
+    if (err || !rows) {
+      console.error('Could not load Google Ads data:', err);
+      cb();
+      return;
+    }
+    rows.forEach(function (row) {
+      if (row.report_type === 'google_ads_weekend') LIVE.googleAdsWeekend = row.payload;
+      if (row.report_type === 'google_ads_wtd') LIVE.googleAdsWtd = row.payload;
+    });
+    cb();
+  });
+}
+
+// ---------------------------------------------------------------------
 // WIDGET REGISTRY
 // ---------------------------------------------------------------------
 var WIDGET_DEFS = [
@@ -111,20 +125,32 @@ var WIDGET_DEFS = [
     id: 'googleads', title: 'Google Ads', accent: '#42a5f5',
     meta: function () { return isMonday ? 'Weekend + week-to-date' : 'Week-to-date'; },
     render: function () {
-      var d = isMonday ? MOCK_ADS_WEEKEND : MOCK_ADS_WTD;
+      var d = isMonday ? LIVE.googleAdsWeekend : LIVE.googleAdsWtd;
+      if (!d) return '<p class="briefing-empty">No Google Ads data yet - the sync job may not have run.</p>';
       var label = isMonday ? 'Weekend recap (Sat-Sun)' : 'Week-to-date (Mon-today)';
       var note = isMonday ? '<p class="briefing-row-sub" style="margin-top:10px;">Week-to-date resets today.</p>' : '';
+      var campaignsHtml = '';
+      if (d.topCampaigns && d.topCampaigns.length) {
+        campaignsHtml = '<p class="briefing-top-title">Top campaigns</p><div>'
+          + d.topCampaigns.map(function (c, i) {
+            return '<div class="briefing-row">'
+              + '<div><p class="briefing-top-product">' + (i + 1) + '. ' + c.name + '</p>'
+              + '<p class="briefing-row-sub">' + c.impressions.toLocaleString() + ' impressions &middot; '
+              + c.clicks.toLocaleString() + ' clicks &middot; ' + c.conversions + ' conversions</p></div>'
+              + '</div>';
+          }).join('') + '</div>';
+      }
       return '<p class="briefing-row-sub" style="margin-bottom:10px;">' + label + '</p>'
         + '<div class="briefing-stat-grid">'
         + stat('Spend', '$' + d.spend.toFixed(2))
         + stat('Clicks', d.clicks)
-        + stat('Conversions', d.conv)
+        + stat('Conversions', d.conversions)
         + '</div>'
         + '<div class="briefing-stat-grid">'
         + stat('CTR', d.ctr + '%')
         + stat('Cost / conv', '$' + d.cpa.toFixed(2))
         + stat('ROAS', d.roas + 'x')
-        + '</div>' + note;
+        + '</div>' + note + campaignsHtml;
     }
   },
   {
@@ -133,12 +159,21 @@ var WIDGET_DEFS = [
     render: function () {
       var d = LIVE.shopify;
       if (!d) return '<p class="briefing-empty">No Shopify data yet - the sync job may not have run.</p>';
+      var topHtml = '';
+      if (d.topProducts && d.topProducts.length) {
+        topHtml = '<p class="briefing-top-title">Top 3 sellers this month</p><div>'
+          + d.topProducts.map(function (p, i) {
+            return '<div class="briefing-row">'
+              + '<div><p class="briefing-top-product">' + (i + 1) + '. ' + p.title + '</p></div>'
+              + '<span class="briefing-top-value">$' + p.revenue.toLocaleString() + '</span>'
+              + '</div>';
+          }).join('') + '</div>';
+      }
       return '<div class="briefing-stat-grid">'
         + stat('Revenue', '$' + d.revenue.toLocaleString())
         + stat('Orders', d.orders)
         + stat('AOV', '$' + d.aov.toFixed(2))
-        + '</div>'
-        + (d.topProduct ? '<p class="briefing-row-sub" style="margin-top:10px;">Top seller: ' + d.topProduct + '</p>' : '');
+        + '</div>' + topHtml;
     }
   }
 ];
@@ -273,8 +308,10 @@ renderSidebar('briefing');
 loadConfig(function () {
   fetchDeadlines(function () {
     fetchShopifyMTD(function () {
-      renderWidgets();
-      renderConfigList();
+      fetchGoogleAds(function () {
+        renderWidgets();
+        renderConfigList();
+      });
     });
   });
 });
