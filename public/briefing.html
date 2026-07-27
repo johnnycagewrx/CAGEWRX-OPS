@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morning Briefing - CAGEwrx Ops</title>
+  <meta name="theme-color" content="#060e18">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="CAGEwrx Ops">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/briefing.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <div id="sidebar-mount"></div>
+
+  <div class="app-content">
+    <div class="briefing-header">
+      <div>
+        <div class="briefing-greeting" id="briefing-greeting">Good morning</div>
+        <div class="briefing-dateline" id="briefing-dateline">-</div>
+      </div>
+      <button class="btn" id="briefing-customize-btn">&#x2699; Customize this page</button>
+    </div>
+
+    <div class="briefing-main">
+      <div class="banner" id="banner"></div>
+      <div class="briefing-grid" id="briefing-grid">
+        <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="briefing-scrim" id="briefing-scrim"></div>
+<div class="briefing-panel" id="briefing-panel">
+  <h2>Customize your briefing</h2>
+  <p class="hint">Toggle what shows up and reorder it. This is saved to your account only.</p>
+  <div id="briefing-cfg-list"></div>
+  <div style="display:flex;gap:8px;margin-top:18px;">
+    <button class="btn btn-green" id="briefing-save-btn">Save layout</button>
+    <button class="btn" id="briefing-close-btn">Close</button>
+  </div>
+  <div class="briefing-save-status" id="briefing-save-status"></div>
+</div>
+
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/briefing.js"></script>
+
+</body>
+</html>
