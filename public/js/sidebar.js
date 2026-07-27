@@ -24,34 +24,14 @@ function renderSidebar(activePage) {
   var popupDocActive  = activePage === 'docs'  ? ' active' : '';
   var popupUserActive = activePage === 'users' ? ' active' : '';
 
-  var logoHtml = activePage === 'briefing'
-    ? '<svg class="sidebar-logo" width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">'
-      + '<g stroke="#ffd400" stroke-width="2.5" stroke-linecap="round">'
-      + '<line x1="16" y1="1" x2="16" y2="5"/>'
-      + '<line x1="16" y1="27" x2="16" y2="31"/>'
-      + '<line x1="1" y1="16" x2="5" y2="16"/>'
-      + '<line x1="27" y1="16" x2="31" y2="16"/>'
-      + '<line x1="5.5" y1="5.5" x2="8.3" y2="8.3"/>'
-      + '<line x1="23.7" y1="23.7" x2="26.5" y2="26.5"/>'
-      + '<line x1="5.5" y1="26.5" x2="8.3" y2="23.7"/>'
-      + '<line x1="23.7" y1="8.3" x2="26.5" y2="5.5"/>'
-      + '</g>'
-      + '<circle cx="16" cy="16" r="9.5" fill="#ffd400"/>'
-      + '<rect x="7" y="14.5" width="7" height="4.5" rx="2" fill="#111"/>'
-      + '<rect x="18" y="14.5" width="7" height="4.5" rx="2" fill="#111"/>'
-      + '<line x1="14" y1="16.5" x2="18" y2="16.5" stroke="#111" stroke-width="1.5"/>'
-      + '<path d="M 12 22 Q 16 24.5 20 22" stroke="#b8860b" stroke-width="1.4" fill="none" stroke-linecap="round"/>'
-      + '</svg>'
-    : '<img class="sidebar-logo" src="img/favicon.png" alt="CW">';
-
   var html = ''
     + '<div class="sidebar" id="app-sidebar">'
     + '<div class="sidebar-logo-wrap">'
-    + logoHtml
+    + '<img class="sidebar-logo" src="img/favicon.png" alt="CW">'
     + '<span class="sidebar-brand">CAGEWRX OPS</span>'
     + '</div>'
     + '<div class="sidebar-nav">'
-    + navLink('briefing',   'briefing.html',   '&#x2600;',  'Morning Briefing', activePage)
+    + navLink('briefing',   'briefing.html',   sunIcon(),  'Morning Briefing', activePage)
     + navLink('orders',     'ops.html',        '&#x1F6CE;', 'Orders',       activePage)
     + navLink('production', 'production.html', '&#x1F527;', 'Production',   activePage)
     + navLink('faq',        'faq.html',        '&#x2753;',  'FAQ',          activePage)
@@ -101,6 +81,26 @@ function closeAdminSubmenu() {
   if (backdrop) backdrop.classList.remove('open');
 }
 
+
+function sunIcon() {
+  return '<svg width="18" height="18" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" style="vertical-align:-3px;">'
+    + '<g stroke="#ffd400" stroke-width="2.5" stroke-linecap="round">'
+    + '<line x1="16" y1="1" x2="16" y2="5"/>'
+    + '<line x1="16" y1="27" x2="16" y2="31"/>'
+    + '<line x1="1" y1="16" x2="5" y2="16"/>'
+    + '<line x1="27" y1="16" x2="31" y2="16"/>'
+    + '<line x1="5.5" y1="5.5" x2="8.3" y2="8.3"/>'
+    + '<line x1="23.7" y1="23.7" x2="26.5" y2="26.5"/>'
+    + '<line x1="5.5" y1="26.5" x2="8.3" y2="23.7"/>'
+    + '<line x1="23.7" y1="8.3" x2="26.5" y2="5.5"/>'
+    + '</g>'
+    + '<circle cx="16" cy="16" r="9.5" fill="#ffd400"/>'
+    + '<rect x="7" y="14.5" width="7" height="4.5" rx="2" fill="#111"/>'
+    + '<rect x="18" y="14.5" width="7" height="4.5" rx="2" fill="#111"/>'
+    + '<line x1="14" y1="16.5" x2="18" y2="16.5" stroke="#111" stroke-width="1.5"/>'
+    + '<path d="M 12 22 Q 16 24.5 20 22" stroke="#b8860b" stroke-width="1.4" fill="none" stroke-linecap="round"/>'
+    + '</svg>';
+}
 
 function navLink(key, href, icon, label, activePage) {
   var isActive = key === activePage;

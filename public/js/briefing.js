@@ -37,11 +37,28 @@ function sbUpsert(path, onConflictCols, rows, cb) {
 }
 
 // ---------------------------------------------------------------------
-// DEADLINES - real data from briefing_deadlines_view
+// DEADLINES - merges manual entries (briefing_deadlines) with Production
+// tasks (tasks table) that have a due date set. Sorted soonest-first.
+// Color rule: red <= 2 days out (incl. overdue), yellow 3-5 days, green > 5.
 // ---------------------------------------------------------------------
-function formatDueDate(dueDateStr) {
-  var due = new Date(dueDateStr + 'T00:00:00');
-  var diffDays = Math.round((due - new Date(today.toDateString())) / 86400000);
+function parseDateFlexible(str) {
+  if (!str) return null;
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) return new Date(str.slice(0, 10) + 'T00:00:00');
+  var mdy = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (mdy) return new Date(mdy[3] + '-' + mdy[1].padStart(2, '0') + '-' + mdy[2].padStart(2, '0') + 'T00:00:00');
+  var d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function computeUrgencyTag(dueDate) {
+  var diffDays = Math.round((dueDate - new Date(today.toDateString())) / 86400000);
+  if (diffDays <= 2) return 'urgent';
+  if (diffDays <= 5) return 'soon';
+  return 'ok';
+}
+
+function formatDueDate(dueDate) {
+  var diffDays = Math.round((dueDate - new Date(today.toDateString())) / 86400000);
   if (diffDays < 0) return 'Overdue';
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Tomorrow';
@@ -49,17 +66,28 @@ function formatDueDate(dueDateStr) {
 }
 
 function fetchDeadlines(cb) {
-  sbFetch('GET', '/rest/v1/briefing_deadlines_view?select=title,due_date,urgency&order=due_date.asc', null, function (err, rows) {
-    if (err || !rows) {
-      console.error('Could not load deadlines:', err);
-      LIVE.deadlines = [];
+  sbFetch('GET', '/rest/v1/briefing_deadlines?select=title,due_date', null, function (err1, manualRows) {
+    sbFetch('GET', '/rest/v1/tasks?select=title,due_date,assigned_to', null, function (err2, taskRows) {
+      var combined = [];
+
+      (err1 || !manualRows ? [] : manualRows).forEach(function (row) {
+        var d = parseDateFlexible(row.due_date);
+        if (!d) return;
+        combined.push({ name: row.title, dateObj: d, tag: computeUrgencyTag(d), due: formatDueDate(d) });
+      });
+
+      (err2 || !taskRows ? [] : taskRows).forEach(function (row) {
+        if (!row.due_date) return; // only tasks with a due date belong on the briefing
+        var d = parseDateFlexible(row.due_date);
+        if (!d) return;
+        var label = row.title + (row.assigned_to ? ' \u2014 ' + row.assigned_to : '');
+        combined.push({ name: label, dateObj: d, tag: computeUrgencyTag(d), due: formatDueDate(d) });
+      });
+
+      combined.sort(function (a, b) { return a.dateObj - b.dateObj; });
+      LIVE.deadlines = combined;
       cb();
-      return;
-    }
-    LIVE.deadlines = rows.map(function (row) {
-      return { name: row.title, due: formatDueDate(row.due_date), tag: row.urgency };
     });
-    cb();
   });
 }
 
