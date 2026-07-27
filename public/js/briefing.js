@@ -5,16 +5,14 @@ var today = new Date();
 var isMonday = today.getDay() === 1;
 
 // ---------------------------------------------------------------------
-// STILL MOCK - swap these two blocks out once the Cloudflare Worker cron
-// jobs are writing into briefing_report_cache (see integration notes).
+// STILL MOCK - Google Ads, until its Worker cron job is set up too.
 // ---------------------------------------------------------------------
 var MOCK_ADS_WEEKEND = { spend: 412.18, clicks: 289, conv: 6, ctr: 3.8, cpa: 68.70, roas: 2.9 };
 var MOCK_ADS_WTD      = { spend: 918.44, clicks: 671, conv: 15, ctr: 4.1, cpa: 61.23, roas: 3.4 };
-var MOCK_SHOPIFY_MTD  = { revenue: 48210, orders: 96, aov: 502.19, conv: 2.1, topProduct: 'RZR Pro R Super Shorty Cage' };
 
-// Live data, filled in by fetchDeadlines() before the first render.
-// Starts empty so an empty state shows correctly if the fetch is slow.
-var LIVE = { deadlines: [] };
+// Live data. shopify starts null so the widget can show a loading/empty
+// state correctly until fetchShopifyMTD() resolves.
+var LIVE = { deadlines: [], shopify: null };
 
 var _sess = null;
 
@@ -72,6 +70,24 @@ function fetchDeadlines(cb) {
 }
 
 // ---------------------------------------------------------------------
+// SHOPIFY MTD - real data from briefing_report_cache, written by the
+// shopify-briefing-worker Cloudflare Worker on a schedule.
+// ---------------------------------------------------------------------
+function fetchShopifyMTD(cb) {
+  sbFetch('GET', '/rest/v1/briefing_report_cache?report_type=eq.shopify_mtd'
+    + '&select=payload,period_start,period_end&order=fetched_at.desc&limit=1', null, function (err, rows) {
+    if (err || !rows || !rows.length) {
+      console.error('Could not load Shopify MTD data:', err);
+      LIVE.shopify = null;
+      cb();
+      return;
+    }
+    LIVE.shopify = rows[0].payload;
+    cb();
+  });
+}
+
+// ---------------------------------------------------------------------
 // WIDGET REGISTRY
 // ---------------------------------------------------------------------
 var WIDGET_DEFS = [
@@ -115,13 +131,14 @@ var WIDGET_DEFS = [
     id: 'shopify', title: 'Shopify - month to date', accent: '#4caf50',
     meta: function () { return today.toLocaleString('default', { month: 'long' }); },
     render: function () {
-      var d = MOCK_SHOPIFY_MTD;
+      var d = LIVE.shopify;
+      if (!d) return '<p class="briefing-empty">No Shopify data yet - the sync job may not have run.</p>';
       return '<div class="briefing-stat-grid">'
         + stat('Revenue', '$' + d.revenue.toLocaleString())
         + stat('Orders', d.orders)
         + stat('AOV', '$' + d.aov.toFixed(2))
         + '</div>'
-        + '<p class="briefing-row-sub" style="margin-top:10px;">Top seller: ' + d.topProduct + ' &middot; conversion ' + d.conv + '%</p>';
+        + (d.topProduct ? '<p class="briefing-row-sub" style="margin-top:10px;">Top seller: ' + d.topProduct + '</p>' : '');
     }
   }
 ];
@@ -255,8 +272,10 @@ renderSidebar('briefing');
 
 loadConfig(function () {
   fetchDeadlines(function () {
-    renderWidgets();
-    renderConfigList();
+    fetchShopifyMTD(function () {
+      renderWidgets();
+      renderConfigList();
+    });
   });
 });
 
