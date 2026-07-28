@@ -623,18 +623,33 @@ renderSidebar('briefing');
     + ' - here\'s what needs your attention';
 })();
 
-loadConfig(function () {
+function loadAllData(cb) {
   fetchDeadlines(function () {
     fetchInbox(function () {
       fetchShopifyMTD(function () {
         fetchGoogleAds(function () {
           renderWidgets();
-          renderConfigList();
+          if (cb) cb();
         });
       });
     });
   });
+}
+
+loadConfig(function () {
+  loadAllData(renderConfigList);
 });
+
+function refreshBriefing() {
+  var btn = document.getElementById('briefing-refresh-btn');
+  btn.disabled = true;
+  btn.textContent = 'Refreshing...';
+  loadAllData(function () {
+    btn.disabled = false;
+    btn.innerHTML = '&#x21BB; Refresh';
+    showBanner('Briefing refreshed', 'success');
+  });
+}
 
 function openBriefingCustomize() {
   var dd = document.getElementById('av-dd');

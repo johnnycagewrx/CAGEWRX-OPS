@@ -73,7 +73,7 @@
 }
 
 .briefing-card-body-capped {
-  max-height: 340px;
+  max-height: 480px;
   overflow-y: auto;
 }
 
