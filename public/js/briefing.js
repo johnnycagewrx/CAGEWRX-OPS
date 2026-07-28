@@ -96,8 +96,8 @@ function isAssignedToCurrentUser(assignedTo) {
 }
 
 function fetchInbox(cb) {
-  sbFetch('GET', '/rest/v1/briefing_inbox_items?select=mailbox,subject,from_address,received_at'
-    + '&order=received_at.asc', null, function (err, rows) {
+  sbFetch('GET', '/rest/v1/briefing_inbox_items?select=gmail_thread_id,mailbox,subject,from_address,received_at'
+    + '&dismissed=eq.false&order=received_at.asc', null, function (err, rows) {
     if (err || !rows) {
       console.error('Could not load inbox data:', err);
       cb();
@@ -109,9 +109,18 @@ function fetchInbox(cb) {
       var age = hours < 24 ? hours + 'h' : Math.round(hours / 24) + 'd';
       var nameMatch = (row.from_address || '').match(/^([^<]+)</);
       var fromName = nameMatch ? nameMatch[1].trim() : (row.from_address || '').split('@')[0];
-      return { mailbox: row.mailbox, subject: row.subject, fromName: fromName, age: age + ' ago' };
+      return { threadId: row.gmail_thread_id, mailbox: row.mailbox, subject: row.subject, fromName: fromName, age: age + ' ago' };
     });
     cb();
+  });
+}
+
+function dismissEmail(threadId) {
+  sbFetch('PATCH', '/rest/v1/briefing_inbox_items?gmail_thread_id=eq.' + encodeURIComponent(threadId),
+    { dismissed: true }, function (err) {
+    if (err) { showBanner('Could not clear that email: ' + err, 'error'); return; }
+    LIVE.inbox = LIVE.inbox.filter(function (m) { return m.threadId !== threadId; });
+    renderWidgets();
   });
 }
 
@@ -190,7 +199,7 @@ function fetchGoogleAds(cb) {
 // ---------------------------------------------------------------------
 var WIDGET_DEFS = [
   {
-    id: 'deadlines', title: 'Upcoming deadlines', accent: '#ffa726',
+    id: 'deadlines', title: 'Upcoming deadlines', accent: '#ffa726', capped: true,
     meta: function () { return LIVE.deadlines.length + ' tracked'; },
     render: function () {
       if (!LIVE.deadlines.length) return '<p class="briefing-empty">Nothing on the calendar right now.</p>';
@@ -206,7 +215,7 @@ var WIDGET_DEFS = [
     }
   },
   {
-    id: 'inbox', title: 'Needs a reply', accent: '#ef5350',
+    id: 'inbox', title: 'Needs a reply', accent: '#ef5350', capped: true,
     meta: function () { return LIVE.inbox.length + ' waiting'; },
     render: function () {
       if (!LIVE.inbox.length) return '<p class="briefing-empty">Nothing waiting on a reply right now.</p>';
@@ -215,6 +224,7 @@ var WIDGET_DEFS = [
         html += '<div class="briefing-row">'
           + '<div><p class="briefing-row-title">' + m.subject + '</p>'
           + '<p class="briefing-row-sub">' + m.mailbox + ' &middot; ' + m.fromName + ' &middot; ' + m.age + '</p></div>'
+          + '<button class="briefing-clear-btn" data-clear-thread="' + m.threadId + '" title="Clear - no action needed">&#x2715;</button>'
           + '</div>';
       });
       html += '</div>';
@@ -222,7 +232,7 @@ var WIDGET_DEFS = [
     }
   },
   {
-    id: 'googleads', title: 'Google Ads', accent: '#42a5f5',
+    id: 'googleads', title: 'Google Ads', accent: '#42a5f5', capped: true,
     meta: function () { return isMonday ? 'Weekend + week-to-date' : 'Week-to-date'; },
     render: function () {
       var d = isMonday ? LIVE.googleAdsWeekend : LIVE.googleAdsWtd;
@@ -254,7 +264,7 @@ var WIDGET_DEFS = [
     }
   },
   {
-    id: 'shopify', title: 'Shopify - month to date', accent: '#4caf50',
+    id: 'shopify', title: 'Shopify - month to date', accent: '#4caf50', capped: true,
     meta: function () { return today.toLocaleString('default', { month: 'long' }); },
     render: function () {
       var d = LIVE.shopify;
@@ -545,10 +555,11 @@ function renderWidgets() {
     .filter(Boolean)
     .map(function (w) {
       var spanStyle = w.fullWidth ? 'grid-column:1/-1;' : '';
-      return '<div class="briefing-card" style="' + spanStyle + 'border-top:2px solid ' + w.accent + '">'
+      var bodyClass = w.capped ? 'briefing-card-body briefing-card-body-capped' : 'briefing-card-body';
+      return '<div class="briefing-card" data-widget="' + w.id + '" style="' + spanStyle + 'border-top:2px solid ' + w.accent + '">'
         + '<div class="briefing-card-head"><h3>' + w.title + '</h3>'
         + '<span class="briefing-card-meta">' + w.meta() + '</span></div>'
-        + '<div class="briefing-card-body">' + w.render() + '</div>'
+        + '<div class="' + bodyClass + '">' + w.render() + '</div>'
         + '</div>';
     }).join('');
   grid.innerHTML = html || '<p class="briefing-empty">Nothing turned on - open Customize to add widgets.</p>';
@@ -638,6 +649,11 @@ function closeBriefingPanel() {
   document.getElementById('briefing-scrim').classList.remove('open');
 }
 document.getElementById('briefing-save-btn').addEventListener('click', saveConfig);
+
+document.getElementById('briefing-grid').addEventListener('click', function (e) {
+  var btn = e.target.closest('[data-clear-thread]');
+  if (btn) dismissEmail(btn.getAttribute('data-clear-thread'));
+});
 
 // ---------------------------------------------------------------------
 // ADD DEADLINE MODAL

@@ -32,6 +32,15 @@
   margin-top: 8px;
 }
 
+/* On wide screens, give the 4 summary cards (Deadlines, Needs a reply,
+   Google Ads, Shopify) fixed proportional widths so they all sit in one
+   row - Deadlines runs narrower since it's usually just a short list. */
+@media (min-width: 1300px) {
+  .briefing-grid {
+    grid-template-columns: 0.8fr 1.1fr 1.1fr 1.1fr;
+  }
+}
+
 .briefing-card {
   background: #111;
   border: 1px solid #2a2a2a;
@@ -63,6 +72,11 @@
   padding: 14px 18px 18px;
 }
 
+.briefing-card-body-capped {
+  max-height: 340px;
+  overflow-y: auto;
+}
+
 .briefing-row {
   display: flex;
   justify-content: space-between;
@@ -72,6 +86,23 @@
   border-bottom: 1px solid #1a1a1a;
 }
 .briefing-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+.briefing-clear-btn {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #333;
+  background: #161616;
+  color: #777;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.briefing-clear-btn:hover { background: #2a0f0f; border-color: #4a1010; color: #ef5350; }
 
 .briefing-row-title { font-size: 13px; font-weight: 600; color: #e0e0e0; margin: 0 0 2px; }
 .briefing-row-sub { font-size: 11.5px; color: #666; margin: 0; }
