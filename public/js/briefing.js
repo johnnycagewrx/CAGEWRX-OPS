@@ -7,7 +7,7 @@ var isMonday = today.getDay() === 1;
 // Live data. shopify and googleAds start null so widgets can show a
 // loading/empty state correctly until their fetches resolve.
 var LIVE = {
-  deadlines: [],
+  deadlines: [], inbox: [],
   shopify: null, shopifyPrev: null,
   googleAdsWeekend: null, googleAdsWtd: null,
   googleAdsMtd: null, googleAdsMtdPrev: null
@@ -73,10 +73,46 @@ function formatDueDate(dueDate) {
 function isAssignedToCurrentUser(assignedTo) {
   if (!assignedTo || !_sess) return false;
   var a = assignedTo.trim().toLowerCase();
+  if (!a) return false;
+
+  var candidates = [];
   var fullName = (_sess.full_name || '').trim().toLowerCase();
-  var firstName = fullName.split(' ')[0];
-  if (!a || !fullName) return false;
-  return a === fullName || a === firstName || a.indexOf(firstName) !== -1;
+  if (fullName) {
+    candidates.push(fullName);
+    candidates.push(fullName.split(' ')[0]);
+  }
+  var email = (_sess.user && _sess.user.email) || _sess.email || '';
+  var emailUser = email.split('@')[0].trim().toLowerCase();
+  if (emailUser) candidates.push(emailUser);
+
+  if (!candidates.length) {
+    // No identity info available at all yet - don't hide everything,
+    // that's worse than occasionally showing an extra task.
+    console.error('No user identity available to match assigned_to against.');
+    return true;
+  }
+
+  return candidates.some(function (c) { return a === c || a.indexOf(c) !== -1 || c.indexOf(a) !== -1; });
+}
+
+function fetchInbox(cb) {
+  sbFetch('GET', '/rest/v1/briefing_inbox_items?select=mailbox,subject,from_address,received_at'
+    + '&order=received_at.asc', null, function (err, rows) {
+    if (err || !rows) {
+      console.error('Could not load inbox data:', err);
+      cb();
+      return;
+    }
+    LIVE.inbox = rows.map(function (row) {
+      var received = new Date(row.received_at);
+      var hours = Math.max(0, Math.round((today - received) / 3600000));
+      var age = hours < 24 ? hours + 'h' : Math.round(hours / 24) + 'd';
+      var nameMatch = (row.from_address || '').match(/^([^<]+)</);
+      var fromName = nameMatch ? nameMatch[1].trim() : (row.from_address || '').split('@')[0];
+      return { mailbox: row.mailbox, subject: row.subject, fromName: fromName, age: age + ' ago' };
+    });
+    cb();
+  });
 }
 
 function fetchDeadlines(cb) {
@@ -163,6 +199,22 @@ var WIDGET_DEFS = [
         html += '<div class="briefing-row">'
           + '<div><p class="briefing-row-title">' + d.name + '</p></div>'
           + '<span class="briefing-tag ' + d.tag + '">' + d.due + '</span>'
+          + '</div>';
+      });
+      html += '</div>';
+      return html;
+    }
+  },
+  {
+    id: 'inbox', title: 'Needs a reply', accent: '#ef5350',
+    meta: function () { return LIVE.inbox.length + ' waiting'; },
+    render: function () {
+      if (!LIVE.inbox.length) return '<p class="briefing-empty">Nothing waiting on a reply right now.</p>';
+      var html = '<div>';
+      LIVE.inbox.forEach(function (m) {
+        html += '<div class="briefing-row">'
+          + '<div><p class="briefing-row-title">' + m.subject + '</p>'
+          + '<p class="briefing-row-sub">' + m.mailbox + ' &middot; ' + m.fromName + ' &middot; ' + m.age + '</p></div>'
           + '</div>';
       });
       html += '</div>';
@@ -562,10 +614,12 @@ renderSidebar('briefing');
 
 loadConfig(function () {
   fetchDeadlines(function () {
-    fetchShopifyMTD(function () {
-      fetchGoogleAds(function () {
-        renderWidgets();
-        renderConfigList();
+    fetchInbox(function () {
+      fetchShopifyMTD(function () {
+        fetchGoogleAds(function () {
+          renderWidgets();
+          renderConfigList();
+        });
       });
     });
   });
