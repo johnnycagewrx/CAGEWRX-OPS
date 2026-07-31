@@ -101,7 +101,9 @@ function isAssignedToCurrentUser(assignedTo) {
 // inferred. Add an entry here before wiring up any future mailbox.
 var MAILBOX_ACCESS = {
   'sales@cagewrx.com': ['johnny@cagewrx.com'],
-  'johnny@cagewrx.com': ['johnny@cagewrx.com']
+  'johnny@cagewrx.com': ['johnny@cagewrx.com'],
+  'colby@cagewrx.com': ['colby@cagewrx.com'],
+  'shipping@cagewrx.com': ['shipping@cagewrx.com']
 };
 
 function currentUserEmail() {
