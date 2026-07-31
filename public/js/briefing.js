@@ -95,6 +95,25 @@ function isAssignedToCurrentUser(assignedTo) {
   return candidates.some(function (c) { return a === c || a.indexOf(c) !== -1 || c.indexOf(a) !== -1; });
 }
 
+// Which logged-in users can see which mailbox. Not the same as "mailbox
+// equals your login email" - sales@ is a shared inbox, not tied to any
+// one login, so it needs its own explicit rule rather than being
+// inferred. Add an entry here before wiring up any future mailbox.
+var MAILBOX_ACCESS = {
+  'sales@cagewrx.com': ['johnny@cagewrx.com'],
+  'johnny@cagewrx.com': ['johnny@cagewrx.com']
+};
+
+function currentUserEmail() {
+  return (((_sess && _sess.user && _sess.user.email) || (_sess && _sess.email) || '')).trim().toLowerCase();
+}
+
+function canSeeMailbox(mailbox) {
+  var allowed = MAILBOX_ACCESS[(mailbox || '').toLowerCase()];
+  if (!allowed) return false; // unconfigured mailbox - nobody sees it until it's added above
+  return allowed.indexOf(currentUserEmail()) !== -1;
+}
+
 function fetchInbox(cb) {
   sbFetch('GET', '/rest/v1/briefing_inbox_items?select=gmail_thread_id,mailbox,subject,from_address,received_at'
     + '&dismissed=eq.false&order=received_at.asc', null, function (err, rows) {
@@ -103,14 +122,16 @@ function fetchInbox(cb) {
       cb();
       return;
     }
-    LIVE.inbox = rows.map(function (row) {
-      var received = new Date(row.received_at);
-      var hours = Math.max(0, Math.round((today - received) / 3600000));
-      var age = hours < 24 ? hours + 'h' : Math.round(hours / 24) + 'd';
-      var nameMatch = (row.from_address || '').match(/^([^<]+)</);
-      var fromName = nameMatch ? nameMatch[1].trim() : (row.from_address || '').split('@')[0];
-      return { threadId: row.gmail_thread_id, mailbox: row.mailbox, subject: row.subject, fromName: fromName, age: age + ' ago' };
-    });
+    LIVE.inbox = rows
+      .filter(function (row) { return canSeeMailbox(row.mailbox); })
+      .map(function (row) {
+        var received = new Date(row.received_at);
+        var hours = Math.max(0, Math.round((today - received) / 3600000));
+        var age = hours < 24 ? hours + 'h' : Math.round(hours / 24) + 'd';
+        var nameMatch = (row.from_address || '').match(/^([^<]+)</);
+        var fromName = nameMatch ? nameMatch[1].trim() : (row.from_address || '').split('@')[0];
+        return { threadId: row.gmail_thread_id, mailbox: row.mailbox, subject: row.subject, fromName: fromName, age: age + ' ago' };
+      });
     cb();
   });
 }
