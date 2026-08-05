@@ -629,23 +629,11 @@ function renderConfigList() {
 
 // ---------------------------------------------------------------------
 // BOOT
+// Called explicitly by ops.html's own boot script, after _sess is
+// already established there - this file no longer sets up its own
+// session/avatar/sidebar, since those are now shared with the Orders
+// tab on the same page.
 // ---------------------------------------------------------------------
-_sess = requireAuth();
-initAvatarDropdown();
-renderAvatar(_sess);
-fetchProfile(_sess, function (sess) { _sess = sess; renderAvatar(_sess); });
-renderSidebar('briefing');
-
-(function () {
-  var hour = today.getHours();
-  document.getElementById('briefing-greeting').textContent =
-    (hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening')
-    + (_sess.full_name ? ', ' + _sess.full_name.split(' ')[0] : '');
-  document.getElementById('briefing-dateline').textContent =
-    today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
-    + ' - here\'s what needs your attention';
-})();
-
 function loadAllData(cb) {
   fetchDeadlines(function () {
     fetchInbox(function () {
@@ -659,9 +647,28 @@ function loadAllData(cb) {
   });
 }
 
-loadConfig(function () {
-  loadAllData(renderConfigList);
-});
+function initBriefingTab() {
+  var hour = today.getHours();
+  document.getElementById('briefing-greeting').textContent =
+    (hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening')
+    + (_sess.full_name ? ', ' + _sess.full_name.split(' ')[0] : '');
+  document.getElementById('briefing-dateline').textContent =
+    today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+    + ' - here\'s what needs your attention';
+
+  loadConfig(function () {
+    loadAllData(renderConfigList);
+  });
+
+  document.getElementById('briefing-close-btn').addEventListener('click', closeBriefingPanel);
+  document.getElementById('briefing-scrim').addEventListener('click', closeBriefingPanel);
+  document.getElementById('briefing-save-btn').addEventListener('click', saveConfig);
+
+  document.getElementById('briefing-grid').addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-clear-thread]');
+    if (btn) dismissEmail(btn.getAttribute('data-clear-thread'));
+  });
+}
 
 function refreshBriefing() {
   var btn = document.getElementById('briefing-refresh-btn');
@@ -680,18 +687,10 @@ function openBriefingCustomize() {
   document.getElementById('briefing-panel').classList.add('open');
   document.getElementById('briefing-scrim').classList.add('open');
 }
-document.getElementById('briefing-close-btn').addEventListener('click', closeBriefingPanel);
-document.getElementById('briefing-scrim').addEventListener('click', closeBriefingPanel);
 function closeBriefingPanel() {
   document.getElementById('briefing-panel').classList.remove('open');
   document.getElementById('briefing-scrim').classList.remove('open');
 }
-document.getElementById('briefing-save-btn').addEventListener('click', saveConfig);
-
-document.getElementById('briefing-grid').addEventListener('click', function (e) {
-  var btn = e.target.closest('[data-clear-thread]');
-  if (btn) dismissEmail(btn.getAttribute('data-clear-thread'));
-});
 
 // ---------------------------------------------------------------------
 // ADD DEADLINE MODAL

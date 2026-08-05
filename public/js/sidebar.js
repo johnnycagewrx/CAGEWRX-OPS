@@ -31,7 +31,7 @@ function renderSidebar(activePage) {
     + '<span class="sidebar-brand">CAGEWRX OPS</span>'
     + '</div>'
     + '<div class="sidebar-nav">'
-    + navLink('briefing',   'briefing.html',   sunIcon(),  'Morning Briefing', activePage)
+    + navLink('briefing',   'ops.html?tab=briefing', sunIcon(),  'Morning Briefing', activePage)
     + navLink('orders',     'ops.html',        '&#x1F6CE;', 'Orders',       activePage)
     + navLink('production', 'production.html', '&#x1F527;', 'Production',   activePage)
     + navLink('faq',        'faq.html',        '&#x2753;',  'FAQ',          activePage)
