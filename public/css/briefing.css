@@ -46,6 +46,8 @@
   border: 1px solid #2a2a2a;
   border-radius: 14px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .briefing-card-head {
@@ -70,6 +72,7 @@
 
 .briefing-card-body {
   padding: 14px 18px 18px;
+  flex: 1;
 }
 
 .briefing-card-body-capped {
@@ -379,7 +382,7 @@ body.light-mode .briefing-card-head h3 { color: #1a1a1a; }
 body.light-mode .briefing-card-meta { color: #888; }
 
 /* Card body matches .stage-body: the gray content area behind the white shell */
-body.light-mode .briefing-card-body { background: #c8cdd5; }
+body.light-mode .briefing-card-body { background: #dadfe5; }
 
 body.light-mode .briefing-row { border-bottom-color: #b8bdc5; }
 body.light-mode .briefing-row-title { color: #1a1a1a; }
