@@ -526,10 +526,13 @@ function renderLowStock(items) {
     var out = (it.available || 0) <= 0;
     var pillClass = out ? 'task-pill-priority-high' : 'task-pill-priority-medium';
     var qtyLabel = out ? 'OUT OF STOCK' : (it.available + ' left');
+    var titleHtml = lsEsc(it.title)
+      + (it.variant ? ' <span style="color:#888;font-weight:400;">(' + lsEsc(it.variant) + ')</span>' : '');
+    titleHtml = it.productAdminUrl
+      ? '<a class="task-title" style="text-decoration:none;" href="' + lsEsc(it.productAdminUrl) + '" target="_blank" rel="noopener noreferrer">' + titleHtml + '</a>'
+      : '<span class="task-title">' + titleHtml + '</span>';
     return '<div class="task-card" style="cursor:default;">'
-      + '<div class="task-top"><span class="task-title">' + lsEsc(it.title)
-      + (it.variant ? ' <span style="color:#888;font-weight:400;">(' + lsEsc(it.variant) + ')</span>' : '')
-      + '</span></div>'
+      + '<div class="task-top">' + titleHtml + '</div>'
       + (it.sku ? '<div class="task-desc">SKU: ' + lsEsc(it.sku) + '</div>' : '')
       + '<div class="task-meta">'
       + '<span class="task-pill ' + pillClass + '">' + qtyLabel + '</span>'
