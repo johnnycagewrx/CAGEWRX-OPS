@@ -11,7 +11,7 @@
   <link rel="icon" type="image/png" href="img/favicon.png">
   <link rel="apple-touch-icon" href="img/favicon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="img/favicon.png">
-  <link rel="stylesheet" href="css/main.css?v=1782237763">
+  <link rel="stylesheet" href="css/main.css?v=1782237764">
   <link rel="stylesheet" href="css/sidebar.css">
   <link rel="stylesheet" href="css/production.css">
 </head>
@@ -121,6 +121,19 @@
 
   </div><!-- end .prod-pipeline -->
 
+  <!-- Low Stock (Shopify) -->
+  <div class="prod-stage" id="pstage-lowstock" style="margin-top:14px;">
+    <div class="prod-stage-header" style="background:#1a1500;cursor:pointer;" onclick="toggleLowStockSection()">
+      <span style="font-size:15px;">&#x26A0;</span>
+      <p class="prod-stage-title" style="color:#ffca28;">LOW STOCK (SHOPIFY)</p>
+      <span class="prod-stage-count" id="pcnt-lowstock" style="background:#2a2200;color:#ffca28;">-</span>
+      <span class="prod-stage-chevron open" id="pchv-lowstock">&#x25BE;</span>
+    </div>
+    <div class="prod-stage-body" id="lowstock-body" style="display:block;">
+      <div style="padding:18px;text-align:center;"><div class="spinner"></div></div>
+    </div>
+  </div>
+
 </div><!-- end .prod-main -->
 
 <!-- ===== TASK MODAL ===== -->
@@ -192,7 +205,7 @@
 <script src="js/activity-log-helper.js"></script>
 <script src="js/sidebar.js"></script>
 <script src="js/calendar.js"></script>
-<script src="js/production.js"></script>
+<script src="js/production.js?v=1782237764"></script>
 <script>
   var _sess = requireAuth();
   initAvatarDropdown();
@@ -229,6 +242,7 @@
     loadProdUsers(function() {
       loadTasks();
     });
+    loadLowStock();
   });
 </script>
 

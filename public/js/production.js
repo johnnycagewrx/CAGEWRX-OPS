@@ -478,3 +478,63 @@ function openAddTaskModal(section) {
   openTaskModal(null);
   if (section) document.getElementById('task-section').value = section;
 }
+
+// ---- Low Stock (Shopify) ----
+// Reads the most recent 'shopify_low_stock' row from briefing_report_cache.
+// That row is written by the same shopify-briefing-worker Cloudflare Worker
+// that feeds the Morning Briefing's Shopify widgets (see js/briefing.js).
+function lsEsc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function toggleLowStockSection() {
+  var body = document.getElementById('lowstock-body');
+  var chv  = document.getElementById('pchv-lowstock');
+  if (!body) return;
+  var isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (chv) chv.classList.toggle('open', !isOpen);
+}
+
+function loadLowStock() {
+  var body = document.getElementById('lowstock-body');
+  var cnt = document.getElementById('pcnt-lowstock');
+  sbFetch('GET', '/rest/v1/briefing_report_cache?report_type=eq.shopify_low_stock'
+    + '&select=payload,fetched_at&order=fetched_at.desc&limit=1', null, function (err, rows) {
+    if (!body) return;
+    if (err) {
+      body.innerHTML = '<div class="task-empty">Could not load low stock data.</div>';
+      return;
+    }
+    var payload = rows && rows[0] && rows[0].payload;
+    var items = (payload && payload.items) || [];
+    if (cnt) cnt.textContent = items.length;
+    renderLowStock(items);
+  });
+}
+
+function renderLowStock(items) {
+  var body = document.getElementById('lowstock-body');
+  if (!body) return;
+  if (!items.length) {
+    body.innerHTML = '<div class="task-empty">Nothing low on stock right now.</div>';
+    return;
+  }
+  body.innerHTML = items.map(function (it) {
+    var out = (it.available || 0) <= 0;
+    var pillClass = out ? 'task-pill-priority-high' : 'task-pill-priority-medium';
+    var qtyLabel = out ? 'OUT OF STOCK' : (it.available + ' left');
+    return '<div class="task-card" style="cursor:default;">'
+      + '<div class="task-top"><span class="task-title">' + lsEsc(it.title)
+      + (it.variant ? ' <span style="color:#888;font-weight:400;">(' + lsEsc(it.variant) + ')</span>' : '')
+      + '</span></div>'
+      + (it.sku ? '<div class="task-desc">SKU: ' + lsEsc(it.sku) + '</div>' : '')
+      + '<div class="task-meta">'
+      + '<span class="task-pill ' + pillClass + '">' + qtyLabel + '</span>'
+      + (it.threshold != null ? '<span class="task-pill task-pill-assigned">Threshold: ' + lsEsc(it.threshold) + '</span>' : '')
+      + '</div>'
+      + '</div>';
+  }).join('');
+}

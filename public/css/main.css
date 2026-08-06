@@ -574,9 +574,9 @@ body.light-mode .task-card:hover { border-color: #b0aca7; box-shadow: 0 2px 8px 
 body.light-mode .task-title { color: #1a1a1a; }
 body.light-mode .task-desc { color: #666; }
 body.light-mode .task-pill { background: #f0ede8; color: #555; border-color: #ccc8c3; }
-body.light-mode .task-pill-high { background: #fdecea; color: #c62828; border-color: #e57373; }
-body.light-mode .task-pill-medium { background: #fff8e1; color: #e65100; border-color: #ffb74d; }
-body.light-mode .task-pill-low { background: #e6f4ea; color: #2e7d32; border-color: #81c784; }
+body.light-mode .task-pill-priority-high { background: #fdecea; color: #c62828; border-color: #e57373; }
+body.light-mode .task-pill-priority-medium { background: #fff8e1; color: #e65100; border-color: #ffb74d; }
+body.light-mode .task-pill-priority-low { background: #e6f4ea; color: #2e7d32; border-color: #81c784; }
 body.light-mode .task-pill-assigned { background: #e3f0fc; color: #0d47a1; border-color: #7ab3e0; }
 body.light-mode .task-empty { color: #bbb; }
 body.light-mode .welcome-bar { background: #fff; border-color: #d8d4cf; color: #444; }
