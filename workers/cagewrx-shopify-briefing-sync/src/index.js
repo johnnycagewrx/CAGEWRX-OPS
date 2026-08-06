@@ -5,6 +5,7 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
 var SHOPIFY_API_VERSION = "2026-07";
 var LOW_STOCK_DEFAULT_THRESHOLD = 5;
 var LOW_STOCK_MAX_ITEMS = 25;
+var LOW_STOCK_EXCLUDED_COLLECTION_HANDLES = ["apparel"];
 
 function fmt(d) {
   return d.toISOString().slice(0, 10);
@@ -156,6 +157,13 @@ async function fetchLowStockVariants(accessToken, env, threshold) {
               title
               legacyResourceId
               status
+              collections(first: 20) {
+                edges {
+                  node {
+                    handle
+                  }
+                }
+              }
             }
           }
         }
@@ -188,6 +196,10 @@ async function fetchLowStockVariants(accessToken, env, threshold) {
       // Skip anything not ACTIVE (draft/archived products aren't for sale,
       // so restocking them isn't relevant here).
       if (node.product.status !== "ACTIVE") return;
+      // Skip products in excluded collections (e.g. apparel) - not
+      // something the production floor needs to see restock alerts for.
+      const collectionHandles = (node.product.collections.edges || []).map((e) => e.node.handle);
+      if (collectionHandles.some((h) => LOW_STOCK_EXCLUDED_COLLECTION_HANDLES.includes(h))) return;
       // The actual low-stock check, done here against live field data
       // instead of Shopify's search index.
       if (node.inventoryQuantity == null || node.inventoryQuantity > threshold) return;
