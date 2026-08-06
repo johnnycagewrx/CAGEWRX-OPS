@@ -134,9 +134,15 @@ __name(fetchOrdersForRange, "fetchOrdersForRange");
 // fetch above already uses. Sorted lowest-stock-first, capped so the
 // Production page section doesn't get flooded on a large catalog.
 async function fetchLowStockVariants(accessToken, env, threshold) {
+  // No "query:" search filter here on purpose - Shopify's query-string search
+  // (e.g. "inventory_quantity:<=N") runs against a search index that isn't
+  // guaranteed to reflect live inventory counts, which was silently hiding
+  // real low-stock tracked items while surfacing stale untracked ones.
+  // Instead: page through every variant and filter on the actual field
+  // values returned, which are always live.
   const graphqlQuery = `
-    query($cursor: String, $q: String!) {
-      productVariants(first: 100, after: $cursor, query: $q) {
+    query($cursor: String) {
+      productVariants(first: 100, after: $cursor) {
         pageInfo { hasNextPage endCursor }
         edges {
           node {
@@ -156,7 +162,6 @@ async function fetchLowStockVariants(accessToken, env, threshold) {
       }
     }
   `;
-  const searchQuery = `inventory_quantity:<=${threshold}`;
   let cursor = null;
   let hasNextPage = true;
   const items = [];
@@ -167,7 +172,7 @@ async function fetchLowStockVariants(accessToken, env, threshold) {
         "Content-Type": "application/json",
         "X-Shopify-Access-Token": accessToken
       },
-      body: JSON.stringify({ query: graphqlQuery, variables: { cursor, q: searchQuery } })
+      body: JSON.stringify({ query: graphqlQuery, variables: { cursor } })
     });
     if (!res.ok) {
       throw new Error("Shopify GraphQL request failed: " + res.status + " " + await res.text());
@@ -183,6 +188,9 @@ async function fetchLowStockVariants(accessToken, env, threshold) {
       // Skip anything not ACTIVE (draft/archived products aren't for sale,
       // so restocking them isn't relevant here).
       if (node.product.status !== "ACTIVE") return;
+      // The actual low-stock check, done here against live field data
+      // instead of Shopify's search index.
+      if (node.inventoryQuantity == null || node.inventoryQuantity > threshold) return;
       items.push({
         title: node.product.title,
         variant: node.title !== "Default Title" ? node.title : null,
