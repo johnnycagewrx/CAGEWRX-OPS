@@ -352,3 +352,48 @@
   color: #666;
   white-space: nowrap;
 }
+
+/* ---- Light mode ---- */
+body.light-mode .briefing-greeting { color: #111; }
+body.light-mode .briefing-dateline { color: #777; }
+
+body.light-mode .briefing-card { background: #fff; border-color: #e0e0e0; }
+body.light-mode .briefing-card-head { border-bottom-color: #f0f0f0; }
+body.light-mode .briefing-card-head h3 { color: #222; }
+body.light-mode .briefing-card-meta { color: #999; }
+
+body.light-mode .briefing-row { border-bottom-color: #f0f0f0; }
+body.light-mode .briefing-row-title { color: #222; }
+body.light-mode .briefing-row-sub { color: #777; }
+body.light-mode .briefing-empty { color: #ccc; }
+
+body.light-mode .briefing-top-title { color: #111; border-top-color: #f0f0f0; }
+body.light-mode .briefing-top-product { color: #222; }
+body.light-mode .briefing-top-qty { color: #888; }
+
+body.light-mode .briefing-stat { background: #f5f5f5; }
+body.light-mode .briefing-stat-label { color: #888; }
+body.light-mode .briefing-stat-value { color: #222; }
+
+body.light-mode .briefing-top-row { border-bottom-color: #f0f0f0; }
+
+body.light-mode .briefing-chart-legend-item { color: #555; }
+body.light-mode .briefing-chart-legend-item:hover { background: #f5f5f5; }
+body.light-mode .briefing-chart-legend-note { color: #999; }
+body.light-mode .briefing-chart-xaxis-label { color: #999; }
+body.light-mode .briefing-chart-tooltip { background: #fff; border-color: #e0e0e0; box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
+body.light-mode .tooltip-day { color: #999; }
+body.light-mode .tooltip-row { color: #444; }
+body.light-mode .tooltip-row b { color: #111; }
+body.light-mode .tooltip-prev { color: #999; }
+body.light-mode .briefing-trend-bar-track { background: #eee; }
+
+body.light-mode .briefing-panel { background: #fff; border-left-color: #e0e0e0; }
+body.light-mode .briefing-panel h2 { color: #111; }
+body.light-mode .briefing-panel .hint { color: #888; }
+body.light-mode .briefing-cfg-item { border-bottom-color: #f0f0f0; }
+body.light-mode .briefing-cfg-item .name { color: #333; }
+body.light-mode .briefing-cfg-item .order-btns button { background: #f5f5f5; border-color: #e0e0e0; color: #777; }
+
+body.light-mode .briefing-clear-btn { background: #f5f5f5; border-color: #e0e0e0; color: #999; }
+body.light-mode .briefing-clear-btn:hover { background: #ffebee; border-color: #ef5350; color: #ef5350; }
