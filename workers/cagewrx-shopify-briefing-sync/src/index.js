@@ -149,6 +149,7 @@ async function fetchLowStockVariants(accessToken, env, threshold) {
             product {
               title
               legacyResourceId
+              status
             }
           }
         }
@@ -179,6 +180,9 @@ async function fetchLowStockVariants(accessToken, env, threshold) {
       // count isn't meaningful (often wildly negative) and they shouldn't
       // show up as "low stock".
       if (!node.inventoryItem || !node.inventoryItem.tracked) return;
+      // Skip anything not ACTIVE (draft/archived products aren't for sale,
+      // so restocking them isn't relevant here).
+      if (node.product.status !== "ACTIVE") return;
       items.push({
         title: node.product.title,
         variant: node.title !== "Default Title" ? node.title : null,
