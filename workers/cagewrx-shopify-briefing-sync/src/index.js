@@ -143,6 +143,9 @@ async function fetchLowStockVariants(accessToken, env, threshold) {
             title
             sku
             inventoryQuantity
+            inventoryItem {
+              tracked
+            }
             product {
               title
               legacyResourceId
@@ -172,6 +175,10 @@ async function fetchLowStockVariants(accessToken, env, threshold) {
     if (json.errors) throw new Error("Shopify GraphQL errors: " + JSON.stringify(json.errors));
     const edges = json.data.productVariants.edges;
     edges.forEach(({ node }) => {
+      // Skip variants with inventory tracking turned off - their available
+      // count isn't meaningful (often wildly negative) and they shouldn't
+      // show up as "low stock".
+      if (!node.inventoryItem || !node.inventoryItem.tracked) return;
       items.push({
         title: node.product.title,
         variant: node.title !== "Default Title" ? node.title : null,
