@@ -294,7 +294,7 @@ var WIDGET_DEFS = [
       if (!d) return '<p class="briefing-empty">No Shopify data yet - the sync job may not have run.</p>';
       var topHtml = '';
       if (d.topProducts && d.topProducts.length) {
-        topHtml = '<p class="briefing-top-title">Top 5 sellers (last 30 days)</p><div>'
+        topHtml = '<p class="briefing-top-title">Top 5 sellers (last 30 days)</p><div class="briefing-top-sellers">'
           + d.topProducts.map(function (p, i) {
             return '<div class="briefing-row briefing-top-row">'
               + '<p class="briefing-top-product">' + (i + 1) + '. ' + p.title + '</p>'

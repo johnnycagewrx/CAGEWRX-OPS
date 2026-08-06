@@ -10,6 +10,7 @@ body {
   background: #080808;
   color: #e0e0e0;
   min-height: 100vh;
+  color-scheme: dark;
 }
 
 /* ---- Buttons ---- */
@@ -190,7 +191,21 @@ body {
   max-width: 95vw;
   max-height: 90vh;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #333 #1a1a1a;
 }
+.modal::-webkit-scrollbar { width: 6px; }
+.modal::-webkit-scrollbar-track { background: #1a1a1a; }
+.modal::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+.modal::-webkit-scrollbar-thumb:hover { background: #444; }
+
+#split-items-list {
+  scrollbar-width: thin;
+  scrollbar-color: #333 #1a1a1a;
+}
+#split-items-list::-webkit-scrollbar { width: 6px; }
+#split-items-list::-webkit-scrollbar-track { background: #1a1a1a; }
+#split-items-list::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
 .modal-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 16px; }
 .modal label {
   font-size: 11px;
@@ -350,6 +365,7 @@ body {
 body.light-mode {
   background: #ffffff;
   color: #1a1a1a;
+  color-scheme: light;
 }
 
 /* Header */
@@ -495,6 +511,13 @@ body.light-mode .modal textarea:focus { border-color: #e53935; }
 body.light-mode .modal-btn-cancel { background: #f0ede8; border-color: #ccc; color: #555; }
 body.light-mode .modal-btn-save { background: #e53935; color: #fff; border-color: #c62828; }
 body.light-mode .modal-btn-save:hover { background: #c62828; }
+body.light-mode .modal { scrollbar-color: #b0aca7 #f5f2ee; }
+body.light-mode .modal::-webkit-scrollbar-track { background: #f5f2ee; }
+body.light-mode .modal::-webkit-scrollbar-thumb { background: #b0aca7; }
+body.light-mode .modal::-webkit-scrollbar-thumb:hover { background: #999; }
+body.light-mode #split-items-list { scrollbar-color: #b0aca7 #f5f2ee; }
+body.light-mode #split-items-list::-webkit-scrollbar-track { background: #f5f2ee; }
+body.light-mode #split-items-list::-webkit-scrollbar-thumb { background: #b0aca7; }
 
 /* Date input */
 body.light-mode .date-input-btn { background: #f5f2ee; border-color: #ccc8c3; color: #333; }

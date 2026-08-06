@@ -997,6 +997,7 @@ body.light-mode .stage-body::-webkit-scrollbar-thumb:hover { background: #8a8580
 body.light-mode .kits-body { scrollbar-color: #a8a29c transparent; }
 body.light-mode .kits-body::-webkit-scrollbar-track { background: transparent; }
 body.light-mode .kits-body::-webkit-scrollbar-thumb { background: #a8a29c; }
+body.light-mode .kits-body::-webkit-scrollbar-thumb:hover { background: #8a8580; }
 
 body.light-mode .cal-scroll-area { scrollbar-color: #a8a29c transparent; }
 body.light-mode .cal-scroll-area::-webkit-scrollbar-track { background: transparent; }

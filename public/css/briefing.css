@@ -233,6 +233,9 @@
 .briefing-save-status { font-size: 11.5px; margin-top: 10px; height: 14px; }
 
 /* ---- Top sellers row with QTY column ---- */
+.briefing-top-sellers {
+  border-radius: 10px;
+}
 .briefing-top-row {
   display: flex;
   align-items: center;
@@ -387,6 +390,16 @@ body.light-mode .briefing-top-title { color: #1a1a1a; border-top-color: #b8bdc5;
 body.light-mode .briefing-top-product { color: #1a1a1a; }
 body.light-mode .briefing-top-qty { color: #555; }
 body.light-mode .briefing-top-row { border-bottom-color: #b8bdc5; }
+
+/* Top 5 sellers list gets its own white card so the text reads clearly
+   against the gray card body, matching the .briefing-stat tile treatment. */
+body.light-mode .briefing-top-sellers {
+  background: #fff;
+  border: 1px solid #d8d4cf;
+  border-radius: 10px;
+  padding: 2px 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
 
 /* Stat tiles match .stat: white boxes with shadow, sitting on the gray body */
 body.light-mode .briefing-stat { background: #fff; border: 1px solid #d8d4cf; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
