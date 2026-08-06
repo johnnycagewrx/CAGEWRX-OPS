@@ -296,3 +296,9 @@ body.light-mode .task-empty { color: #ccc; }
   border-bottom: 3px solid #42a5f5;
   margin-bottom: -1px;
 }
+
+/* ---- Light mode scrollbar (add to css/production.css) ---- */
+body.light-mode .prod-stage-body { scrollbar-color: #a8a29c transparent; }
+body.light-mode .prod-stage-body::-webkit-scrollbar-track { background: transparent; }
+body.light-mode .prod-stage-body::-webkit-scrollbar-thumb { background: #a8a29c; }
+body.light-mode .prod-stage-body::-webkit-scrollbar-thumb:hover { background: #8a8580; }

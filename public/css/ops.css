@@ -987,3 +987,17 @@ body.light-mode [id="col-oos"] > div button { color: #fff !important; }
 body.light-mode [id="col-oos"] button.oos-add-btn,
 body.light-mode .oos-add-btn { background: #8b0000 !important; }
 body.light-mode .oos-add-btn:hover { background: #6a0000 !important; }
+
+/* ---- Light mode scrollbars (add to css/ops.css) ---- */
+body.light-mode .stage-body { scrollbar-color: #a8a29c transparent; }
+body.light-mode .stage-body::-webkit-scrollbar-track { background: transparent; }
+body.light-mode .stage-body::-webkit-scrollbar-thumb { background: #a8a29c; }
+body.light-mode .stage-body::-webkit-scrollbar-thumb:hover { background: #8a8580; }
+
+body.light-mode .kits-body { scrollbar-color: #a8a29c transparent; }
+body.light-mode .kits-body::-webkit-scrollbar-track { background: transparent; }
+body.light-mode .kits-body::-webkit-scrollbar-thumb { background: #a8a29c; }
+
+body.light-mode .cal-scroll-area { scrollbar-color: #a8a29c transparent; }
+body.light-mode .cal-scroll-area::-webkit-scrollbar-track { background: transparent; }
+body.light-mode .cal-scroll-area::-webkit-scrollbar-thumb { background: #a8a29c; }
