@@ -27,12 +27,6 @@
 <!-- ===== HEADER ===== -->
 <div id="header-mount"></div>
 
-<!-- Tab switcher between Orders and Morning Briefing -->
-<div class="ops-tab-switcher">
-  <button class="ops-tab-btn" id="ops-tab-btn-orders" onclick="switchOpsTab('orders')">Orders</button>
-  <button class="ops-tab-btn" id="ops-tab-btn-briefing" onclick="switchOpsTab('briefing')">Morning Briefing</button>
-</div>
-
 <div id="tab-orders" class="ops-tab-section active">
 
 <!-- Search bar below shared header (ops-specific) -->
@@ -498,8 +492,6 @@
     document.getElementById('tab-briefing').classList.toggle('active', tab === 'briefing');
     document.getElementById('tabbtns-orders').style.display = tab === 'orders' ? '' : 'none';
     document.getElementById('tabbtns-briefing').style.display = tab === 'briefing' ? '' : 'none';
-    document.getElementById('ops-tab-btn-orders').classList.toggle('active', tab === 'orders');
-    document.getElementById('ops-tab-btn-briefing').classList.toggle('active', tab === 'briefing');
     var url = new URL(window.location.href);
     if (tab === 'briefing') url.searchParams.set('tab', 'briefing'); else url.searchParams.delete('tab');
     history.replaceState(null, '', url);
