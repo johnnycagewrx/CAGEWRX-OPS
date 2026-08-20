@@ -689,7 +689,7 @@ function toggleAssemblySection() {
   var chv  = document.getElementById('chv-needsassembly');
   if (!body) return;
   var isOpen = body.style.display !== 'none';
-  body.style.display = isOpen ? 'none' : 'block';
+  body.style.display = isOpen ? 'none' : 'grid';
   if (chv) chv.classList.toggle('open', !isOpen);
 }
 
@@ -732,7 +732,7 @@ function renderNeedsAssembly(items) {
   // Auto collapse when empty, auto open when it has items.
   var body = document.getElementById('col-needsassembly');
   var chv  = document.getElementById('chv-needsassembly');
-  if (body) body.style.display = cnt ? 'block' : 'none';
+  if (body) body.style.display = cnt ? 'grid' : 'none';
   if (chv) chv.classList.toggle('open', !!cnt);
   if (!body) return;
   if (!cnt) { body.innerHTML = '<div class="empty">No items</div>'; return; }
