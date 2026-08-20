@@ -150,15 +150,16 @@ var undoStack = []; // { action, data } - last 10 actions
 
 // ---- Tab config ----
 var TAB_LABELS = {
-  new:        'New Orders',
-  ready:      'Ready to Ship',
-  backorder:  'Backordered',
-  dropship:   'Drop Shipping',
-  assembled:  'Assembled Cage Orders',
-  powdercoat: 'At Powder Coating',
-  pickup:     'Ready for Pickup',
-  cagekits:   'Cage Kits',
-  tagpull:    'Tag and Pull from Inventory'
+  new:           'New Orders',
+  ready:         'Ready to Ship',
+  backorder:     'Backordered',
+  dropship:      'Drop Shipping',
+  assembled:     'Assembled Cage Orders',
+  powdercoat:    'At Powder Coating',
+  pickup:        'Ready for Pickup',
+  cagekits:      'Cage Kits',
+  tagpull:       'Tag and Pull from Inventory',
+  needsassembly: 'Needs to be Assembled'
 };
 
 // ---- Helpers ----
@@ -447,7 +448,8 @@ function buildStatusSelect(id, currentTab) {
     { val: 'ready',      label: '&#x1F4EC; Ready to Ship' },
     { val: 'pickup',     label: '&#x1F3E0; Ready for Pickup' },
     { val: 'tagpull',    label: '&#x1F3F7; Tag & Pull' },
-    { val: 'cagekits',   label: '&#x1F4E6; Cage Kit' }
+    { val: 'cagekits',   label: '&#x1F4E6; Cage Kit' },
+    { val: 'needsassembly', label: '&#x1F527; Needs to be Assembled' }
   ];
   var opts = tabs.map(function(t) {
     return '<option value="' + t.val + '"' + (t.val === currentTab ? ' selected' : '') + '>' + t.label + '</option>';
@@ -678,6 +680,93 @@ function renderBackorder(items) {
 }
 
 
+// ---- Needs to be Assembled ----
+var ASSEMBLY_PRIORITY_LABELS = { high: 'High', medium: 'Medium', low: 'Low' };
+var ASSEMBLY_PRIORITY_ORDER = { high: 0, medium: 1, low: 2, '': 3 };
+
+function toggleAssemblySection() {
+  var body = document.getElementById('col-needsassembly');
+  var chv  = document.getElementById('chv-needsassembly');
+  if (!body) return;
+  var isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (chv) chv.classList.toggle('open', !isOpen);
+}
+
+function buildAssemblyPrioritySelect(id, current) {
+  var opts = '<option value=""' + (!current ? ' selected' : '') + '>&mdash; Priority &mdash;</option>'
+    + Object.keys(ASSEMBLY_PRIORITY_LABELS).map(function (val) {
+      return '<option value="' + val + '"' + (val === current ? ' selected' : '') + '>' + ASSEMBLY_PRIORITY_LABELS[val] + '</option>';
+    }).join('');
+  return '<select class="status-select" data-id="' + id + '" onclick="event.stopPropagation()" onchange="updateAssemblyPriority(this)">' + opts + '</select>';
+}
+
+function updateAssemblyPriority(selectEl) {
+  var id = selectEl.getAttribute('data-id');
+  var priority = selectEl.value;
+  var o = orderCache[id];
+  var prevPriority = o ? o.assembly_priority : null;
+  sbFetch('PATCH', '/rest/v1/orders?id=eq.' + id, { assembly_priority: priority }, function (err) {
+    if (err) { showBanner('Update failed: ' + err, 'error'); return; }
+    logActivity('orders', 'update', {
+      recordId: id,
+      fieldChanges: { assembly_priority: { old: prevPriority, new: priority } },
+      summary: 'Order #' + ((o && o.order_num) || '') + ' assembly priority set to ' + (ASSEMBLY_PRIORITY_LABELS[priority] || 'none')
+    });
+    loadData(true);
+  });
+}
+
+function renderNeedsAssembly(items) {
+  items = items.slice().sort(function (a, b) {
+    var pa = ASSEMBLY_PRIORITY_ORDER[a.assembly_priority || ''];
+    var pb = ASSEMBLY_PRIORITY_ORDER[b.assembly_priority || ''];
+    if (pa !== pb) return pa - pb;
+    return parseInt(a.order_num || 0, 10) - parseInt(b.order_num || 0, 10);
+  });
+
+  var cnt = items.length;
+  var cntEl = document.getElementById('cnt-needsassembly');
+  if (cntEl) cntEl.textContent = cnt;
+
+  // Auto collapse when empty, auto open when it has items.
+  var body = document.getElementById('col-needsassembly');
+  var chv  = document.getElementById('chv-needsassembly');
+  if (body) body.style.display = cnt ? 'block' : 'none';
+  if (chv) chv.classList.toggle('open', !!cnt);
+  if (!body) return;
+  if (!cnt) { body.innerHTML = '<div class="empty">No items</div>'; return; }
+
+  var h = '';
+  for (var i = 0; i < items.length; i++) {
+    var o = items[i];
+    orderCache[o.id] = o;
+    var isHigh = o.assembly_priority === 'high';
+    var link = 'https://admin.shopify.com/store/ccee09-8a/orders?query=' + o.order_num;
+    var safeJson = JSON.stringify(o).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    var metaHTML = pill(o.color, 'pill-color') + pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order');
+
+    h += '<div class="order-card' + (isHigh ? ' assembly-priority-high' : '') + '" draggable="true"' +
+      ' data-id="' + o.id + '" data-tab="needsassembly"' +
+      ' ondragstart="onDragStart(event,\'needsassembly\',\'' + safeJson + '\')"' +
+      ' ondragend="onDragEnd()">' +
+      '<div class="order-top">' +
+        '<a class="order-num" href="' + link + '" target="_blank">#' + o.order_num + '</a>' +
+        '<div class="order-actions">' +
+          splitBtn(o) +
+          '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
+          doneBtn('needsassembly', o.id) +
+        '</div>' +
+      '</div>' +
+      '<div class="order-item" style="cursor:pointer;" onclick="editFromCard(this.closest(\'.order-card\'))">' + (o.sku || o.item || '') + '</div>' +
+      '<div class="order-meta">' + metaHTML + '</div>' +
+      '<div style="margin-top:6px;">' + buildAssemblyPrioritySelect(o.id, o.assembly_priority || '') + '</div>' +
+    '</div>';
+  }
+  body.innerHTML = h;
+}
+
+
 // ---- Cascade build date modal ----
 var _cascadeDelta = 0;
 var _cascadePivot = '';
@@ -902,7 +991,7 @@ function deleteOos(id) {
 
 function renderData(data) {
   orderCache = {};
-  var grouped = { new: [], ready: [], backorder: [], dropship: [], assembled: [], powdercoat: [], pickup: [], tagpull: [] };
+  var grouped = { new: [], ready: [], backorder: [], dropship: [], assembled: [], powdercoat: [], pickup: [], tagpull: [], needsassembly: [] };
   (data.orders || []).forEach(function (o) { if (grouped[o.tab]) grouped[o.tab].push(o); });
 
   fillStage('col-new', 'cnt-new', 'stat-new', 'new', grouped.new, function (o) {
@@ -929,6 +1018,7 @@ function renderData(data) {
 
   renderKits(data.kits || []);
   renderTagPull(grouped.tagpull);
+  renderNeedsAssembly(grouped.needsassembly);
 
   var now = new Date();
   var lu = document.getElementById('last-updated');
@@ -945,13 +1035,13 @@ function renderData(data) {
 }
 
 function setLoadingSpinners() {
-  var ids = ['col-new', 'col-ready', 'col-back', 'col-dropship', 'col-assembled', 'col-powder', 'col-pickup', 'col-kits'];
+  var ids = ['col-new', 'col-ready', 'col-back', 'col-dropship', 'col-assembled', 'col-powder', 'col-pickup', 'col-kits', 'col-needsassembly'];
   ids.forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.innerHTML = spinnerHTML();
   });
   var cids = ['stat-new', 'stat-ready', 'stat-back', 'stat-dropship', 'stat-assembled', 'stat-powder', 'stat-pickup', 'stat-kits',
-              'cnt-new', 'cnt-ready', 'cnt-back', 'cnt-dropship', 'cnt-assembled', 'cnt-powder', 'cnt-pickup', 'cnt-kits'];
+              'cnt-new', 'cnt-ready', 'cnt-back', 'cnt-dropship', 'cnt-assembled', 'cnt-powder', 'cnt-pickup', 'cnt-kits', 'cnt-needsassembly'];
   cids.forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.textContent = '-';
@@ -1280,7 +1370,8 @@ function openEditModal(tab, o) {
     { val: 'ready',      label: 'Ready to Ship' },
     { val: 'pickup',     label: 'Ready for Pickup' },
     { val: 'tagpull',    label: 'Tag & Pull' },
-    { val: 'cagekits',   label: 'Cage Kit' }
+    { val: 'cagekits',   label: 'Cage Kit' },
+    { val: 'needsassembly', label: 'Needs to be Assembled' }
   ];
   var tabOpts = allTabs.map(function(t) {
     return '<option value="' + t.val + '"' + (t.val === tab ? ' selected' : '') + '>' + t.label + '</option>';

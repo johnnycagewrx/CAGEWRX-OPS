@@ -749,6 +749,17 @@ body.light-mode .cal-legend-item span[style] { color: #000 !important; }
   border: 2px solid #4caf50;
 }
 
+/* ---- Priority: Needs to be Assembled ---- */
+.order-card.assembly-priority-high {
+  border: 2px solid #ef5350;
+  animation: glow-red 1.6s ease-in-out infinite;
+}
+
+@keyframes glow-red {
+  0%, 100% { box-shadow: 0 0 6px 1px rgba(239, 83, 80, 0.55); }
+  50%      { box-shadow: 0 0 16px 4px rgba(239, 83, 80, 0.9); }
+}
+
 .ship-now {
   font-size: 10px;
   color: #fff;
