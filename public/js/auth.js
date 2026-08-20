@@ -134,3 +134,37 @@ function initAvatarDropdown() {
     }
   });
 }
+
+/**
+ * Global ESC-to-close for modals, the avatar dropdown, and the briefing
+ * customize panel. Runs on every page since this file is loaded everywhere.
+ * Closes by toggling the same classes/styles each popup's own close
+ * function uses, so no page-specific wiring is needed.
+ */
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+
+  var avDd = document.getElementById('av-dd');
+  if (avDd && avDd.style.display === 'block') { avDd.style.display = 'none'; return; }
+
+  // The date picker can stack on top of another modal (e.g. Add Order) -
+  // close just the picker first so the form underneath isn't lost too.
+  var datePicker = document.getElementById('date-picker-modal');
+  if (datePicker && datePicker.classList.contains('open')) {
+    datePicker.classList.remove('open');
+    return;
+  }
+
+  var openOverlays = document.querySelectorAll('.modal-overlay.open, .move-overlay.open');
+  if (openOverlays.length) {
+    openOverlays.forEach(function (el) { el.classList.remove('open'); });
+    return;
+  }
+
+  var briefingPanel = document.getElementById('briefing-panel');
+  if (briefingPanel && briefingPanel.classList.contains('open')) {
+    briefingPanel.classList.remove('open');
+    var scrim = document.getElementById('briefing-scrim');
+    if (scrim) scrim.classList.remove('open');
+  }
+});

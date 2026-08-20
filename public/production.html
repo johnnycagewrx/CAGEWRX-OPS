@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="img/favicon.png">
   <link rel="stylesheet" href="css/main.css?v=1782237764">
   <link rel="stylesheet" href="css/sidebar.css">
-  <link rel="stylesheet" href="css/production.css">
+  <link rel="stylesheet" href="css/production.css?v=1782237766">
 </head>
 <body>
 
@@ -134,48 +134,94 @@
     </div>
   </div>
 
+  <!-- Open PO's -->
+  <div class="prod-stage" id="pstage-openpo" style="margin-top:14px;">
+    <div class="prod-stage-header" style="background:#0a1a0f;cursor:pointer;" onclick="toggleOpenPoSection()">
+      <span style="font-size:15px;">&#x1F4CB;</span>
+      <p class="prod-stage-title" style="color:#66bb6a;">OPEN PO'S</p>
+      <span class="prod-stage-count" id="pcnt-openpo" style="background:#0f2a17;color:#66bb6a;">-</span>
+      <button type="button" class="btn" style="margin-left:auto;padding:3px 10px;font-size:11px;" onclick="event.stopPropagation();openAddItemModal('openpo')">+ Add PO</button>
+      <span class="prod-stage-chevron open" id="pchv-openpo">&#x25BE;</span>
+    </div>
+    <div class="prod-stage-body" id="openpo-body" style="display:block;">
+      <div style="padding:18px;text-align:center;"><div class="spinner"></div></div>
+    </div>
+  </div>
+
 </div><!-- end .prod-main -->
 
-<!-- ===== TASK MODAL ===== -->
+<!-- ===== TASK / OPEN PO MODAL ===== -->
 <div class="modal-overlay" id="task-modal">
   <div class="modal">
-    <div class="modal-title" id="task-modal-title">New Task</div>
+    <div class="modal-title" id="task-modal-title">New Item</div>
 
     <label>Section</label>
-    <select id="task-section">
+    <select id="task-section" onchange="updateItemFields()">
       <option value="shipping">Shipping</option>
       <option value="shop">Shop</option>
       <option value="sme">Sales / Marketing</option>
       <option value="engineering">Engineering</option>
       <option value="needtomake">Need to Make</option>
+      <option value="openpo">Open PO's</option>
     </select>
 
-    <label>Title</label>
+    <label id="task-title-label">Title</label>
     <input type="text" id="task-title" placeholder="e.g. Order more powder coat hooks">
 
-    <label>Description (optional)</label>
-    <textarea id="task-desc" placeholder="Additional details..."></textarea>
-
-    <label>Assigned To (optional)</label>
-    <div id="task-assigned-wrap">
-      <select id="task-assigned" style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;font-family:inherit;margin-top:4px;">
-        <option value="">— Unassigned —</option>
-      </select>
+    <div id="task-desc-wrap">
+      <label>Description (optional)</label>
+      <textarea id="task-desc" placeholder="Additional details..."></textarea>
     </div>
 
-    <label>Due Date (optional)</label>
-    <input type="hidden" id="task-due" value="">
-    <button type="button" class="date-input-btn" data-picker-target="task-due">
-      <span style="color:#333;">Select date...</span>
-      <span style="color:#555;font-size:12px;"> &#x1F4C5;</span>
-    </button>
+    <div id="task-assigned-outer-wrap">
+      <label>Assigned To (optional)</label>
+      <div id="task-assigned-wrap">
+        <select id="task-assigned" style="width:100%;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;font-size:13px;color:#e0e0e0;outline:none;font-family:inherit;margin-top:4px;">
+          <option value="">— Unassigned —</option>
+        </select>
+      </div>
+    </div>
 
-    <label>Priority (optional)</label>
-    <input type="hidden" id="task-priority" value="">
-    <div class="priority-select-row">
-      <button type="button" class="priority-btn" data-priority="low" onclick="setPriority('low')">Low</button>
-      <button type="button" class="priority-btn" data-priority="medium" onclick="setPriority('medium')">Medium</button>
-      <button type="button" class="priority-btn" data-priority="high" onclick="setPriority('high')">High</button>
+    <div id="task-due-wrap">
+      <label>Due Date (optional)</label>
+      <input type="hidden" id="task-due" value="">
+      <button type="button" class="date-input-btn" data-picker-target="task-due">
+        <span style="color:#333;">Select date...</span>
+        <span style="color:#555;font-size:12px;"> &#x1F4C5;</span>
+      </button>
+    </div>
+
+    <div id="task-priority-wrap">
+      <label>Priority (optional)</label>
+      <input type="hidden" id="task-priority" value="">
+      <div class="priority-select-row">
+        <button type="button" class="priority-btn" data-priority="low" onclick="setPriority('low')">Low</button>
+        <button type="button" class="priority-btn" data-priority="medium" onclick="setPriority('medium')">Medium</button>
+        <button type="button" class="priority-btn" data-priority="high" onclick="setPriority('high')">High</button>
+      </div>
+    </div>
+
+    <div id="po-fields-wrap" style="display:none;">
+      <label>Vendor (optional)</label>
+      <input type="text" id="po-vendor" placeholder="e.g. Acme Supply Co.">
+
+      <label>PO # (optional)</label>
+      <input type="text" id="po-num" placeholder="e.g. PO-12345">
+
+      <label>Status</label>
+      <select id="po-status">
+        <option value="need_to_submit">Need to Submit</option>
+        <option value="in_progress">In Progress</option>
+        <option value="eta">ETA</option>
+        <option value="arrived">Arrived</option>
+      </select>
+
+      <label>ETA (optional)</label>
+      <input type="hidden" id="po-eta" value="">
+      <button type="button" class="date-input-btn" data-picker-target="po-eta">
+        <span style="color:#333;">Select date...</span>
+        <span style="color:#555;font-size:12px;"> &#x1F4C5;</span>
+      </button>
     </div>
 
     <div class="modal-btns">
@@ -201,16 +247,16 @@
 
 <!-- ===== SCRIPTS ===== -->
 <script src="js/supabase.js"></script>
-<script src="js/auth.js"></script>
+<script src="js/auth.js?v=1782237766"></script>
 <script src="js/activity-log-helper.js"></script>
 <script src="js/sidebar.js"></script>
 <script src="js/calendar.js"></script>
-<script src="js/production.js?v=1782237765"></script>
+<script src="js/production.js?v=1782237766"></script>
 <script>
   var _sess = requireAuth();
   initAvatarDropdown();
   renderAvatar(_sess);
-  renderHeader({ title: 'PRODUCTION', buttons: '<button class="btn btn-green" onclick="openAddTaskModal()">+ Add Task</button><button class="btn" onclick="loadTasks()">&#x21BB; Refresh</button>' });
+  renderHeader({ title: 'PRODUCTION', buttons: '<button class="btn btn-green" onclick="openAddItemModal()">+ ADD ITEM</button><button class="btn" onclick="loadTasks();loadOpenPOs();">&#x21BB; Refresh</button>' });
   renderSidebar('production');
   initProdSections();
   initDatePickers();
@@ -243,6 +289,7 @@
       loadTasks();
     });
     loadLowStock();
+    loadOpenPOs();
   });
 </script>
 

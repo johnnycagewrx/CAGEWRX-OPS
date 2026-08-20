@@ -6,6 +6,8 @@ var taskCache = {};
 var dragTaskData = null;
 var dragTaskFromSection = null;
 var editingTask = null;
+var editingPO = null;
+var poCache = {};
 var activeAssigneeFilter = null;
 
 var SECTION_LABELS = {
@@ -17,6 +19,8 @@ var SECTION_LABELS = {
 };
 
 var PRIORITY_LABELS = { low: 'Low', medium: 'Medium', high: 'High' };
+var PO_STATUS_LABELS = { need_to_submit: 'Need to Submit', in_progress: 'In Progress', eta: 'ETA', arrived: 'Arrived' };
+var PO_STATUS_ORDER = { need_to_submit: 0, in_progress: 1, eta: 2, arrived: 3 };
 
 // ---- Stage open/close ----
 var openSections = {};
@@ -381,33 +385,64 @@ function tgv(id) {
 function editTaskFromCard(cardEl) {
   var id = cardEl.getAttribute('data-id');
   var t = taskCache[id];
-  if (t) openTaskModal(t);
+  if (t) openItemModal(t, 'task');
   else showBanner('Task data not found - refresh and try again', 'error');
 }
 
-function openTaskModal(t) {
-  editingTask = t || null;
-  var isEdit = !!t;
-  document.getElementById('task-modal-title').textContent = isEdit ? 'Edit Task' : 'New Task';
+function editPoFromCard(cardEl) {
+  var id = cardEl.getAttribute('data-id');
+  var p = poCache[id];
+  if (p) openItemModal(p, 'po');
+  else showBanner('PO data not found - refresh and try again', 'error');
+}
 
-  document.getElementById('task-section').value = (t && t.section) || 'shipping';
-  document.getElementById('task-title').value = (t && t.title) || '';
-  document.getElementById('task-desc').value = (t && t.description) || '';
-  resetDateBtn('task-due', (t && t.due_date) || '');
-  setPriority((t && t.priority) || '');
+// type: 'task' or 'po'. record is null for a new item.
+function openItemModal(record, type) {
+  editingTask = (type === 'task') ? record : null;
+  editingPO   = (type === 'po')   ? record : null;
+  var isEdit = !!record;
+  document.getElementById('task-modal-title').textContent = isEdit ? 'Edit Item' : 'New Item';
 
-  // Replace assigned field with dropdown
-  var assignedWrap = document.getElementById('task-assigned-wrap');
-  if (assignedWrap) {
-    assignedWrap.innerHTML = buildAssignedDropdown((t && t.assigned_to) || '');
+  if (type === 'po') {
+    document.getElementById('task-section').value = 'openpo';
+    document.getElementById('task-title').value = (record && record.title) || '';
+    document.getElementById('po-vendor').value = (record && record.vendor) || '';
+    document.getElementById('po-num').value = (record && record.po_num) || '';
+    document.getElementById('po-status').value = (record && record.status) || 'need_to_submit';
+    resetDateBtn('po-eta', (record && record.eta) || '');
+  } else {
+    document.getElementById('task-section').value = (record && record.section) || 'shipping';
+    document.getElementById('task-title').value = (record && record.title) || '';
+    document.getElementById('task-desc').value = (record && record.description) || '';
+    resetDateBtn('task-due', (record && record.due_date) || '');
+    setPriority((record && record.priority) || '');
+
+    // Replace assigned field with dropdown
+    var assignedWrap = document.getElementById('task-assigned-wrap');
+    if (assignedWrap) {
+      assignedWrap.innerHTML = buildAssignedDropdown((record && record.assigned_to) || '');
+    }
   }
 
+  updateItemFields();
   document.getElementById('task-modal').classList.add('open');
+}
+
+function updateItemFields() {
+  var isPO = document.getElementById('task-section').value === 'openpo';
+  document.getElementById('task-desc-wrap').style.display = isPO ? 'none' : '';
+  document.getElementById('task-assigned-outer-wrap').style.display = isPO ? 'none' : '';
+  document.getElementById('task-due-wrap').style.display = isPO ? 'none' : '';
+  document.getElementById('task-priority-wrap').style.display = isPO ? 'none' : '';
+  document.getElementById('po-fields-wrap').style.display = isPO ? '' : 'none';
+  document.getElementById('task-title-label').textContent = isPO ? 'PO Title / Item' : 'Title';
+  document.getElementById('task-title').placeholder = isPO ? 'e.g. Roll cage tubing restock' : 'e.g. Order more powder coat hooks';
 }
 
 function closeTaskModal() {
   document.getElementById('task-modal').classList.remove('open');
   editingTask = null;
+  editingPO = null;
 }
 
 function setPriority(p) {
@@ -421,6 +456,8 @@ function setPriority(p) {
 }
 
 function confirmTaskSave() {
+  if (tgv('task-section') === 'openpo') { confirmPoSave(); return; }
+
   var title = tgv('task-title');
   if (!title) { showBanner('Task title is required', 'error'); return; }
 
@@ -474,9 +511,58 @@ function confirmTaskSave() {
   }
 }
 
-function openAddTaskModal(section) {
-  openTaskModal(null);
-  if (section) document.getElementById('task-section').value = section;
+function confirmPoSave() {
+  var title = tgv('task-title');
+  if (!title) { showBanner('PO title is required', 'error'); return; }
+
+  var body = {
+    title: title,
+    vendor: tgv('po-vendor'),
+    po_num: tgv('po-num'),
+    status: tgv('po-status') || 'need_to_submit',
+    eta: tgv('po-eta')
+  };
+
+  if (editingPO) {
+    var id = editingPO.id;
+    var prevSnapshot = JSON.parse(JSON.stringify(editingPO));
+    closeTaskModal();
+    sbFetch('PATCH', '/rest/v1/open_pos?id=eq.' + id, body, function (err) {
+      if (err) showBanner('Save failed: ' + err, 'error');
+      else {
+        showBanner('PO updated!', 'success');
+        logActivity('open_pos', 'update', {
+          recordId: id,
+          fieldChanges: diffFields(prevSnapshot, body),
+          summary: 'PO "' + (body.title || prevSnapshot.title) + '" edited'
+        });
+        loadOpenPOs();
+      }
+    });
+  } else {
+    closeTaskModal();
+    sbFetch('POST', '/rest/v1/open_pos', body, function (err, data) {
+      if (err) showBanner('Add failed: ' + err, 'error');
+      else {
+        showBanner('PO added!', 'success');
+        var newId = (Array.isArray(data) && data[0] && data[0].id) || null;
+        logActivity('open_pos', 'create', {
+          recordId: newId,
+          fullAfter: body,
+          summary: 'PO "' + body.title + '" added'
+        });
+        loadOpenPOs();
+      }
+    });
+  }
+}
+
+function openAddItemModal(section) {
+  openItemModal(null, section === 'openpo' ? 'po' : 'task');
+  if (section) {
+    document.getElementById('task-section').value = section;
+    updateItemFields();
+  }
 }
 
 // ---- Low Stock (Shopify) ----
@@ -538,6 +624,90 @@ function renderLowStock(items) {
       + '<span class="task-pill ' + pillClass + '">' + qtyLabel + '</span>'
       + (it.threshold != null ? '<span class="task-pill task-pill-assigned">Threshold: ' + lsEsc(it.threshold) + '</span>' : '')
       + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+// ---- Open PO's ----
+function toggleOpenPoSection() {
+  var body = document.getElementById('openpo-body');
+  var chv  = document.getElementById('pchv-openpo');
+  if (!body) return;
+  var isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (chv) chv.classList.toggle('open', !isOpen);
+}
+
+function loadOpenPOs() {
+  var body = document.getElementById('openpo-body');
+  var cnt = document.getElementById('pcnt-openpo');
+  sbFetch('GET', '/rest/v1/open_pos?select=*&order=created_at.asc', null, function (err, data) {
+    var pos = (err || !Array.isArray(data)) ? [] : data;
+    poCache = {};
+    pos.forEach(function (p) { poCache[p.id] = p; });
+    if (cnt) cnt.textContent = pos.length;
+    renderOpenPOs(pos);
+  });
+}
+
+function buildPoStatusSelect(id, current) {
+  var opts = Object.keys(PO_STATUS_LABELS).map(function (val) {
+    return '<option value="' + val + '"' + (val === current ? ' selected' : '') + '>' + PO_STATUS_LABELS[val] + '</option>';
+  }).join('');
+  return '<select class="status-select" data-id="' + id + '" onclick="event.stopPropagation()" onchange="updatePoStatus(this)">' + opts + '</select>';
+}
+
+function updatePoStatus(selectEl) {
+  var id = selectEl.getAttribute('data-id');
+  var status = selectEl.value;
+  var p = poCache[id];
+  var prevStatus = p ? p.status : null;
+  sbFetch('PATCH', '/rest/v1/open_pos?id=eq.' + id, { status: status }, function (err) {
+    if (err) { showBanner('Update failed: ' + err, 'error'); return; }
+    if (p) p.status = status;
+    logActivity('open_pos', 'update', {
+      recordId: id,
+      fieldChanges: { status: { old: prevStatus, new: status } },
+      summary: 'PO "' + ((p && p.title) || '') + '" status set to ' + (PO_STATUS_LABELS[status] || status)
+    });
+  });
+}
+
+function clearPo(id) {
+  var p = poCache[id];
+  sbFetch('DELETE', '/rest/v1/open_pos?id=eq.' + id, null, function (err) {
+    if (err) { showBanner('Failed to clear PO: ' + err, 'error'); return; }
+    showBanner('PO cleared!', 'success');
+    logActivity('open_pos', 'delete', { recordId: id, summary: 'PO "' + ((p && p.title) || '') + '" cleared (received)' });
+    loadOpenPOs();
+  });
+}
+
+function renderOpenPOs(pos) {
+  var body = document.getElementById('openpo-body');
+  if (!body) return;
+  if (!pos.length) {
+    body.innerHTML = '<div class="task-empty">No open POs.</div>';
+    return;
+  }
+  var sorted = pos.slice().sort(function (a, b) {
+    return (PO_STATUS_ORDER[a.status] || 0) - (PO_STATUS_ORDER[b.status] || 0);
+  });
+  body.innerHTML = sorted.map(function (p) {
+    var metaBits = [];
+    if (p.vendor) metaBits.push('<span class="task-pill task-pill-assigned">' + lsEsc(p.vendor) + '</span>');
+    if (p.po_num) metaBits.push('<span class="task-pill">PO# ' + lsEsc(p.po_num) + '</span>');
+    if (p.eta) metaBits.push('<span class="task-pill task-pill-due">ETA: ' + lsEsc(p.eta) + '</span>');
+    return '<div class="task-card" data-id="' + p.id + '" style="cursor:default;">'
+      + '<div class="task-top">'
+      + '<div class="task-title" style="cursor:pointer;" onclick="editPoFromCard(this.closest(\'.task-card\'))">' + lsEsc(p.title) + '</div>'
+      + '<div class="task-actions">'
+      + '<button class="task-edit-btn" title="Edit" onclick="editPoFromCard(this.closest(\'.task-card\'))">&#x270E;</button>'
+      + '<button class="task-done-btn" title="Clear (received)" onclick="clearPo(\'' + p.id + '\')">&#x2713;</button>'
+      + '</div>'
+      + '</div>'
+      + '<div style="margin-top:6px;">' + buildPoStatusSelect(p.id, p.status || 'need_to_submit') + '</div>'
+      + (metaBits.length ? '<div class="task-meta" style="margin-top:6px;">' + metaBits.join('') + '</div>' : '')
       + '</div>';
   }).join('');
 }
