@@ -145,6 +145,17 @@
 .task-card:active { cursor: grabbing; opacity: 0.7; }
 .task-card.dragging { opacity: 0.4; border-color: #4caf50; }
 
+/* ---- Priority: HIGH glow (tasks + Open PO's Need to Submit) ---- */
+.task-card[data-priority="high"] {
+  border: 2px solid #ef5350;
+  animation: glow-red 1.6s ease-in-out infinite;
+}
+
+@keyframes glow-red {
+  0%, 100% { box-shadow: 0 0 6px 1px rgba(239, 83, 80, 0.55); }
+  50%      { box-shadow: 0 0 16px 4px rgba(239, 83, 80, 0.9); }
+}
+
 .task-top {
   display: flex;
   align-items: flex-start;

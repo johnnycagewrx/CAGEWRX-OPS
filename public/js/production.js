@@ -750,7 +750,7 @@ function renderPoColumn(bodyId, pos, kind) {
     } else {
       if (p.eta) metaBits.push('<span class="task-pill task-pill-due">ETA: ' + lsEsc(p.eta) + '</span>');
     }
-    return '<div class="task-card" data-id="' + p.id + '" style="cursor:default;">'
+    return '<div class="task-card" data-id="' + p.id + '" data-priority="' + (kind === 'submit' ? (p.priority || '') : '') + '" style="cursor:default;">'
       + '<div class="task-top">'
       + '<div class="task-title" style="cursor:pointer;" onclick="editPoFromCard(this.closest(\'.task-card\'))">' + lsEsc(p.title) + '</div>'
       + '<div class="task-actions">'
