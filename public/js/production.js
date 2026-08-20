@@ -19,8 +19,8 @@ var SECTION_LABELS = {
 };
 
 var PRIORITY_LABELS = { low: 'Low', medium: 'Medium', high: 'High' };
-var PO_STATUS_LABELS = { need_to_submit: 'Need to Submit', in_progress: 'In Progress', eta: 'ETA', arrived: 'Arrived' };
-var PO_STATUS_ORDER = { need_to_submit: 0, in_progress: 1, eta: 2, arrived: 3 };
+var PO_STATUS_LABELS = { need_to_submit: 'Need to Submit', in_progress: 'In Progress' };
+var PO_PRIORITY_ORDER = { high: 0, medium: 1, low: 2, '': 3 };
 
 // ---- Stage open/close ----
 var openSections = {};
@@ -409,7 +409,10 @@ function openItemModal(record, type) {
     document.getElementById('po-vendor').value = (record && record.vendor) || '';
     document.getElementById('po-num').value = (record && record.po_num) || '';
     document.getElementById('po-status').value = (record && record.status) || 'need_to_submit';
+    setPoPriority((record && record.priority) || '');
+    resetDateBtn('po-duedate', (record && record.due_date) || '');
     resetDateBtn('po-eta', (record && record.eta) || '');
+    updatePoStatusFields();
   } else {
     document.getElementById('task-section').value = (record && record.section) || 'shipping';
     document.getElementById('task-title').value = (record && record.title) || '';
@@ -447,12 +450,29 @@ function closeTaskModal() {
 
 function setPriority(p) {
   document.getElementById('task-priority').value = p;
-  document.querySelectorAll('.priority-btn').forEach(function (btn) {
+  document.querySelectorAll('.task-priority-btn').forEach(function (btn) {
     btn.classList.remove('active-low', 'active-medium', 'active-high');
     if (btn.getAttribute('data-priority') === p && p) {
       btn.classList.add('active-' + p);
     }
   });
+}
+
+function setPoPriority(p) {
+  document.getElementById('po-priority').value = p;
+  document.querySelectorAll('.po-priority-btn').forEach(function (btn) {
+    btn.classList.remove('active-low', 'active-medium', 'active-high');
+    if (btn.getAttribute('data-priority') === p && p) {
+      btn.classList.add('active-' + p);
+    }
+  });
+}
+
+function updatePoStatusFields() {
+  var isSubmit = document.getElementById('po-status').value === 'need_to_submit';
+  document.getElementById('po-priority-wrap').style.display = isSubmit ? '' : 'none';
+  document.getElementById('po-duedate-wrap').style.display = isSubmit ? '' : 'none';
+  document.getElementById('po-eta-wrap').style.display = isSubmit ? 'none' : '';
 }
 
 function confirmTaskSave() {
@@ -520,6 +540,8 @@ function confirmPoSave() {
     vendor: tgv('po-vendor'),
     po_num: tgv('po-num'),
     status: tgv('po-status') || 'need_to_submit',
+    priority: tgv('po-priority'),
+    due_date: tgv('po-duedate'),
     eta: tgv('po-eta')
   };
 
@@ -629,9 +651,9 @@ function renderLowStock(items) {
 }
 
 // ---- Open PO's ----
-function toggleOpenPoSection() {
-  var body = document.getElementById('openpo-body');
-  var chv  = document.getElementById('pchv-openpo');
+function toggleOpenPoSection(which) {
+  var body = document.getElementById('openpo-' + which + '-body');
+  var chv  = document.getElementById('pchv-po-' + which);
   if (!body) return;
   var isOpen = body.style.display !== 'none';
   body.style.display = isOpen ? 'none' : 'block';
@@ -639,15 +661,43 @@ function toggleOpenPoSection() {
 }
 
 function loadOpenPOs() {
-  var body = document.getElementById('openpo-body');
-  var cnt = document.getElementById('pcnt-openpo');
   sbFetch('GET', '/rest/v1/open_pos?select=*&order=created_at.asc', null, function (err, data) {
     var pos = (err || !Array.isArray(data)) ? [] : data;
     poCache = {};
     pos.forEach(function (p) { poCache[p.id] = p; });
-    if (cnt) cnt.textContent = pos.length;
-    renderOpenPOs(pos);
+
+    var submitPos = pos.filter(function (p) { return p.status !== 'in_progress'; });
+    var progressPos = pos.filter(function (p) { return p.status === 'in_progress'; });
+
+    // Need to Submit: highest priority first, then soonest due date first.
+    submitPos.sort(function (a, b) {
+      var pa = PO_PRIORITY_ORDER[a.priority || ''];
+      var pb = PO_PRIORITY_ORDER[b.priority || ''];
+      if (pa !== pb) return pa - pb;
+      return comparePoDate(a.due_date, b.due_date);
+    });
+    // In Progress: soonest ETA first.
+    progressPos.sort(function (a, b) { return comparePoDate(a.eta, b.eta); });
+
+    var submitCnt = document.getElementById('pcnt-po-submit');
+    var progressCnt = document.getElementById('pcnt-po-progress');
+    if (submitCnt) submitCnt.textContent = submitPos.length;
+    if (progressCnt) progressCnt.textContent = progressPos.length;
+
+    renderPoColumn('openpo-submit-body', submitPos, 'submit');
+    renderPoColumn('openpo-progress-body', progressPos, 'progress');
   });
+}
+
+// Dates are stored as "MM/DD/YYYY" strings (see calendar.js parseDate).
+// Missing dates sort to the end regardless of direction.
+function comparePoDate(a, b) {
+  var da = a ? parseDate(a) : null;
+  var db = b ? parseDate(b) : null;
+  if (!da && !db) return 0;
+  if (!da) return 1;
+  if (!db) return -1;
+  return da - db;
 }
 
 function buildPoStatusSelect(id, current) {
@@ -664,12 +714,12 @@ function updatePoStatus(selectEl) {
   var prevStatus = p ? p.status : null;
   sbFetch('PATCH', '/rest/v1/open_pos?id=eq.' + id, { status: status }, function (err) {
     if (err) { showBanner('Update failed: ' + err, 'error'); return; }
-    if (p) p.status = status;
     logActivity('open_pos', 'update', {
       recordId: id,
       fieldChanges: { status: { old: prevStatus, new: status } },
       summary: 'PO "' + ((p && p.title) || '') + '" status set to ' + (PO_STATUS_LABELS[status] || status)
     });
+    loadOpenPOs();
   });
 }
 
@@ -683,21 +733,23 @@ function clearPo(id) {
   });
 }
 
-function renderOpenPOs(pos) {
-  var body = document.getElementById('openpo-body');
+function renderPoColumn(bodyId, pos, kind) {
+  var body = document.getElementById(bodyId);
   if (!body) return;
   if (!pos.length) {
-    body.innerHTML = '<div class="task-empty">No open POs.</div>';
+    body.innerHTML = '<div class="task-empty">' + (kind === 'submit' ? 'Nothing to submit.' : 'Nothing in progress.') + '</div>';
     return;
   }
-  var sorted = pos.slice().sort(function (a, b) {
-    return (PO_STATUS_ORDER[a.status] || 0) - (PO_STATUS_ORDER[b.status] || 0);
-  });
-  body.innerHTML = sorted.map(function (p) {
+  body.innerHTML = pos.map(function (p) {
     var metaBits = [];
     if (p.vendor) metaBits.push('<span class="task-pill task-pill-assigned">' + lsEsc(p.vendor) + '</span>');
     if (p.po_num) metaBits.push('<span class="task-pill">PO# ' + lsEsc(p.po_num) + '</span>');
-    if (p.eta) metaBits.push('<span class="task-pill task-pill-due">ETA: ' + lsEsc(p.eta) + '</span>');
+    if (kind === 'submit') {
+      if (p.priority) metaBits.push('<span class="task-pill task-pill-priority-' + p.priority + '">' + (PRIORITY_LABELS[p.priority] || p.priority) + '</span>');
+      if (p.due_date) metaBits.push('<span class="task-pill task-pill-due">Due: ' + lsEsc(p.due_date) + '</span>');
+    } else {
+      if (p.eta) metaBits.push('<span class="task-pill task-pill-due">ETA: ' + lsEsc(p.eta) + '</span>');
+    }
     return '<div class="task-card" data-id="' + p.id + '" style="cursor:default;">'
       + '<div class="task-top">'
       + '<div class="task-title" style="cursor:pointer;" onclick="editPoFromCard(this.closest(\'.task-card\'))">' + lsEsc(p.title) + '</div>'

@@ -60,6 +60,16 @@
   gap: 14px;
 }
 
+/* ---- Half-width side-by-side row (Open PO's) ---- */
+.prod-half-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 900px) {
+  .prod-half-row { grid-template-columns: 1fr; }
+}
+
 .prod-stage {
   background: #181818;
   border: 1px solid #1a1a1a;

@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="img/favicon.png">
   <link rel="stylesheet" href="css/main.css?v=1782237764">
   <link rel="stylesheet" href="css/sidebar.css">
-  <link rel="stylesheet" href="css/production.css?v=1782237766">
+  <link rel="stylesheet" href="css/production.css?v=1782237767">
 </head>
 <body>
 
@@ -135,17 +135,34 @@
   </div>
 
   <!-- Open PO's -->
-  <div class="prod-stage" id="pstage-openpo" style="margin-top:14px;">
-    <div class="prod-stage-header" style="background:#0a1a0f;cursor:pointer;" onclick="toggleOpenPoSection()">
-      <span style="font-size:15px;">&#x1F4CB;</span>
-      <p class="prod-stage-title" style="color:#66bb6a;">OPEN PO'S</p>
-      <span class="prod-stage-count" id="pcnt-openpo" style="background:#0f2a17;color:#66bb6a;">-</span>
-      <button type="button" class="btn" style="margin-left:auto;padding:3px 10px;font-size:11px;" onclick="event.stopPropagation();openAddItemModal('openpo')">+ Add PO</button>
-      <span class="prod-stage-chevron open" id="pchv-openpo">&#x25BE;</span>
+  <div class="section-label" style="margin-top:20px;">Open PO's</div>
+  <div class="prod-half-row">
+
+    <div class="prod-stage" id="pstage-po-submit">
+      <div class="prod-stage-header" style="background:#2a0f0f;cursor:pointer;" onclick="toggleOpenPoSection('submit')">
+        <span style="font-size:15px;">&#x1F534;</span>
+        <p class="prod-stage-title" style="color:#ef5350;">NEED TO SUBMIT</p>
+        <span class="prod-stage-count" id="pcnt-po-submit" style="background:#3a1010;color:#ef5350;">-</span>
+        <button type="button" class="btn" style="margin-left:auto;padding:3px 10px;font-size:11px;" onclick="event.stopPropagation();openAddItemModal('openpo')">+ Add PO</button>
+        <span class="prod-stage-chevron open" id="pchv-po-submit">&#x25BE;</span>
+      </div>
+      <div class="prod-stage-body" id="openpo-submit-body" style="display:block;">
+        <div style="padding:18px;text-align:center;"><div class="spinner"></div></div>
+      </div>
     </div>
-    <div class="prod-stage-body" id="openpo-body" style="display:block;">
-      <div style="padding:18px;text-align:center;"><div class="spinner"></div></div>
+
+    <div class="prod-stage" id="pstage-po-progress">
+      <div class="prod-stage-header" style="background:#0a1f0a;cursor:pointer;" onclick="toggleOpenPoSection('progress')">
+        <span style="font-size:15px;">&#x1F7E2;</span>
+        <p class="prod-stage-title" style="color:#66bb6a;">IN PROGRESS</p>
+        <span class="prod-stage-count" id="pcnt-po-progress" style="background:#0f2a0f;color:#66bb6a;">-</span>
+        <span class="prod-stage-chevron open" id="pchv-po-progress">&#x25BE;</span>
+      </div>
+      <div class="prod-stage-body" id="openpo-progress-body" style="display:block;">
+        <div style="padding:18px;text-align:center;"><div class="spinner"></div></div>
+      </div>
     </div>
+
   </div>
 
 </div><!-- end .prod-main -->
@@ -195,9 +212,9 @@
       <label>Priority (optional)</label>
       <input type="hidden" id="task-priority" value="">
       <div class="priority-select-row">
-        <button type="button" class="priority-btn" data-priority="low" onclick="setPriority('low')">Low</button>
-        <button type="button" class="priority-btn" data-priority="medium" onclick="setPriority('medium')">Medium</button>
-        <button type="button" class="priority-btn" data-priority="high" onclick="setPriority('high')">High</button>
+        <button type="button" class="priority-btn task-priority-btn" data-priority="low" onclick="setPriority('low')">Low</button>
+        <button type="button" class="priority-btn task-priority-btn" data-priority="medium" onclick="setPriority('medium')">Medium</button>
+        <button type="button" class="priority-btn task-priority-btn" data-priority="high" onclick="setPriority('high')">High</button>
       </div>
     </div>
 
@@ -209,19 +226,38 @@
       <input type="text" id="po-num" placeholder="e.g. PO-12345">
 
       <label>Status</label>
-      <select id="po-status">
+      <select id="po-status" onchange="updatePoStatusFields()">
         <option value="need_to_submit">Need to Submit</option>
         <option value="in_progress">In Progress</option>
-        <option value="eta">ETA</option>
-        <option value="arrived">Arrived</option>
       </select>
 
-      <label>ETA (optional)</label>
-      <input type="hidden" id="po-eta" value="">
-      <button type="button" class="date-input-btn" data-picker-target="po-eta">
-        <span style="color:#333;">Select date...</span>
-        <span style="color:#555;font-size:12px;"> &#x1F4C5;</span>
-      </button>
+      <div id="po-priority-wrap">
+        <label>Priority</label>
+        <input type="hidden" id="po-priority" value="">
+        <div class="priority-select-row">
+          <button type="button" class="priority-btn po-priority-btn" data-priority="low" onclick="setPoPriority('low')">Low</button>
+          <button type="button" class="priority-btn po-priority-btn" data-priority="medium" onclick="setPoPriority('medium')">Medium</button>
+          <button type="button" class="priority-btn po-priority-btn" data-priority="high" onclick="setPoPriority('high')">High</button>
+        </div>
+      </div>
+
+      <div id="po-duedate-wrap">
+        <label>Due Date (optional)</label>
+        <input type="hidden" id="po-duedate" value="">
+        <button type="button" class="date-input-btn" data-picker-target="po-duedate">
+          <span style="color:#333;">Select date...</span>
+          <span style="color:#555;font-size:12px;"> &#x1F4C5;</span>
+        </button>
+      </div>
+
+      <div id="po-eta-wrap" style="display:none;">
+        <label>ETA (optional)</label>
+        <input type="hidden" id="po-eta" value="">
+        <button type="button" class="date-input-btn" data-picker-target="po-eta">
+          <span style="color:#333;">Select date...</span>
+          <span style="color:#555;font-size:12px;"> &#x1F4C5;</span>
+        </button>
+      </div>
     </div>
 
     <div class="modal-btns">
@@ -251,7 +287,7 @@
 <script src="js/activity-log-helper.js"></script>
 <script src="js/sidebar.js"></script>
 <script src="js/calendar.js"></script>
-<script src="js/production.js?v=1782237766"></script>
+<script src="js/production.js?v=1782237767"></script>
 <script>
   var _sess = requireAuth();
   initAvatarDropdown();
