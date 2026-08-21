@@ -1011,6 +1011,171 @@ function deleteOos(id) {
 }
 
 
+// ============================================
+// BLEM ROOF STOCK (Powder Coating only)
+// ============================================
+var blemCache = {};
+var editingBlem = null;
+var blemOpen = true;
+
+function toggleBlemSection() {
+  var body = document.getElementById('col-blem');
+  var chv  = document.getElementById('chv-blem');
+  if (!body) return;
+  blemOpen = body.style.display === 'none';
+  body.style.display = blemOpen ? 'grid' : 'none';
+  if (chv) chv.classList.toggle('open', blemOpen);
+}
+
+function loadBlemStock() {
+  sbFetch('GET', '/rest/v1/blem_roof_stock?select=*&order=sku.asc', null, function (err, data) {
+    var items = (err || !Array.isArray(data)) ? [] : data;
+    blemCache = {};
+    items.forEach(function (b) { blemCache[b.id] = b; });
+    renderBlemStock(items);
+  });
+}
+
+function renderBlemStock(items) {
+  var el = document.getElementById('col-blem');
+  var cnt = document.getElementById('cnt-blem');
+  if (cnt) cnt.textContent = items.length;
+  if (!el) return;
+  el.style.display = blemOpen ? 'grid' : 'none';
+  var chv = document.getElementById('chv-blem');
+  if (chv) chv.classList.toggle('open', blemOpen);
+
+  if (!items.length) {
+    el.innerHTML = '<div class="empty">No blem roofs on hand - use + Add Roof above</div>';
+    return;
+  }
+
+  var h = '';
+  items.forEach(function (b) {
+    var out = (b.quantity || 0) <= 0;
+    h += '<div class="blem-pill' + (out ? ' out-of-stock' : '') + '">' +
+      '<div class="blem-pill-top">' +
+        '<div>' +
+          '<div class="blem-pill-sku">' + (b.sku || '') + '</div>' +
+          (b.title ? '<div class="blem-pill-title">' + b.title + '</div>' : '') +
+        '</div>' +
+        '<div class="blem-pill-actions">' +
+          '<button class="blem-pill-btn" title="Edit" onclick="openBlemModal(blemCache[\'' + b.id + '\'])">&#x270E;</button>' +
+          '<button class="blem-pill-btn danger" title="Remove" onclick="deleteBlemItem(\'' + b.id + '\')">&#x2715;</button>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
+        '<span class="blem-pill-qty">' + (out ? 'OUT OF STOCK' : b.quantity + ' in stock') + '</span>' +
+        (out ? '' : '<button class="blem-pill-btn" title="Mark one pulled" onclick="pullBlemItem(\'' + b.id + '\')" style="font-size:11px;color:#ffa726;">&minus;1 Pulled</button>') +
+      '</div>' +
+    '</div>';
+  });
+  el.innerHTML = h;
+}
+
+function openBlemModal(item) {
+  editingBlem = item || null;
+  var titleEl = document.getElementById('blem-modal-title');
+  if (titleEl) titleEl.textContent = item ? '🎨 Edit Blem Roof' : '🎨 Add Blem Roof';
+  document.getElementById('blem-sku').value   = (item && item.sku)   || '';
+  document.getElementById('blem-title').value = (item && item.title) || '';
+  document.getElementById('blem-qty').value   = (item && item.quantity != null) ? item.quantity : '';
+  document.getElementById('blem-modal').classList.add('open');
+  setTimeout(function () { document.getElementById('blem-sku').focus(); }, 50);
+}
+
+function closeBlemModal() {
+  document.getElementById('blem-modal').classList.remove('open');
+  editingBlem = null;
+}
+
+function confirmBlemSave() {
+  var sku = (document.getElementById('blem-sku').value || '').trim();
+  if (!sku) { showBanner('SKU is required', 'error'); return; }
+  var qtyRaw = (document.getElementById('blem-qty').value || '').trim();
+  var body = {
+    sku: sku,
+    title: (document.getElementById('blem-title').value || '').trim(),
+    quantity: qtyRaw ? Math.max(0, parseInt(qtyRaw, 10) || 0) : 0
+  };
+  if (editingBlem) {
+    var id = editingBlem.id;
+    closeBlemModal();
+    sbFetch('PATCH', '/rest/v1/blem_roof_stock?id=eq.' + id, body, function (err) {
+      if (err) showBanner('Save failed: ' + err, 'error');
+      else { showBanner('Blem roof updated!', 'success'); loadBlemStock(); }
+    });
+  } else {
+    closeBlemModal();
+    sbFetch('POST', '/rest/v1/blem_roof_stock', body, function (err) {
+      if (err) showBanner('Add failed: ' + err, 'error');
+      else { showBanner('Blem roof added!', 'success'); loadBlemStock(); }
+    });
+  }
+}
+
+function deleteBlemItem(id) {
+  if (!confirm('Remove this blem roof entry?')) return;
+  sbFetch('DELETE', '/rest/v1/blem_roof_stock?id=eq.' + id, null, function (err) {
+    if (err) showBanner('Delete failed', 'error');
+    else { showBanner('Removed', 'success'); loadBlemStock(); }
+  });
+}
+
+function pullBlemItem(id) {
+  var b = blemCache[id];
+  if (!b) return;
+  var newQty = Math.max(0, (b.quantity || 0) - 1);
+  sbFetch('PATCH', '/rest/v1/blem_roof_stock?id=eq.' + id, { quantity: newQty }, function (err) {
+    if (err) { showBanner('Update failed: ' + err, 'error'); return; }
+    showBanner((b.sku || 'Roof') + ' marked pulled - ' + newQty + ' left', 'success');
+    loadBlemStock();
+  });
+}
+
+// Called after any order successfully lands in the "powdercoat" tab.
+// Checks its SKU(s) against in-stock blem roofs and pops the big glowing
+// alert if any match, so staff grab from the blem stack instead of
+// sending that roof out fresh.
+function checkBlemStockAlert(order) {
+  var stock = Object.values(blemCache);
+  if (!stock.length) return;
+  var orderSkus = (order.sku || '').split(',').map(function (s) { return s.trim().toLowerCase(); }).filter(Boolean);
+  if (!orderSkus.length) return;
+  var matches = stock.filter(function (b) {
+    return (b.quantity || 0) > 0 && orderSkus.indexOf((b.sku || '').trim().toLowerCase()) !== -1;
+  });
+  if (matches.length) showBlemAlert(matches);
+}
+
+function showBlemAlert(matches) {
+  var list = document.getElementById('blem-alert-list');
+  if (list) {
+    list.innerHTML = matches.map(function (b) {
+      return '<div class="blem-alert-item">' +
+        '<div>' +
+          '<div class="blem-alert-item-sku">' + (b.sku || '') + '</div>' +
+          (b.title ? '<div class="blem-alert-item-title">' + b.title + '</div>' : '') +
+        '</div>' +
+        '<button class="blem-alert-pull-btn" onclick="pullBlemFromAlert(\'' + b.id + '\')">&#x2713; Pulled</button>' +
+      '</div>';
+    }).join('');
+  }
+  var m = document.getElementById('blem-alert-modal');
+  if (m) m.classList.add('open');
+}
+
+function closeBlemAlert() {
+  var m = document.getElementById('blem-alert-modal');
+  if (m) m.classList.remove('open');
+}
+
+function pullBlemFromAlert(id) {
+  pullBlemItem(id);
+  closeBlemAlert();
+}
+
+
 function renderData(data) {
   orderCache = {};
   var grouped = { new: [], ready: [], backorder: [], dropship: [], assembled: [], powdercoat: [], pickup: [], tagpull: [], needsassembly: [] };
@@ -1084,6 +1249,7 @@ function loadData(background) {
       hideIndicator();
       renderData(results);
       loadOos();
+      loadBlemStock();
       scheduleAutoRefresh();
     }
   }
@@ -1320,6 +1486,7 @@ function confirmMove() {
         fieldChanges: diffFields(o, updates),
         summary: 'Order #' + o.order_num + ' moved from ' + (TAB_LABELS[fromTab]||fromTab) + ' to ' + toLabel
       });
+      if (toTab === 'powdercoat' && fromTab !== 'powdercoat') checkBlemStockAlert(o);
       loadData(true);
     }
   });
@@ -1618,6 +1785,7 @@ function submitAdd() {
         fullAfter: body,
         summary: 'Order #' + num + ' added to ' + (TAB_LABELS[t] || t)
       });
+      if (t === 'powdercoat') checkBlemStockAlert(body);
       loadData(false);
     }
   });

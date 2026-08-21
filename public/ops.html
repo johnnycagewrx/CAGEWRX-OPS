@@ -15,7 +15,7 @@
   <link rel="apple-touch-icon" sizes="120x120" href="img/favicon.png">
   <link rel="stylesheet" href="css/main.css?v=1782237764">
   <link rel="stylesheet" href="css/sidebar.css">
-  <link rel="stylesheet" href="css/ops.css?v=1782237768">
+  <link rel="stylesheet" href="css/ops.css?v=1782237772">
   <link rel="stylesheet" href="css/briefing.css?v=1782237762">
 </head>
 <body>
@@ -250,6 +250,20 @@
     </div>
   </div>
 
+  <!-- ===== BLEM ROOF STOCK (Powder Coating Only) ===== -->
+  <div class="stage" id="stage-blem" style="margin-top:20px;">
+    <div class="stage-header stage-toggle" style="background:#1a1000;cursor:pointer;" onclick="toggleBlemSection()">
+      <span style="font-size:15px;">&#x1F3A8;</span>
+      <p class="stage-title" style="color:#ffa726;">BLEM ROOF STOCK &mdash; POWDER COATING ONLY</p>
+      <span class="stage-count" id="cnt-blem" style="background:#2a1a00;color:#ffa726;">-</span>
+      <button type="button" class="btn" style="margin-left:auto;padding:3px 10px;font-size:11px;" onclick="event.stopPropagation();openBlemModal(null)">+ Add Roof</button>
+      <span class="stage-chevron open" id="chv-blem">&#x25BE;</span>
+    </div>
+    <div class="kits-body" id="col-blem" style="display:grid;">
+      <div style="padding:18px 8px;text-align:center;"><div class="spinner"></div></div>
+    </div>
+  </div>
+
 </div><!-- end .main -->
 
 <!-- Refresh indicator -->
@@ -455,7 +469,7 @@
 <script src="js/activity-log-helper.js"></script>
 <script src="js/sidebar.js"></script>
 <script src="js/calendar.js?v=1782237760"></script>
-<script src="js/pipeline.js?v=1782237771"></script>
+<script src="js/pipeline.js?v=1782237772"></script>
 <script src="js/briefing.js?v=1782237761"></script>
 <script>
   // ---- Boot sequence ----
@@ -574,6 +588,35 @@
     <div class="modal-btns">
       <button class="modal-btn modal-btn-cancel" onclick="closeOosModal()">Cancel</button>
       <button class="modal-btn modal-btn-save" onclick="confirmOosSave()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BLEM ROOF STOCK MODAL ===== -->
+<div class="modal-overlay" id="blem-modal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-title" id="blem-modal-title">&#x1F3A8; Add Blem Roof</div>
+    <label>SKU / Part Number</label>
+    <input type="text" id="blem-sku" placeholder="e.g. 4SPROXPFT-ROOF">
+    <label>Title / Description (optional)</label>
+    <input type="text" id="blem-title" placeholder="e.g. 4 Seat Pro XP Roof Panel">
+    <label>Quantity in Stock</label>
+    <input type="number" id="blem-qty" min="0" step="1" placeholder="0">
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeBlemModal()">Cancel</button>
+      <button class="modal-btn modal-btn-save" onclick="confirmBlemSave()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BLEM ROOF ALERT (big glowing popup) ===== -->
+<div class="modal-overlay" id="blem-alert-modal">
+  <div class="blem-alert-box">
+    <div class="blem-alert-icon">&#x1F6A8;</div>
+    <div class="blem-alert-title">USE BLEM ROOF FROM POWDER COATING STACK!!</div>
+    <div id="blem-alert-list"></div>
+    <div class="modal-btns" style="margin-top:22px;justify-content:center;">
+      <button class="modal-btn modal-btn-cancel" onclick="closeBlemAlert()">Dismiss</button>
     </div>
   </div>
 </div>
