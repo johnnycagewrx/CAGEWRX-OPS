@@ -258,8 +258,25 @@ function guessColorForItem(itemName, colorMap) {
 function openSplitModal(id) {
   var o = orderCache[id];
   if (!o) return;
-  var items = (o.item || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-  var skus  = (o.sku  || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+  var rawItems = (o.item || '').split(',').map(function(s){ return s.trim(); });
+  var rawSkus  = (o.sku  || '').split(',').map(function(s){ return s.trim(); });
+
+  // Some older imports have a sku list shorter than the item list (a line
+  // item with no real SKU, like a color-selection property row, used to get
+  // silently dropped instead of leaving a blank placeholder - see runImport).
+  // When the underlying counts don't match, positional pairing can't be
+  // trusted at all, so skip it entirely rather than show a confident-looking
+  // wrong SKU next to the wrong item.
+  var skuDataTrusted = rawItems.filter(Boolean).length === rawSkus.filter(Boolean).length;
+
+  var items = [];
+  var skus = [];
+  rawItems.forEach(function (it, i) {
+    if (!it) return;
+    items.push(it);
+    skus.push(skuDataTrusted ? (rawSkus[i] || '') : '');
+  });
+
   var colorMap = parseSplitColors(o.color || '');
 
   // Build all available color values for the dropdown
@@ -295,8 +312,13 @@ function openSplitModal(id) {
     '</div>';
   }).join('');
 
+  var warning = skuDataTrusted ? '' :
+    '<div style="background:#2a1500;border:1px solid #ff8a65;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#ffab91;">' +
+    '&#x26A0; This order\'s SKU data doesn\'t line up with its items (likely an older import) - SKUs are hidden below. Check Shopify directly before splitting.' +
+    '</div>';
+
   document.getElementById('split-order-num').textContent = '#' + o.order_num;
-  document.getElementById('split-items-list').innerHTML = rows;
+  document.getElementById('split-items-list').innerHTML = warning + rows;
   document.getElementById('split-modal').dataset.orderId = id;
   document.getElementById('split-modal').classList.add('open');
 }
@@ -1726,8 +1748,14 @@ function runImport() {
       shipping: r['Shipping Method'] || '',
       order_date: r['Created at'] ? new Date(r['Created at']).toLocaleDateString('en-US') : ''
     };
-    if (r['Lineitem name']) orders[name].items.push(r['Lineitem name']);
-    if (r['Lineitem sku'])  orders[name].skus.push(r['Lineitem sku']);
+    // Push items/skus together, one pair per line item, so their indexes
+    // stay aligned even when a line item (e.g. a color-selection property
+    // row) has no SKU. A skipped push here previously let the two arrays
+    // drift out of sync, silently mismatching every item after it.
+    if (r['Lineitem name']) {
+      orders[name].items.push(r['Lineitem name']);
+      orders[name].skus.push(r['Lineitem sku'] || '');
+    }
     // Color from line item properties columns
     // Shopify CSV exports property names as "Property: <name>" columns
     var colorFields = [
