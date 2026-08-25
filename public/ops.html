@@ -622,5 +622,28 @@
 </div>
 
 <div class="banner" id="banner"></div>
+<!-- ===== HOLD ORDER MODAL ===== -->
+<div class="modal-overlay" id="hold-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-title" style="color:#ffd600;">&#x23F8; Place Order on Hold</div>
+    <div id="hold-existing-note" style="display:none;">
+      <div class="hold-note-display" id="hold-note-display"></div>
+    </div>
+    <label style="color:#ffd600;font-weight:700;">Hold Note <span style="color:#555;font-weight:400;">(visible to all users)</span></label>
+    <textarea id="hold-note-input" placeholder="e.g. Waiting on customer color confirmation. Do not ship."
+      style="width:100%;background:#1a1600;border:2px solid #ffd600;border-radius:8px;padding:10px 12px;font-size:13px;color:#ffd600;outline:none;min-height:80px;font-family:inherit;resize:vertical;box-sizing:border-box;margin-top:4px;"></textarea>
+    <div class="modal-btns" style="margin-top:16px;flex-direction:column;gap:8px;">
+      <div style="display:flex;gap:8px;width:100%;">
+        <button class="modal-btn modal-btn-cancel" style="flex:1;" onclick="closeHoldModal()">Cancel</button>
+        <button id="hold-save-btn" class="modal-btn modal-btn-save" style="flex:1;background:#ffd600;color:#1a1600;border-color:#ffd600;" onclick="confirmHold()">Place on Hold</button>
+      </div>
+      <button id="hold-remove-btn" style="display:none;width:100%;background:#2a2a2a;border:1px solid #444;border-radius:8px;padding:10px;color:#aaa;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;" onclick="removeHold()">&#x2715; Remove Hold</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CANCELLED ORDER MODAL handled inline on card ===== -->
+
+
 </body>
 </html>

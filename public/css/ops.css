@@ -747,6 +747,12 @@ body.light-mode .cal-legend-item span[style] { color: #000 !important; }
 .order-card.priority-high {
   background: #0d1f0d;
   border: 2px solid #4caf50;
+  animation: glow-ship-now 2s ease-in-out infinite;
+}
+
+@keyframes glow-ship-now {
+  0%, 100% { box-shadow: 0 0 6px 1px rgba(76, 175, 80, 0.5); }
+  50%       { box-shadow: 0 0 18px 4px rgba(76, 175, 80, 0.85); }
 }
 
 /* ---- Priority: Needs to be Assembled ---- */
@@ -1105,3 +1111,121 @@ body.light-mode .kits-body::-webkit-scrollbar-thumb:hover { background: #8a8580;
 body.light-mode .cal-scroll-area { scrollbar-color: #a8a29c transparent; }
 body.light-mode .cal-scroll-area::-webkit-scrollbar-track { background: transparent; }
 body.light-mode .cal-scroll-area::-webkit-scrollbar-thumb { background: #a8a29c; }
+/* ---- On Hold card ---- */
+.order-card.on-hold {
+  border: 2px solid #ffd600 !important;
+  background: #1a1600;
+  animation: glow-hold 2s ease-in-out infinite;
+}
+
+@keyframes glow-hold {
+  0%, 100% { box-shadow: 0 0 6px 1px rgba(255, 214, 0, 0.45); }
+  50%       { box-shadow: 0 0 18px 4px rgba(255, 214, 0, 0.8); }
+}
+
+.hold-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: #1a1600;
+  background: #ffd600;
+  border-radius: 4px;
+  padding: 2px 7px;
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+
+.hold-btn {
+  font-size: 12px;
+  cursor: pointer;
+  color: #444;
+  background: none;
+  border: none;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.hold-btn:hover { color: #ffd600; }
+.hold-btn.hold-active { color: #ffd600; }
+
+.hold-note-pill {
+  background: #332800;
+  border: 1px solid #ffd60055;
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #ffd600;
+  margin-top: 4px;
+  width: 100%;
+  box-sizing: border-box;
+  font-style: italic;
+}
+
+.hold-note-display {
+  background: #332800;
+  border: 2px solid #ffd600;
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #ffd600;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+.hold-note-display::before {
+  content: '⚠ HOLD NOTE: ';
+  font-weight: 800;
+  display: block;
+  font-size: 11px;
+  letter-spacing: .08em;
+  margin-bottom: 4px;
+  color: #ffd600;
+}
+
+/* ---- Cancelled order overlay ---- */
+.order-card.is-cancelled {
+  position: relative;
+  overflow: hidden;
+  opacity: 0.85;
+  border-color: #c62828 !important;
+}
+
+.cancelled-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(180, 0, 0, 0.82);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  z-index: 10;
+  border-radius: 8px;
+}
+
+.cancelled-x {
+  font-size: 28px;
+  color: #fff;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.cancelled-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: .12em;
+}
+
+.cancelled-remove-btn {
+  margin-top: 6px;
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.cancelled-remove-btn:hover { background: rgba(255,255,255,0.35); }

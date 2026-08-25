@@ -440,7 +440,7 @@ function buildCard(o, tab, metaHTML) {
     .replace(/'/g, "\\'")
     .replace(/"/g, '&quot;');
 
-  return '<div class="order-card" draggable="true"' +
+  return '<div class="order-card' + (o.cancelled ? ' is-cancelled' : '') + (o.on_hold ? ' on-hold' : '') + '" draggable="true"' +
     ' data-id="' + o.id + '" data-tab="' + tab + '"' +
     ' ondragstart="onDragStart(event,\'' + tab + '\',\'' + safeJson + '\')"' +
     ' ondragend="onDragEnd()">' +
@@ -449,6 +449,7 @@ function buildCard(o, tab, metaHTML) {
       '<div class="order-actions">' +
         '<span class="order-ship">' + shipLabel(o.shipping) + '</span>' +
         splitBtn(o) +
+        '<button class="hold-btn' + (o.on_hold ? ' hold-active' : '') + '" title="' + (o.on_hold ? 'Remove hold' : 'Place on hold') + '" onclick="event.stopPropagation();openHoldModal(\'' + o.id + '\')" >&#x23F8;</button>' +
         '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
         doneBtn(tab, o.id) +
       '</div>' +
@@ -457,6 +458,8 @@ function buildCard(o, tab, metaHTML) {
       (o.sku || o.item || '') +
     '</div>' +
     '<div class="order-meta">' + metaHTML + '</div>' +
+  (o.on_hold && o.hold_note ? '<div class="hold-note-pill">&#x23F8; ' + o.hold_note + '</div>' : '') +
+  (o.cancelled ? '<div class="cancelled-overlay"><span class="cancelled-x">&#x2715;</span><span class="cancelled-label">CANCELLED</span><button class="cancelled-remove-btn" onclick="event.stopPropagation();removeOrder(\'' + o.id + '\')" title="Remove">Remove</button></div>' : '') +
   '</div>';
 }
 
@@ -646,6 +649,7 @@ function renderTagPull(items) {
         '<a class="order-num" href="' + link + '" target="_blank">#' + o.order_num + '</a>' +
         '<div class="order-actions">' +
           splitBtn(o) +
+          '<button class="hold-btn' + (o.on_hold ? ' hold-active' : '') + '" title="' + (o.on_hold ? 'Remove hold' : 'Place on hold') + '" onclick="event.stopPropagation();openHoldModal(\'' + o.id + '\')" >&#x23F8;</button>' +
           '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
           doneBtn('tagpull', o.id) +
         '</div>' +
@@ -690,6 +694,7 @@ function renderBackorder(items) {
         '<div class="order-actions">' +
           '<span class="order-ship">' + shipLabel(o.shipping) + '</span>' +
           splitBtn(o) +
+          '<button class="hold-btn' + (o.on_hold ? ' hold-active' : '') + '" title="' + (o.on_hold ? 'Remove hold' : 'Place on hold') + '" onclick="event.stopPropagation();openHoldModal(\'' + o.id + '\')" >&#x23F8;</button>' +
           '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
           doneBtn('backorder', o.id) +
         '</div>' +
@@ -854,7 +859,7 @@ function renderReadyToShip(items) {
       ? '<span class="order-ship ship-now">&#x1F6A8; SHIP NOW</span>'
       : '<span class="order-ship">' + shipLabel(o.shipping) + '</span>';
 
-    h += '<div class="order-card' + (isHigh ? ' priority-high' : '') + '" draggable="true"' +
+    h += '<div class="order-card' + (isHigh ? ' priority-high' : '') + (o.cancelled ? ' is-cancelled' : '') + (o.on_hold ? ' on-hold' : '') + '" draggable="true"' +
       ' data-id="' + o.id + '" data-tab="ready"' +
       ' ondragstart="onDragStart(event,\'ready\',\'' + safeJson + '\')"' +
       ' ondragend="onDragEnd()">' +
@@ -862,6 +867,7 @@ function renderReadyToShip(items) {
         '<a class="order-num" href="' + link + '" target="_blank"' + (isHigh ? ' style="color:#69f0ae;"' : '') + '>#' + o.order_num + '</a>' +
         '<div class="order-actions">' + shipSpan + starBtn +
           splitBtn(o) +
+          '<button class="hold-btn' + (o.on_hold ? ' hold-active' : '') + '" title="' + (o.on_hold ? 'Remove hold' : 'Place on hold') + '" onclick="event.stopPropagation();openHoldModal(\'' + o.id + '\')" >&#x23F8;</button>' +
           '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
           doneBtn('ready', o.id) +
         '</div>' +
@@ -1173,6 +1179,72 @@ function closeBlemAlert() {
 function pullBlemFromAlert(id) {
   pullBlemItem(id);
   closeBlemAlert();
+}
+
+
+// ============================================
+// HOLD ORDER
+// ============================================
+var holdingOrderId = null;
+
+function openHoldModal(id) {
+  var o = orderCache[id];
+  if (!o) return;
+  holdingOrderId = id;
+  var noteInput = document.getElementById('hold-note-input');
+  var noteDisplay = document.getElementById('hold-note-display');
+  var existingNote = document.getElementById('hold-existing-note');
+  var saveBtn = document.getElementById('hold-save-btn');
+  var removeBtn = document.getElementById('hold-remove-btn');
+  if (noteInput) noteInput.value = o.hold_note || '';
+  if (o.on_hold && o.hold_note) {
+    if (existingNote) existingNote.style.display = 'block';
+    if (noteDisplay) noteDisplay.textContent = o.hold_note;
+  } else {
+    if (existingNote) existingNote.style.display = 'none';
+  }
+  if (removeBtn) removeBtn.style.display = o.on_hold ? 'block' : 'none';
+  if (saveBtn) saveBtn.textContent = o.on_hold ? 'Update Note' : 'Place on Hold';
+  document.getElementById('hold-modal').classList.add('open');
+  setTimeout(function(){ if (noteInput) noteInput.focus(); }, 50);
+}
+
+function closeHoldModal() {
+  document.getElementById('hold-modal').classList.remove('open');
+  holdingOrderId = null;
+}
+
+function confirmHold() {
+  if (!holdingOrderId) return;
+  var note = (document.getElementById('hold-note-input').value || '').trim();
+  sbFetch('PATCH', '/rest/v1/orders?id=eq.' + holdingOrderId, { on_hold: true, hold_note: note }, function(err) {
+    if (err) { showBanner('Could not place hold', 'error'); return; }
+    showBanner('Order placed on hold', 'success');
+    closeHoldModal();
+    loadData(true);
+  });
+}
+
+function removeHold() {
+  if (!holdingOrderId) return;
+  sbFetch('PATCH', '/rest/v1/orders?id=eq.' + holdingOrderId, { on_hold: false, hold_note: '' }, function(err) {
+    if (err) { showBanner('Could not remove hold', 'error'); return; }
+    showBanner('Hold removed', 'success');
+    closeHoldModal();
+    loadData(true);
+  });
+}
+
+// ============================================
+// REMOVE CANCELLED ORDER
+// ============================================
+function removeOrder(id) {
+  if (!confirm('Remove this cancelled order from the pipeline?')) return;
+  sbFetch('DELETE', '/rest/v1/orders?id=eq.' + id, null, function(err) {
+    if (err) { showBanner('Could not remove order', 'error'); return; }
+    showBanner('Order removed', 'success');
+    loadData(true);
+  });
 }
 
 
