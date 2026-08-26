@@ -182,9 +182,20 @@ function colorPill(color) {
   return pill(c || 'RAW', 'pill-color');
 }
 
+function mmdd(s) {
+  if (!s) return '';
+  var f = fmtDate(s) || s;
+  var parts = String(f).split('/');
+  return parts.length >= 2 ? parts[0] + '/' + parts[1] : f;
+}
+
 function orderDatePills(o) {
-  return pill(o.order_date ? 'ORD: ' + o.order_date : '', 'pill-order') +
-    pill(o.build_date ? 'Build: ' + fmtDate(o.build_date) : '', 'pill-date');
+  return pill(o.order_date ? 'ORD: ' + mmdd(o.order_date) : '', 'pill-order') +
+    pill(o.build_date ? 'Build: ' + mmdd(o.build_date) : '', 'pill-date');
+}
+
+function shipColorRow(o) {
+  return '<div class="order-meta-row1"><span class="order-ship">' + shipLabel(o.shipping) + '</span>' + colorPill(o.color) + '</div>';
 }
 
 function doneBtn(tab, id) {
@@ -459,7 +470,6 @@ function buildCard(o, tab, metaHTML) {
     '<div class="order-top">' +
       '<a class="order-num" href="' + link + '" target="_blank">#' + o.order_num + '</a>' +
       '<div class="order-actions">' +
-        '<span class="order-ship">' + shipLabel(o.shipping) + '</span>' +
         splitBtn(o) +
         '<button class="hold-btn' + (o.on_hold ? ' hold-active' : '') + '" title="' + (o.on_hold ? 'Remove hold' : 'Place on hold') + '" onclick="event.stopPropagation();openHoldModal(\'' + o.id + '\')" >&#x23F8;</button>' +
         '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
@@ -469,7 +479,7 @@ function buildCard(o, tab, metaHTML) {
     '<div class="order-item" style="cursor:pointer;" onclick="editFromCard(this.closest(\'.order-card\'))">' +
       (o.sku || o.item || '') +
     '</div>' +
-    '<div class="order-meta">' + metaHTML + '</div>' +
+    '<div class="order-meta">' + shipColorRow(o) + '<div class="order-meta-row2">' + metaHTML + '</div></div>' +
   (o.on_hold && o.hold_note ? '<div class="hold-note-pill">&#x23F8; ' + o.hold_note + '</div>' : '') +
   (o.cancelled ? '<div class="cancelled-overlay"><span class="cancelled-x">&#x2715;</span><span class="cancelled-label">CANCELLED</span><button class="cancelled-remove-btn" onclick="event.stopPropagation();removeOrder(\'' + o.id + '\')" title="Remove">Remove</button></div>' : '') +
   '</div>';
@@ -562,7 +572,6 @@ function renderKits(items) {
       '<div class="order-top">' +
         '<a class="order-num" href="' + link + '" target="_blank">#' + o.order_num + '</a>' +
         '<div class="order-actions">' +
-          '<span class="order-ship">' + shipLabel(o.shipping) + '</span>' +
           '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
           doneBtn('cagekits', o.id) +
         '</div>' +
@@ -570,7 +579,7 @@ function renderKits(items) {
       '<div class="order-item" style="cursor:pointer;" onclick="editFromCard(this.closest(\'.order-card\'))">' +
         (o.sku || o.item || '') +
       '</div>' +
-      '<div class="order-meta">' + orderDatePills(o) + '</div>' +
+      '<div class="order-meta">' + shipColorRow(o) + '<div class="order-meta-row2">' + orderDatePills(o) + '</div></div>' +
     '</div>';
   }
   el.innerHTML = h;
@@ -623,8 +632,7 @@ function renderPowderCoat(items) {
     h += '<div class="powder-group">';
     h += '<div class="powder-group-label">' + dateLabel + ' <span style="color:#555;font-size:10px;">(' + group.length + ')</span></div>';
     group.forEach(function(o) {
-      var metaHTML = pill(o.color, 'pill-color') +
-        orderDatePills(o) +
+      var metaHTML = orderDatePills(o) +
         pill(o.eta ? 'ETA: ' + fmtDate(o.eta) : '', 'pill-date');
       h += buildCard(o, 'powdercoat', metaHTML);
     });
@@ -693,8 +701,7 @@ function renderBackorder(items) {
     orderCache[o.id] = o;
     var link = 'https://admin.shopify.com/store/ccee09-8a/orders?query=' + o.order_num;
     var safeJson = JSON.stringify(o).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    var metaHTML = pill(o.color, 'pill-color') +
-      orderDatePills(o) +
+    var metaHTML = orderDatePills(o) +
       pill(o.po_num ? 'PO: ' + o.po_num : '', 'pill-po') +
       pill(o.eta ? 'ETA: ' + fmtDate(o.eta) : '', 'pill-eta');
     h += '<div class="order-card" draggable="true"' +
@@ -704,7 +711,6 @@ function renderBackorder(items) {
       '<div class="order-top">' +
         '<a class="order-num" href="' + link + '" target="_blank">#' + o.order_num + '</a>' +
         '<div class="order-actions">' +
-          '<span class="order-ship">' + shipLabel(o.shipping) + '</span>' +
           splitBtn(o) +
           '<button class="hold-btn' + (o.on_hold ? ' hold-active' : '') + '" title="' + (o.on_hold ? 'Remove hold' : 'Place on hold') + '" onclick="event.stopPropagation();openHoldModal(\'' + o.id + '\')" >&#x23F8;</button>' +
           '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
@@ -712,7 +718,7 @@ function renderBackorder(items) {
         '</div>' +
       '</div>' +
       '<div class="order-item" style="cursor:pointer;" onclick="editFromCard(this.closest(\'.order-card\'))">' + (o.sku || o.item || '') + '</div>' +
-      '<div class="order-meta">' + metaHTML + '</div>' +
+      '<div class="order-meta">' + shipColorRow(o) + '<div class="order-meta-row2">' + metaHTML + '</div></div>' +
     '</div>';
   }
   el.innerHTML = h;
@@ -783,8 +789,6 @@ function renderNeedsAssembly(items) {
     var isHigh = o.assembly_priority === 'high';
     var link = 'https://admin.shopify.com/store/ccee09-8a/orders?query=' + o.order_num;
     var safeJson = JSON.stringify(o).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    var metaHTML = pill(o.color, 'pill-color') + orderDatePills(o);
-
     h += '<div class="order-card' + (isHigh ? ' assembly-priority-high' : '') + '" draggable="true"' +
       ' data-id="' + o.id + '" data-tab="needsassembly"' +
       ' ondragstart="onDragStart(event,\'needsassembly\',\'' + safeJson + '\')"' +
@@ -798,7 +802,7 @@ function renderNeedsAssembly(items) {
         '</div>' +
       '</div>' +
       '<div class="order-item" style="cursor:pointer;" onclick="editFromCard(this.closest(\'.order-card\'))">' + (o.sku || o.item || '') + '</div>' +
-      '<div class="order-meta">' + metaHTML + '</div>' +
+      '<div class="order-meta">' + shipColorRow(o) + '<div class="order-meta-row2">' + orderDatePills(o) + '</div></div>' +
       '<div style="margin-top:6px;">' + buildAssemblyPrioritySelect(o.id, o.assembly_priority || '') + '</div>' +
     '</div>';
   }
@@ -1275,19 +1279,17 @@ function renderData(data) {
   renderReadyToShip(grouped.ready);
   renderBackorder(grouped.backorder);
   fillStage('col-dropship', 'cnt-dropship', 'stat-dropship', 'dropship', grouped.dropship, function (o) {
-    return pill(o.color, 'pill-color') +
-      orderDatePills(o) +
+    return orderDatePills(o) +
       pill(o.po_num ? 'PO: ' + o.po_num : '', 'pill-po') +
       pill(o.eta ? 'ETA: ' + fmtDate(o.eta) : '', 'pill-eta');
   });
   fillStage('col-assembled', 'cnt-assembled', 'stat-assembled', 'assembled', grouped.assembled, function (o) {
-    return pill(o.color, 'pill-color') +
-      orderDatePills(o) +
+    return orderDatePills(o) +
       pill(o.eta ? 'ETA: ' + fmtDate(o.eta) : '', 'pill-date');
   });
   renderPowderCoat(grouped.powdercoat);
   fillStage('col-pickup', 'cnt-pickup', 'stat-pickup', 'pickup', grouped.pickup, function (o) {
-    return pill(o.color, 'pill-color') + orderDatePills(o);
+    return orderDatePills(o);
   });
 
   renderKits(data.kits || []);
