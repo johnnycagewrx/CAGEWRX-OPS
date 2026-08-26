@@ -181,6 +181,7 @@
   min-height: 80px;
   max-height: 560px;
   overflow-y: auto;
+  overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: #333 #1a1a1a;
 }
@@ -236,6 +237,7 @@
   cursor: grab;
   transition: border-color 0.15s, opacity 0.15s;
   user-select: none;
+  overflow: hidden;
 }
 .order-card:last-child { margin-bottom: 0; }
 .order-card:active { cursor: grabbing; opacity: 0.7; }
@@ -245,7 +247,7 @@
 
 .order-top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 4px;
   gap: 6px;
@@ -256,6 +258,12 @@
   font-weight: 700;
   color: #4caf50;
   text-decoration: none;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-top: 1px;
 }
 .order-num:hover { color: #81c784; text-decoration: underline; }
 
@@ -264,6 +272,23 @@
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
+}
+
+.order-actions-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.order-actions-row1,
+.order-actions-row2 {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-wrap: nowrap;
 }
 
 .order-ship {
@@ -1229,3 +1254,23 @@ body.light-mode .cal-scroll-area::-webkit-scrollbar-thumb { background: #a8a29c;
   font-family: inherit;
 }
 .cancelled-remove-btn:hover { background: rgba(255,255,255,0.35); }
+/* ---- Ready to Ship — two row actions layout ---- */
+.order-actions-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.order-actions-row1 {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.order-actions-row2 {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
