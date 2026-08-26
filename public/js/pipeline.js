@@ -182,6 +182,11 @@ function colorPill(color) {
   return pill(c || 'RAW', 'pill-color');
 }
 
+function orderDatePills(o) {
+  return pill(o.order_date ? 'ORD: ' + o.order_date : '', 'pill-order') +
+    pill(o.build_date ? 'Build: ' + fmtDate(o.build_date) : '', 'pill-date');
+}
+
 function doneBtn(tab, id) {
   return '<button class="done-btn" title="Mark complete" onclick="event.stopPropagation();markDone(event,\'' + tab + '\',\'' + id + '\')">&#x2713;</button>';
 }
@@ -565,7 +570,7 @@ function renderKits(items) {
       '<div class="order-item" style="cursor:pointer;" onclick="editFromCard(this.closest(\'.order-card\'))">' +
         (o.sku || o.item || '') +
       '</div>' +
-      '<div class="order-meta">' + pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order') + '</div>' +
+      '<div class="order-meta">' + orderDatePills(o) + '</div>' +
     '</div>';
   }
   el.innerHTML = h;
@@ -619,7 +624,7 @@ function renderPowderCoat(items) {
     h += '<div class="powder-group-label">' + dateLabel + ' <span style="color:#555;font-size:10px;">(' + group.length + ')</span></div>';
     group.forEach(function(o) {
       var metaHTML = pill(o.color, 'pill-color') +
-        pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order') +
+        orderDatePills(o) +
         pill(o.eta ? 'ETA: ' + fmtDate(o.eta) : '', 'pill-date');
       h += buildCard(o, 'powdercoat', metaHTML);
     });
@@ -689,7 +694,7 @@ function renderBackorder(items) {
     var link = 'https://admin.shopify.com/store/ccee09-8a/orders?query=' + o.order_num;
     var safeJson = JSON.stringify(o).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
     var metaHTML = pill(o.color, 'pill-color') +
-      pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order') +
+      orderDatePills(o) +
       pill(o.po_num ? 'PO: ' + o.po_num : '', 'pill-po') +
       pill(o.eta ? 'ETA: ' + fmtDate(o.eta) : '', 'pill-eta');
     h += '<div class="order-card" draggable="true"' +
@@ -778,7 +783,7 @@ function renderNeedsAssembly(items) {
     var isHigh = o.assembly_priority === 'high';
     var link = 'https://admin.shopify.com/store/ccee09-8a/orders?query=' + o.order_num;
     var safeJson = JSON.stringify(o).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    var metaHTML = pill(o.color, 'pill-color') + pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order');
+    var metaHTML = pill(o.color, 'pill-color') + orderDatePills(o);
 
     h += '<div class="order-card' + (isHigh ? ' assembly-priority-high' : '') + '" draggable="true"' +
       ' data-id="' + o.id + '" data-tab="needsassembly"' +
@@ -864,7 +869,7 @@ function renderReadyToShip(items) {
     var shipSpan = isHigh
       ? '<span class="order-ship ship-now">&#x1F6A8; SHIP NOW</span>'
       : '<span class="order-ship">' + shipLabel(o.shipping) + '</span>';
-    var orderDatePill = o.order_date ? pill('ORD: ' + o.order_date, 'pill-order') : '';
+    var orderDatePill = orderDatePills(o);
 
     h += '<div class="order-card' + (isHigh ? ' priority-high' : '') + (o.cancelled ? ' is-cancelled' : '') + (o.on_hold ? ' on-hold' : '') + '" draggable="true"' +
       ' data-id="' + o.id + '" data-tab="ready"' +
@@ -1265,25 +1270,24 @@ function renderData(data) {
   (data.orders || []).forEach(function (o) { if (grouped[o.tab]) grouped[o.tab].push(o); });
 
   fillStage('col-new', 'cnt-new', 'stat-new', 'new', grouped.new, function (o) {
-    return pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order');
+    return orderDatePills(o);
   });
   renderReadyToShip(grouped.ready);
   renderBackorder(grouped.backorder);
   fillStage('col-dropship', 'cnt-dropship', 'stat-dropship', 'dropship', grouped.dropship, function (o) {
     return pill(o.color, 'pill-color') +
-      pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order') +
+      orderDatePills(o) +
       pill(o.po_num ? 'PO: ' + o.po_num : '', 'pill-po') +
       pill(o.eta ? 'ETA: ' + fmtDate(o.eta) : '', 'pill-eta');
   });
   fillStage('col-assembled', 'cnt-assembled', 'stat-assembled', 'assembled', grouped.assembled, function (o) {
     return pill(o.color, 'pill-color') +
-      pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order') +
-      pill(o.build_date ? 'Build: ' + fmtDate(o.build_date) : '', 'pill-date') +
+      orderDatePills(o) +
       pill(o.eta ? 'ETA: ' + fmtDate(o.eta) : '', 'pill-date');
   });
   renderPowderCoat(grouped.powdercoat);
   fillStage('col-pickup', 'cnt-pickup', 'stat-pickup', 'pickup', grouped.pickup, function (o) {
-    return pill(o.color, 'pill-color') + pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order');
+    return pill(o.color, 'pill-color') + orderDatePills(o);
   });
 
   renderKits(data.kits || []);
