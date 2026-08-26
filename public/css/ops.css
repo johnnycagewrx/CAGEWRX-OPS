@@ -274,30 +274,17 @@
   flex-shrink: 0;
 }
 
-.order-actions-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.order-actions-row1,
-.order-actions-row2 {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-  flex-wrap: nowrap;
-}
 
 .order-ship {
   font-size: 10px;
-  color: #555;
-  background: #1a1a1a;
+  font-weight: 700;
+  color: #4a3b00;
+  background: #ffd54f;
+  border: 1px solid #ffca28;
   border-radius: 4px;
   padding: 2px 6px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .edit-btn {
@@ -329,7 +316,8 @@
   line-height: 1.4;
 }
 
-.order-meta { display: flex; flex-wrap: wrap; gap: 4px; }
+.order-meta { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px; }
+.order-meta-left { display: flex; flex-wrap: wrap; align-content: flex-end; gap: 4px; flex: 1; min-width: 0; }
 
 /* ---- Pills ---- */
 .pill {

@@ -865,7 +865,8 @@ function renderReadyToShip(items) {
       ' ondragend="onDragEnd()">' +
       '<div class="order-top">' +
         '<a class="order-num" href="' + link + '" target="_blank"' + (isHigh ? ' style="color:#69f0ae;"' : '') + '>#' + o.order_num + '</a>' +
-        '<div class="order-actions">' + shipSpan + starBtn +
+        '<div class="order-actions">' +
+          starBtn +
           splitBtn(o) +
           '<button class="hold-btn' + (o.on_hold ? ' hold-active' : '') + '" title="' + (o.on_hold ? 'Remove hold' : 'Place on hold') + '" onclick="event.stopPropagation();openHoldModal(\'' + o.id + '\')" >&#x23F8;</button>' +
           '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
@@ -873,7 +874,10 @@ function renderReadyToShip(items) {
         '</div>' +
       '</div>' +
       '<div class="order-item" style="cursor:pointer;' + (isHigh ? 'color:#fff;font-weight:600;' : '') + '" onclick="editFromCard(this.closest(\'.order-card\'))">' + (o.sku || o.item || '') + '</div>' +
-      '<div class="order-meta">' + metaHTML + '</div>' +
+      '<div class="order-meta">' +
+        '<div class="order-meta-left">' + metaHTML + '</div>' +
+        shipSpan +
+      '</div>' +
     '</div>';
   }
   el.innerHTML = h;
