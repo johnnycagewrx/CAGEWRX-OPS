@@ -175,6 +175,13 @@ function shipLabel(s) {
   return s ? 'SHIP' : '';
 }
 
+function colorPill(color) {
+  var c = (color || '').trim();
+  var cLower = c.toLowerCase();
+  if (cLower === 'n/a' || cLower === 'na' || cLower === 'none') return '';
+  return pill(c || 'RAW', 'pill-color');
+}
+
 function doneBtn(tab, id) {
   return '<button class="done-btn" title="Mark complete" onclick="event.stopPropagation();markDone(event,\'' + tab + '\',\'' + id + '\')">&#x2713;</button>';
 }
@@ -849,7 +856,6 @@ function renderReadyToShip(items) {
     var isHigh = o.priority === 'high';
     var link = 'https://admin.shopify.com/store/ccee09-8a/orders?query=' + o.order_num;
     var safeJson = JSON.stringify(o).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    var metaHTML = pill(o.color, 'pill-color') + pill(o.order_date ? 'Ordered: ' + o.order_date : '', 'pill-order');
     var newPriority = isHigh ? '' : 'high';
     var starBtn = '<button class="' + (isHigh ? 'priority-btn-active' : 'priority-btn-inactive') + '"' +
       ' title="' + (isHigh ? 'Remove high priority' : 'Mark high priority') + '"' +
@@ -858,6 +864,7 @@ function renderReadyToShip(items) {
     var shipSpan = isHigh
       ? '<span class="order-ship ship-now">&#x1F6A8; SHIP NOW</span>'
       : '<span class="order-ship">' + shipLabel(o.shipping) + '</span>';
+    var orderDatePill = o.order_date ? pill('ORD: ' + o.order_date, 'pill-order') : '';
 
     h += '<div class="order-card' + (isHigh ? ' priority-high' : '') + (o.cancelled ? ' is-cancelled' : '') + (o.on_hold ? ' on-hold' : '') + '" draggable="true"' +
       ' data-id="' + o.id + '" data-tab="ready"' +
@@ -875,8 +882,8 @@ function renderReadyToShip(items) {
       '</div>' +
       '<div class="order-item" style="cursor:pointer;' + (isHigh ? 'color:#fff;font-weight:600;' : '') + '" onclick="editFromCard(this.closest(\'.order-card\'))">' + (o.sku || o.item || '') + '</div>' +
       '<div class="order-meta">' +
-        '<div class="order-meta-left">' + metaHTML + '</div>' +
-        shipSpan +
+        '<div class="order-meta-row1">' + shipSpan + colorPill(o.color) + '</div>' +
+        '<div class="order-meta-row2">' + orderDatePill + '</div>' +
       '</div>' +
     '</div>';
   }

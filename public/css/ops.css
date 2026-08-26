@@ -278,7 +278,7 @@
 .order-ship {
   font-size: 10px;
   font-weight: 700;
-  color: #ffd54f;
+  color: #d8d8d8;
   background: transparent;
   border: 1px solid #ffd54f;
   border-radius: 4px;
@@ -316,8 +316,9 @@
   line-height: 1.4;
 }
 
-.order-meta { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px; }
-.order-meta-left { display: flex; flex-wrap: wrap; align-content: flex-end; gap: 4px; flex: 1; min-width: 0; }
+.order-meta { display: flex; flex-direction: column; gap: 4px; }
+.order-meta-row1,
+.order-meta-row2 { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 
 /* ---- Pills ---- */
 .pill {
