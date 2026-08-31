@@ -178,8 +178,8 @@ function shipLabel(s) {
 function colorPill(color) {
   var c = (color || '').trim();
   var cLower = c.toLowerCase();
-  if (cLower === 'n/a' || cLower === 'na' || cLower === 'none') return '';
-  return pill(c || 'RAW', 'pill-color');
+  if (!c || cLower === 'n/a' || cLower === 'na' || cLower === 'none') return '';
+  return pill(c, 'pill-color');
 }
 
 function mmdd(s) {
