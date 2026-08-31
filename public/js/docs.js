@@ -336,7 +336,7 @@ function loadUsers() {
   fetch(SUPABASE_URL + '/rest/v1/profiles?select=*&order=created_at.asc', {
     headers: {
       'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY
+      'Authorization': 'Bearer ' + currentUser.access_token
     }
   })
   .then(function (r) { return r.json(); })

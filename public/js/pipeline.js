@@ -168,6 +168,13 @@ function pill(t, c) {
   return '<span class="pill ' + c + '">' + t + '</span>';
 }
 
+function safeJsonAttr(o) {
+  return JSON.stringify(o)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '&quot;');
+}
+
 function shipLabel(s) {
   s = (s || '').toLowerCase();
   if (s.indexOf('pick') !== -1) return 'PICKUP';
@@ -287,10 +294,11 @@ function openSplitModal(id) {
   // Some older imports have a sku list shorter than the item list (a line
   // item with no real SKU, like a color-selection property row, used to get
   // silently dropped instead of leaving a blank placeholder - see runImport).
-  // When the underlying counts don't match, positional pairing can't be
-  // trusted at all, so skip it entirely rather than show a confident-looking
-  // wrong SKU next to the wrong item.
-  var skuDataTrusted = rawItems.filter(Boolean).length === rawSkus.filter(Boolean).length;
+  // Pairing below indexes rawSkus by rawItems' position, so trust requires
+  // the raw (unfiltered) list lengths to match exactly - matching only the
+  // non-blank counts can still misalign a blank that lands at a different
+  // position in each list, silently pairing the wrong SKU to an item.
+  var skuDataTrusted = rawItems.length === rawSkus.length;
 
   var items = [];
   var skus = [];
@@ -440,7 +448,8 @@ function confirmSplit() {
 }
 
 
-function buildCard(o, tab, metaHTML) {
+function buildCard(o, tab, metaHTML, opts) {
+  opts = opts || {};
   // Store in cache for edit lookup
   orderCache[o.id] = o;
 
@@ -458,28 +467,27 @@ function buildCard(o, tab, metaHTML) {
   }
 
   var link = 'https://admin.shopify.com/store/ccee09-8a/orders?query=' + o.order_num;
-  var safeJson = JSON.stringify(o)
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
-    .replace(/"/g, '&quot;');
+  var safeJson = safeJsonAttr(o);
 
-  return '<div class="order-card' + (o.cancelled ? ' is-cancelled' : '') + (o.on_hold ? ' on-hold' : '') + '" draggable="true"' +
+  var actions = (opts.extraActions || '') +
+    (opts.showSplit !== false ? splitBtn(o) : '') +
+    (opts.showHold !== false ? '<button class="hold-btn' + (o.on_hold ? ' hold-active' : '') + '" title="' + (o.on_hold ? 'Remove hold' : 'Place on hold') + '" onclick="event.stopPropagation();openHoldModal(\'' + o.id + '\')" >&#x23F8;</button>' : '') +
+    '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
+    doneBtn(tab, o.id);
+
+  return '<div class="order-card' + (opts.extraCardClass || '') + (o.cancelled ? ' is-cancelled' : '') + (o.on_hold ? ' on-hold' : '') + '" draggable="true"' +
     ' data-id="' + o.id + '" data-tab="' + tab + '"' +
     ' ondragstart="onDragStart(event,\'' + tab + '\',\'' + safeJson + '\')"' +
     ' ondragend="onDragEnd()">' +
     '<div class="order-top">' +
       '<a class="order-num" href="' + link + '" target="_blank">#' + o.order_num + '</a>' +
-      '<div class="order-actions">' +
-        splitBtn(o) +
-        '<button class="hold-btn' + (o.on_hold ? ' hold-active' : '') + '" title="' + (o.on_hold ? 'Remove hold' : 'Place on hold') + '" onclick="event.stopPropagation();openHoldModal(\'' + o.id + '\')" >&#x23F8;</button>' +
-        '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
-        doneBtn(tab, o.id) +
-      '</div>' +
+      '<div class="order-actions">' + actions + '</div>' +
     '</div>' +
     '<div class="order-item" style="cursor:pointer;" onclick="editFromCard(this.closest(\'.order-card\'))">' +
       (o.sku || o.item || '') +
     '</div>' +
     '<div class="order-meta">' + shipColorRow(o) + '<div class="order-meta-row2">' + metaHTML + '</div></div>' +
+  (opts.afterMeta || '') +
   (o.on_hold && o.hold_note ? '<div class="hold-note-pill">&#x23F8; ' + o.hold_note + '</div>' : '') +
   (o.cancelled ? '<div class="cancelled-overlay"><span class="cancelled-x">&#x2715;</span><span class="cancelled-label">CANCELLED</span><button class="cancelled-remove-btn" onclick="event.stopPropagation();removeOrder(\'' + o.id + '\')" title="Remove">Remove</button></div>' : '') +
   '</div>';
@@ -561,26 +569,7 @@ function renderKits(items) {
   if (!items.length) { el.innerHTML = '<div class="empty">No active kit orders</div>'; return; }
   var h = '';
   for (var i = 0; i < items.length; i++) {
-    var o = items[i];
-    orderCache[o.id] = o;
-    var link = 'https://admin.shopify.com/store/ccee09-8a/orders?query=' + o.order_num;
-    var safeJson = JSON.stringify(o).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    h += '<div class="order-card" draggable="true"' +
-      ' data-id="' + o.id + '" data-tab="cagekits"' +
-      ' ondragstart="onDragStart(event,\'cagekits\',\'' + safeJson + '\')"' +
-      ' ondragend="onDragEnd()">' +
-      '<div class="order-top">' +
-        '<a class="order-num" href="' + link + '" target="_blank">#' + o.order_num + '</a>' +
-        '<div class="order-actions">' +
-          '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
-          doneBtn('cagekits', o.id) +
-        '</div>' +
-      '</div>' +
-      '<div class="order-item" style="cursor:pointer;" onclick="editFromCard(this.closest(\'.order-card\'))">' +
-        (o.sku || o.item || '') +
-      '</div>' +
-      '<div class="order-meta">' + shipColorRow(o) + '<div class="order-meta-row2">' + orderDatePills(o) + '</div></div>' +
-    '</div>';
+    h += buildCard(items[i], 'cagekits', orderDatePills(items[i]), { showSplit: false, showHold: false });
   }
   el.innerHTML = h;
 }
@@ -660,7 +649,7 @@ function renderTagPull(items) {
     var o = items[i];
     orderCache[o.id] = o;
     var link = 'https://admin.shopify.com/store/ccee09-8a/orders?query=' + o.order_num;
-    var safeJson = JSON.stringify(o).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    var safeJson = safeJsonAttr(o);
     h += '<div class="order-card" draggable="true"' +
       ' data-id="' + o.id + '" data-tab="tagpull"' +
       ' ondragstart="onDragStart(event,\'tagpull\',\'' + safeJson + '\')"' +
@@ -698,28 +687,10 @@ function renderBackorder(items) {
   var h = '';
   for (var i = 0; i < items.length; i++) {
     var o = items[i];
-    orderCache[o.id] = o;
-    var link = 'https://admin.shopify.com/store/ccee09-8a/orders?query=' + o.order_num;
-    var safeJson = JSON.stringify(o).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
     var metaHTML = orderDatePills(o) +
       pill(o.po_num ? 'PO: ' + o.po_num : '', 'pill-po') +
       pill(o.eta ? 'ETA: ' + fmtDate(o.eta) : '', 'pill-eta');
-    h += '<div class="order-card" draggable="true"' +
-      ' data-id="' + o.id + '" data-tab="backorder"' +
-      ' ondragstart="onDragStart(event,\'backorder\',\'' + safeJson + '\')"' +
-      ' ondragend="onDragEnd()">' +
-      '<div class="order-top">' +
-        '<a class="order-num" href="' + link + '" target="_blank">#' + o.order_num + '</a>' +
-        '<div class="order-actions">' +
-          splitBtn(o) +
-          '<button class="hold-btn' + (o.on_hold ? ' hold-active' : '') + '" title="' + (o.on_hold ? 'Remove hold' : 'Place on hold') + '" onclick="event.stopPropagation();openHoldModal(\'' + o.id + '\')" >&#x23F8;</button>' +
-          '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
-          doneBtn('backorder', o.id) +
-        '</div>' +
-      '</div>' +
-      '<div class="order-item" style="cursor:pointer;" onclick="editFromCard(this.closest(\'.order-card\'))">' + (o.sku || o.item || '') + '</div>' +
-      '<div class="order-meta">' + shipColorRow(o) + '<div class="order-meta-row2">' + metaHTML + '</div></div>' +
-    '</div>';
+    h += buildCard(o, 'backorder', metaHTML);
   }
   el.innerHTML = h;
 }
@@ -785,26 +756,12 @@ function renderNeedsAssembly(items) {
   var h = '';
   for (var i = 0; i < items.length; i++) {
     var o = items[i];
-    orderCache[o.id] = o;
     var isHigh = o.assembly_priority === 'high';
-    var link = 'https://admin.shopify.com/store/ccee09-8a/orders?query=' + o.order_num;
-    var safeJson = JSON.stringify(o).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    h += '<div class="order-card' + (isHigh ? ' assembly-priority-high' : '') + '" draggable="true"' +
-      ' data-id="' + o.id + '" data-tab="needsassembly"' +
-      ' ondragstart="onDragStart(event,\'needsassembly\',\'' + safeJson + '\')"' +
-      ' ondragend="onDragEnd()">' +
-      '<div class="order-top">' +
-        '<a class="order-num" href="' + link + '" target="_blank">#' + o.order_num + '</a>' +
-        '<div class="order-actions">' +
-          splitBtn(o) +
-          '<button class="edit-btn" title="Edit" onclick="editFromCard(this.closest(\'.order-card\'))">&#x270E;</button>' +
-          doneBtn('needsassembly', o.id) +
-        '</div>' +
-      '</div>' +
-      '<div class="order-item" style="cursor:pointer;" onclick="editFromCard(this.closest(\'.order-card\'))">' + (o.sku || o.item || '') + '</div>' +
-      '<div class="order-meta">' + shipColorRow(o) + '<div class="order-meta-row2">' + orderDatePills(o) + '</div></div>' +
-      '<div style="margin-top:6px;">' + buildAssemblyPrioritySelect(o.id, o.assembly_priority || '') + '</div>' +
-    '</div>';
+    h += buildCard(o, 'needsassembly', orderDatePills(o), {
+      showHold: false,
+      extraCardClass: isHigh ? ' assembly-priority-high' : '',
+      afterMeta: '<div style="margin-top:6px;">' + buildAssemblyPrioritySelect(o.id, o.assembly_priority || '') + '</div>'
+    });
   }
   body.innerHTML = h;
 }
@@ -864,7 +821,7 @@ function renderReadyToShip(items) {
     orderCache[o.id] = o;
     var isHigh = o.priority === 'high';
     var link = 'https://admin.shopify.com/store/ccee09-8a/orders?query=' + o.order_num;
-    var safeJson = JSON.stringify(o).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    var safeJson = safeJsonAttr(o);
     var newPriority = isHigh ? '' : 'high';
     var starBtn = '<button class="' + (isHigh ? 'priority-btn-active' : 'priority-btn-inactive') + '"' +
       ' title="' + (isHigh ? 'Remove high priority' : 'Mark high priority') + '"' +
@@ -911,10 +868,16 @@ function renderReadyToShip(items) {
 function togglePriority(id, priority) {
   var o = orderCache[id];
   if (!o) return;
+  var prevPriority = o.priority || '';
   sbFetch('PATCH', '/rest/v1/orders?id=eq.' + id, { priority: priority }, function(err) {
     if (err) showBanner('Could not update priority', 'error');
     else {
       showBanner(priority === 'high' ? '&#x1F6A8; Marked HIGH PRIORITY' : 'Priority removed', 'success');
+      logActivity('orders', 'update', {
+        recordId: id,
+        fieldChanges: { priority: { old: prevPriority, new: priority } },
+        summary: 'Order #' + (o.order_num || '') + (priority === 'high' ? ' marked SHIP NOW' : ' priority removed')
+      });
       loadData(true);
     }
   });
@@ -1236,10 +1199,16 @@ function closeHoldModal() {
 
 function confirmHold() {
   if (!holdingOrderId) return;
+  var o = orderCache[holdingOrderId];
   var note = (document.getElementById('hold-note-input').value || '').trim();
   sbFetch('PATCH', '/rest/v1/orders?id=eq.' + holdingOrderId, { on_hold: true, hold_note: note }, function(err) {
     if (err) { showBanner('Could not place hold', 'error'); return; }
     showBanner('Order placed on hold', 'success');
+    logActivity('orders', 'update', {
+      recordId: holdingOrderId,
+      fieldChanges: { on_hold: { old: !!(o && o.on_hold), new: true } },
+      summary: 'Order #' + ((o && o.order_num) || '') + ' placed on hold'
+    });
     closeHoldModal();
     loadData(true);
   });
@@ -1247,9 +1216,15 @@ function confirmHold() {
 
 function removeHold() {
   if (!holdingOrderId) return;
+  var o = orderCache[holdingOrderId];
   sbFetch('PATCH', '/rest/v1/orders?id=eq.' + holdingOrderId, { on_hold: false, hold_note: '' }, function(err) {
     if (err) { showBanner('Could not remove hold', 'error'); return; }
     showBanner('Hold removed', 'success');
+    logActivity('orders', 'update', {
+      recordId: holdingOrderId,
+      fieldChanges: { on_hold: { old: true, new: false } },
+      summary: 'Order #' + ((o && o.order_num) || '') + ' hold removed'
+    });
     closeHoldModal();
     loadData(true);
   });
@@ -1520,7 +1495,7 @@ function showMoveModal(from, to, o) {
     fields += labelHTML('Sent to Powder Date') + dateInputHTML('move-sent', todayStr());
   } else if (to === 'assembled') {
     fields += '<p style="font-size:13px;color:#888;margin-top:12px;">Move <b style="color:#fff">#' + o.order_num + '</b> back to <b style="color:#fff">Assembled Cage Orders</b>?</p>';
-    if (o.build_date) fields += '<p style="font-size:11px;color:#444;margin-top:8px;">Build date: <span style="color:#90caf9">' + o.build_date + '</span></p>';
+    fields += labelHTML('Build Date') + dateInputHTML('move-build', o.build_date || '');
   } else {
     fields += '<p style="font-size:13px;color:#888;margin-top:12px;">Move <b style="color:#fff">#' + o.order_num + '</b> to <b style="color:#fff">' + (TAB_LABELS[to] || to) + '</b>?</p>';
   }
@@ -1737,6 +1712,7 @@ function confirmEdit() {
   }
 
   // Universal updates - all fields always saved
+  if (!gv('edit-order')) { showBanner('Order # is required', 'error'); return; }
   var updates = {
     order_num:      gv('edit-order'),
     sku:            gv('edit-sku'),
@@ -2059,16 +2035,8 @@ function runImport() {
     }
     if (preview) preview.textContent = 'Importing ' + toImport.length + ' orders...';
 
-    var done = 0, errors = 0, idx = 0;
-    function next() {
-      if (idx >= toImport.length) {
-        showBanner(done + ' orders imported!', 'success');
-        closeImportModal();
-        loadData(false);
-        return;
-      }
-      var o = toImport[idx++];
-      sbFetch('POST', '/rest/v1/orders', {
+    var rowsToInsert = toImport.map(function (o) {
+      return {
         tab: 'new',
         order_num: o.order_num,
         sku:  (o.skus || []).join(', ') || '',
@@ -2077,12 +2045,17 @@ function runImport() {
         order_date: o.order_date,
         shipping: o.shipping,
         po_num: '', eta: '', build_date: '', sent_to_powder: ''
-      }, function (err) {
-        if (err) errors++; else done++;
-        if (preview) preview.textContent = 'Importing... ' + (done + errors) + ' of ' + toImport.length;
-        next();
-      });
-    }
-    next();
+      };
+    });
+    sbFetch('POST', '/rest/v1/orders', rowsToInsert, function (err, inserted) {
+      if (err) {
+        showBanner('Import failed: ' + err, 'error');
+        return;
+      }
+      var count = Array.isArray(inserted) ? inserted.length : rowsToInsert.length;
+      showBanner(count + ' orders imported!', 'success');
+      closeImportModal();
+      loadData(false);
+    });
   });
 }

@@ -110,7 +110,7 @@ function buildAssignedDropdown(currentVal) {
 
 
 function loadTasks() {
-  var ids = ['pcol-shipping', 'pcol-shop', 'pcol-sme', 'pcol-needtomake'];
+  var ids = ['pcol-shipping', 'pcol-shop', 'pcol-sme', 'pcol-needtomake', 'pcol-engineering'];
   ids.forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.innerHTML = '<div style="padding:18px;text-align:center;"><div class="spinner"></div></div>';
@@ -347,11 +347,14 @@ function onTaskCardDrop(e) {
     if (cid) updates.push({ id: cid, sort_order: (idx + 1) * 10 });
   });
   var saved = 0;
+  var sortFailed = false;
   updates.forEach(function(u) {
-    sbFetch('PATCH', '/rest/v1/tasks?id=eq.' + u.id, { sort_order: u.sort_order }, function() {
+    sbFetch('PATCH', '/rest/v1/tasks?id=eq.' + u.id, { sort_order: u.sort_order }, function(err) {
+      if (err) sortFailed = true;
       saved++;
-      if (saved === updates.length && draggedTask.priority === newPriority) {
-        showBanner('Task reordered', 'success');
+      if (saved === updates.length) {
+        if (sortFailed) showBanner('Error saving task order', 'error');
+        else if (draggedTask.priority === newPriority) showBanner('Task reordered', 'success');
       }
     });
   });

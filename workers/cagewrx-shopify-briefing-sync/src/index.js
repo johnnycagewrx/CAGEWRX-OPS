@@ -308,25 +308,32 @@ async function runShopifySync(env) {
   const accessToken = await getShopifyAccessToken(env);
   const now = /* @__PURE__ */ new Date();
   const current = getCurrentMonthToDateRange(now);
-  const currentSummary = await fetchOrdersForRange(accessToken, env, current.start, current.end, 3);
   const trailing30 = getTrailing30DaysRange(now);
-  const trailing30Summary = await fetchOrdersForRange(accessToken, env, trailing30.start, trailing30.end, 5);
-  currentSummary.topProducts = trailing30Summary.topProducts;
-  await writeToSupabase(env, "shopify_mtd", currentSummary);
   const previous = getPreviousMonthToDateRange(now);
-  const previousSummary = await fetchOrdersForRange(accessToken, env, previous.start, previous.end, 3);
-  await writeToSupabase(env, "shopify_mtd_prev", previousSummary);
-
   const threshold = env.LOW_STOCK_THRESHOLD ? Number(env.LOW_STOCK_THRESHOLD) : LOW_STOCK_DEFAULT_THRESHOLD;
-  const lowStockItems = await fetchLowStockVariants(accessToken, env, threshold);
-  await writeLowStockToSupabase(env, lowStockItems);
+
+  const [currentSummary, trailing30Summary, previousSummary, lowStockItems] = await Promise.all([
+    fetchOrdersForRange(accessToken, env, current.start, current.end, 3),
+    fetchOrdersForRange(accessToken, env, trailing30.start, trailing30.end, 5),
+    fetchOrdersForRange(accessToken, env, previous.start, previous.end, 3),
+    fetchLowStockVariants(accessToken, env, threshold)
+  ]);
+  currentSummary.topProducts = trailing30Summary.topProducts;
+
+  await Promise.all([
+    writeToSupabase(env, "shopify_mtd", currentSummary),
+    writeToSupabase(env, "shopify_mtd_prev", previousSummary),
+    writeLowStockToSupabase(env, lowStockItems)
+  ]);
 
   return { current: currentSummary, previous: previousSummary, lowStock: lowStockItems };
 }
 __name(runShopifySync, "runShopifySync");
 var index_default = {
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(runShopifySync(env));
+    ctx.waitUntil(
+      runShopifySync(env).catch((err) => console.error("runShopifySync failed:", err))
+    );
   },
   // Manual trigger for testing: GET /?key=<TEST_KEY>
   // Set a TEST_KEY secret so this endpoint isn't wide open.
