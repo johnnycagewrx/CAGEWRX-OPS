@@ -196,6 +196,7 @@
     buttons: '<button class="btn btn-green" id="upload-btn" onclick="openUploadModal()" style="display:none;">+ Upload File</button>'
   });
   renderSidebar(urlTab || 'docs');
+  initAvatarDropdown();
   if (localStorage.getItem('cw_theme') === 'light') {
     document.body.classList.add('light-mode');
     var tb = document.getElementById('theme-btn');
