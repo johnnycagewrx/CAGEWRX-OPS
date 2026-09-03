@@ -50,7 +50,7 @@ function requireAuth() {
  * Updates session with role and full_name
  */
 function fetchProfile(sess, callback) {
-  fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + sess.user.id + '&select=role,full_name', {
+  fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + sess.user.id + '&select=role,full_name,must_change_password', {
     headers: {
       'apikey': SUPABASE_KEY,
       'Authorization': 'Bearer ' + sess.access_token
@@ -64,9 +64,11 @@ function fetchProfile(sess, callback) {
       var profileName = rows[0].full_name || '';
       var metaName = (sess.user && sess.user.user_metadata && sess.user.user_metadata.full_name) || '';
       sess.full_name = profileName || metaName || '';
+      sess.must_change_password = !!rows[0].must_change_password;
       saveSession(sess);
     }
     callback(sess);
+    checkForcePasswordChange(sess);
   })
   .catch(function () { callback(sess); });
 }
@@ -155,7 +157,12 @@ document.addEventListener('keydown', function (e) {
     return;
   }
 
-  var openOverlays = document.querySelectorAll('.modal-overlay.open, .move-overlay.open');
+  // The forced password-change modal isn't dismissable via ESC - it has
+  // to actually be completed (or the user signs out) before continuing.
+  var openOverlays = Array.prototype.filter.call(
+    document.querySelectorAll('.modal-overlay.open, .move-overlay.open'),
+    function (el) { return el.id !== 'force-pw-modal'; }
+  );
   if (openOverlays.length) {
     openOverlays.forEach(function (el) { el.classList.remove('open'); });
     return;
@@ -168,3 +175,79 @@ document.addEventListener('keydown', function (e) {
     if (scrim) scrim.classList.remove('open');
   }
 });
+
+/**
+ * Forced password-change flow. Triggered from fetchProfile() (and
+ * docs.js's own profile load, which doesn't go through fetchProfile)
+ * whenever profiles.must_change_password is true - e.g. after an admin
+ * resets someone's password via the admin API. Blocks the rest of the
+ * app until they set a new one; no way to dismiss except signing out.
+ */
+function checkForcePasswordChange(sess) {
+  if (!sess || !sess.must_change_password) return;
+  if (document.getElementById('force-pw-modal')) return;
+
+  var wrap = document.createElement('div');
+  wrap.innerHTML =
+    '<div class="modal-overlay open" id="force-pw-modal" style="z-index:5000;">' +
+      '<div class="modal" style="max-width:380px;">' +
+        '<div class="modal-title">Set a New Password</div>' +
+        '<p style="font-size:12px;color:#888;margin-bottom:16px;line-height:1.5;">' +
+          'Your password was reset. Choose a new one to continue.' +
+        '</p>' +
+        '<label>New Password</label>' +
+        '<input type="password" id="force-pw-new" placeholder="At least 8 characters">' +
+        '<label>Confirm Password</label>' +
+        '<input type="password" id="force-pw-confirm" placeholder="Re-enter password">' +
+        '<div class="modal-btns">' +
+          '<button class="modal-btn modal-btn-cancel" onclick="signOut()">Sign Out</button>' +
+          '<button class="modal-btn modal-btn-save" onclick="submitForcePasswordChange()">Save &amp; Continue</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(wrap.firstElementChild);
+}
+
+function submitForcePasswordChange() {
+  var pw = (document.getElementById('force-pw-new').value || '');
+  var confirmPw = (document.getElementById('force-pw-confirm').value || '');
+  if (pw.length < 8) { showBanner('Password must be at least 8 characters', 'error'); return; }
+  if (pw !== confirmPw) { showBanner('Passwords do not match', 'error'); return; }
+
+  var sess = getSession();
+  if (!sess || !sess.access_token) return;
+
+  fetch(SUPABASE_URL + '/auth/v1/user', {
+    method: 'PUT',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + sess.access_token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ password: pw })
+  })
+  .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+  .then(function (res) {
+    if (!res.ok) throw new Error(res.data.msg || res.data.error_description || res.data.error || 'Could not update password');
+    return fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + sess.user.id, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + sess.access_token,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ must_change_password: false })
+    });
+  })
+  .then(function () {
+    sess.must_change_password = false;
+    saveSession(sess);
+    var m = document.getElementById('force-pw-modal');
+    if (m) m.remove();
+    showBanner('Password updated!', 'success');
+  })
+  .catch(function (e) {
+    showBanner('Error: ' + (e.message || 'could not update password'), 'error');
+  });
+}

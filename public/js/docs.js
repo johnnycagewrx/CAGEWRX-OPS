@@ -60,8 +60,10 @@ function loadProfile() {
     var sess = getSession() || {};
     sess.role = currentProfile.role || 'user';
     sess.full_name = currentProfile.full_name || '';
+    sess.must_change_password = !!currentProfile.must_change_password;
     saveSession(sess);
     showApp();
+    checkForcePasswordChange(sess);
   })
   .catch(function () {
     currentProfile = { role: 'user' };
@@ -360,7 +362,8 @@ function loadUsers() {
           '</select>';
       var actions = isSelf
         ? '<span style="color:#333;font-size:11px;">You</span>'
-        : '<button class="doc-btn doc-btn-del" onclick="removeUser(\'' + u.id + '\')">Remove</button>';
+        : '<button class="doc-btn" onclick="resetUserPassword(\'' + u.id + '\',\'' + (u.email || '').replace(/'/g, "\\'") + '\')" style="margin-right:6px;">Reset Password</button>' +
+          '<button class="doc-btn doc-btn-del" onclick="removeUser(\'' + u.id + '\')">Remove</button>';
 
       return '<tr>' +
         '<td>' + (u.full_name || '-') + '</td>' +
@@ -404,6 +407,21 @@ function removeUser(userId) {
     else showBanner('Could not remove user', 'error');
   })
   .catch(function () { showBanner('Error removing user', 'error'); });
+}
+
+function resetUserPassword(userId, email) {
+  if (!confirm('Reset password for ' + email + ' to "cagewrx123!"? They\'ll be asked to set a new one on next login.')) return;
+  fetch('https://cagewrx-admin-api.sales-8e3.workers.dev', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'reset_password', user_id: userId, password: 'cagewrx123!' })
+  })
+  .then(function (r) { return r.json(); })
+  .then(function (d) {
+    if (d.success) showBanner('Password reset to cagewrx123!', 'success');
+    else showBanner('Could not reset password: ' + (d.error || 'unknown'), 'error');
+  })
+  .catch(function () { showBanner('Error resetting password', 'error'); });
 }
 
 function inviteUser() {
