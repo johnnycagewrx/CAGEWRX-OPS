@@ -255,39 +255,57 @@ function submitForcePasswordChange() {
 /**
  * Auto-scroll the page when dragging a card near the top/bottom edge of
  * the viewport, so a section scrolled out of view can still be dropped
- * into. Runs on every page since this file loads everywhere. Listens on
- * the capture phase so it still sees the event even when a card-level
- * handler calls stopPropagation() on dragover (e.g. production.js's
- * drag-to-reorder-within-a-column logic).
+ * into. Runs on every page since this file loads everywhere.
+ *
+ * Uses setInterval rather than a requestAnimationFrame chain - browsers
+ * are known to throttle/deprioritize rAF during an active native OS-level
+ * drag session, which made the first version stall unpredictably rather
+ * than scroll smoothly. All listeners are capture-phase so per-card drag
+ * handlers that call stopPropagation() (e.g. production.js's
+ * drag-to-reorder-within-a-column logic, which stops it on both dragover
+ * and drop) can't block the cleanup and leave stale state behind.
  */
 (function () {
-  var EDGE_SIZE = 72;
-  var MAX_SPEED = 16;
+  var EDGE_SIZE = 90;
+  var MAX_SPEED = 22;
+  var MIN_SPEED = 6; // floor so the outer part of the zone isn't imperceptibly slow
   var pointerY = null;
-  var rafId = null;
+  var timer = null;
 
-  function tick() {
-    if (pointerY == null) { rafId = null; return; }
+  function speedFor(y) {
+    if (y == null) return 0;
     var vh = window.innerHeight;
-    var speed = 0;
-    if (pointerY < EDGE_SIZE) {
-      speed = -MAX_SPEED * (1 - pointerY / EDGE_SIZE);
-    } else if (pointerY > vh - EDGE_SIZE) {
-      speed = MAX_SPEED * (1 - (vh - pointerY) / EDGE_SIZE);
+    if (y < EDGE_SIZE) {
+      var depthTop = 1 - y / EDGE_SIZE;
+      return -(MIN_SPEED + (MAX_SPEED - MIN_SPEED) * depthTop);
     }
-    if (speed !== 0) {
-      window.scrollBy(0, speed);
-      rafId = requestAnimationFrame(tick);
-    } else {
-      rafId = null;
+    if (y > vh - EDGE_SIZE) {
+      var depthBottom = 1 - (vh - y) / EDGE_SIZE;
+      return MIN_SPEED + (MAX_SPEED - MIN_SPEED) * depthBottom;
     }
+    return 0;
   }
 
+  function startLoop() {
+    if (timer) return;
+    timer = setInterval(function () {
+      var speed = speedFor(pointerY);
+      if (speed !== 0) window.scrollBy(0, speed);
+    }, 16);
+  }
+
+  function stopLoop() {
+    if (timer) { clearInterval(timer); timer = null; }
+    pointerY = null;
+  }
+
+  document.addEventListener('dragstart', startLoop, true);
   document.addEventListener('dragover', function (e) {
     pointerY = e.clientY;
-    if (!rafId) rafId = requestAnimationFrame(tick);
+    startLoop();
   }, true);
 
-  document.addEventListener('dragend', function () { pointerY = null; });
-  document.addEventListener('drop', function () { pointerY = null; });
+  document.addEventListener('dragend', stopLoop, true);
+  document.addEventListener('drop', stopLoop, true);
+  window.addEventListener('blur', stopLoop);
 })();
