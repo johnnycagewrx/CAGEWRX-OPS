@@ -39,7 +39,7 @@ export default {
     if (action === 'get_all_profiles') {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*&order=created_at.asc`, { headers: sbHeaders });
       const data = await res.json();
-      return new Response(JSON.stringify({ profiles: Array.isArray(data) ? data : [], status: res.status }), { headers });
+      return new Response(JSON.stringify({ profiles: Array.isArray(data) ? data : [], status: res.status, raw: data, keyPresent: !!KEY, keyLength: KEY ? KEY.length : 0 }), { headers });
     }
 
     if (action === 'update_role') {
