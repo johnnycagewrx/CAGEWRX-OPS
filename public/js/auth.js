@@ -251,3 +251,43 @@ function submitForcePasswordChange() {
     showBanner('Error: ' + (e.message || 'could not update password'), 'error');
   });
 }
+
+/**
+ * Auto-scroll the page when dragging a card near the top/bottom edge of
+ * the viewport, so a section scrolled out of view can still be dropped
+ * into. Runs on every page since this file loads everywhere. Listens on
+ * the capture phase so it still sees the event even when a card-level
+ * handler calls stopPropagation() on dragover (e.g. production.js's
+ * drag-to-reorder-within-a-column logic).
+ */
+(function () {
+  var EDGE_SIZE = 72;
+  var MAX_SPEED = 16;
+  var pointerY = null;
+  var rafId = null;
+
+  function tick() {
+    if (pointerY == null) { rafId = null; return; }
+    var vh = window.innerHeight;
+    var speed = 0;
+    if (pointerY < EDGE_SIZE) {
+      speed = -MAX_SPEED * (1 - pointerY / EDGE_SIZE);
+    } else if (pointerY > vh - EDGE_SIZE) {
+      speed = MAX_SPEED * (1 - (vh - pointerY) / EDGE_SIZE);
+    }
+    if (speed !== 0) {
+      window.scrollBy(0, speed);
+      rafId = requestAnimationFrame(tick);
+    } else {
+      rafId = null;
+    }
+  }
+
+  document.addEventListener('dragover', function (e) {
+    pointerY = e.clientY;
+    if (!rafId) rafId = requestAnimationFrame(tick);
+  }, true);
+
+  document.addEventListener('dragend', function () { pointerY = null; });
+  document.addEventListener('drop', function () { pointerY = null; });
+})();
